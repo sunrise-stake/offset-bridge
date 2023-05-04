@@ -39,9 +39,9 @@ contract TheBasicDAO is Ownable {
         uint256 nftTokenId;
         // deadline - the UNIX timestamp until which this proposal is active. Proposal can be executed after the deadline has been exceeded.
         uint256 deadline;
-        // yesVotes - number of yay votes for this proposal
+        // yesVotes - number of Yes votes for this proposal
         uint256 yesVotes;
-        // noVotes - number of nay votes for this proposal
+        // noVotes - number of No votes for this proposal
         uint256 noVotes;
         // executed - whether or not this proposal has been executed yet. Cannot be executed before the deadline has been exceeded.
         bool executed;
@@ -72,9 +72,9 @@ contract TheBasicDAO is Ownable {
     }
 
     // Active proposals whose deadline is positive & has not been exceeded
-    modifier activeProposal(uint256 idx) {
+    modifier activeProposal(uint256 index) {
         require(
-            proposals[idx].deadline > block.timestamp,
+            proposals[index].deadline > block.timestamp,
             "Proposal is not active"
         );
         _;
