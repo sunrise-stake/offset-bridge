@@ -14,6 +14,8 @@ const {
   Keypair,
   PublicKey,
   TokenAccountsFilter,
+  sendAndConfirmTransaction,
+  clusterApiUrl
 } = require("@solana/web3.js");
 const bs58 = require("bs58");
 
@@ -22,7 +24,8 @@ const { SOL_TEST_TOKEN_BRIDGE_ADDRESS, POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, SOL_TE
 
 /* 
 0. get test token 
-    - i actually found USDC faucet here: https://usdcfaucet.com/, but it's probably more convenient to your own contract
+    - i actually found USDC faucet here: https://usdcfaucet.com/, however not available on testnet 
+    - use this interface instead: https://spl-token-faucet.com/?token-name=USDC
 1. attest token if necessary 
     - I did this via the token bridge UI on devnet: https://wormhole-foundation.github.io/example-token-bridge-ui/
 2. transfer - code examples from: 
@@ -47,7 +50,9 @@ async function transfer() {
     )
   ).toString();
 
-  const connection = new Connection(SOLANA_HOST, "confirmed");
+  // const connection = new Connection(SOLANA_HOST, "confirmed");
+  const connection = new Connection(clusterApiUrl("devnet"));
+
 
   const amount = parseUnits("1", 9).toBigInt();
   // Submit transaction - results in a Wormhole message being published
@@ -59,21 +64,18 @@ async function transfer() {
     fromAddress,
     USDC_TEST_TOKEN,
     amount,
-
     //   targetAddress,
     //   CHAIN_ID_ETH,
     //   originAddress,
     //   originChain
     // );
-
     Wormhole.tryNativeToUint8Array(TARGET_CONTRACT, CHAIN_ID_POLYGON),
     CHAIN_ID_POLYGON
   );
 
   // const signed = await wallet.signTransaction(transaction);
   // const txid = await connection.sendRawTransaction(signed.serialize());
-  // await connection.confirmTransaction(txid);
-
+  // await connection.confirmTransaction(txid); 
 
   // sign, send, and confirm transaction
   transaction.partialSign(keypair);
