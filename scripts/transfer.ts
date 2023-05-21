@@ -1,26 +1,33 @@
-
-require("dotenv").config({ path: ".env" });
-const POLYGON_PRIVATE_KEY = process.env.ETH_PRIVATE_KEY;
+// Transfer from Solana to Ethereum using Wormhole SDK 
+const { ethers } = require("ethers");
+require("dotenv").config(({ path: ".env" }));
+const POLYGON_PRIVATE_KEY = process.env.POLYGON_PRIVATE_KEY;
 const SOLANA_PRIVATE_KEY = process.env.SOLANA_PRIVATE_KEY;
 const SOLANA_HOST = process.env.SOLANA_HOST;
-const POLYGON_NODE_URL = process.env.ETH_NODE_URL;
+const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;
 
 const { formatUnits, parseUnits } = require("@ethersproject/units");
-const { Wormhole } = require("@certusone/wormhole-sdk");
+const Wormhole = require("@certusone/wormhole-sdk");
+const { getAssociatedTokenAddress } = require("@solana/spl-token");
 const {
   Connection,
   Keypair,
   PublicKey,
   TokenAccountsFilter,
 } = require("@solana/web3.js");
-const { ethers } = require("ethers");
+const bs58 = require("bs58");
 
-const { SOL_TEST_TOKEN_BRIDGE_ADDRESS, POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, SOL_TEST_BRIDGE_ADDRESS, CHAIN_ID_POLYGON, USDC_TEST_TOKEN, TARGET_CONTRACT, WORMHOLE_RPC_HOST } = require("../constants");
+const { SOL_TEST_TOKEN_BRIDGE_ADDRESS, POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, SOL_TEST_BRIDGE_ADDRESS, CHAIN_ID_POLYGON, CHAIN_ID_SOLANA, USDC_TEST_TOKEN, TARGET_CONTRACT, WORMHOLE_RPC_HOST } = require("../constants");
 
 
-/* 1. attest token 
+/* 
+0. get test token 
+    - i actually found USDC faucet here: https://usdcfaucet.com/, but it's probably more convenient to your own contract
+1. attest token if necessary 
     - I did this via the token bridge UI on devnet: https://wormhole-foundation.github.io/example-token-bridge-ui/
-
+2. transfer - code examples from: 
+    - https://github.com/wormhole-foundation/wormhole/tree/main/sdk/js
+    - https://github.com/wormhole-foundation/wormhole/blob/main/sdk/js/src/token_bridge/__tests__/solana-integration.ts
 */
 
 async function transfer() {
@@ -28,13 +35,13 @@ async function transfer() {
   const provider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
   const signer = new ethers.Wallet(POLYGON_PRIVATE_KEY, provider);
   // create a keypair for Solana
-  const keypair = Keypair.fromSecretKey(SOLANA_PRIVATE_KEY);
+  const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE_KEY));
   const payerAddress = keypair.publicKey.toString();
 
 
   // find the associated token account
   const fromAddress = (
-    await Wormhole.getAssociatedTokenAddress(
+    await getAssociatedTokenAddress(
       new PublicKey(USDC_TEST_TOKEN),
       keypair.publicKey
     )
@@ -46,8 +53,8 @@ async function transfer() {
   // Submit transaction - results in a Wormhole message being published
   const transaction = await Wormhole.transferFromSolana(
     connection,
-    SOL_BRIDGE_ADDRESS,
-    SOL_TOKEN_BRIDGE_ADDRESS,
+    SOL_TEST_BRIDGE_ADDRESS,
+    SOL_TEST_TOKEN_BRIDGE_ADDRESS,
     payerAddress,
     fromAddress,
     USDC_TEST_TOKEN,
@@ -83,7 +90,7 @@ async function transfer() {
     );
   }
   const sequence = Wormhole.parseSequenceFromLogSolana(info);
-  const emitterAddress = await Wormhole.getEmitterAddressSolana(SOL_TOKEN_BRIDGE_ADDRESS);
+  const emitterAddress = await Wormhole.getEmitterAddressSolana(SOL_TEST_TOKEN_BRIDGE_ADDRESS);
   // Fetch the signedVAA from the Wormhole Network (this may require retries while you wait for confirmation)
   const { signedVAA } = await Wormhole.getSignedVAAWithRetry(
     WORMHOLE_RPC_HOST,
@@ -95,4 +102,13 @@ async function transfer() {
   await Wormhole.redeemOnEth(POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, signer, signedVAA);
 }
 
-transfer();
+async function main() {
+  try {
+    await transfer();
+    console.log('Transfer successful!');
+  } catch (err) {
+    console.error('Transfer failed:', err);
+  }
+}
+
+main();

@@ -13,7 +13,7 @@ const CHAIN_ID_SOLANA = 1;
 const USDC_TEST_TOKEN = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 // Holding contract deployed on sepolia testnet 
-const TARGET_CONTRACT = "";
+const TARGET_CONTRACT = "0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb"; // this is just any contract rn 
 
 const WORMHOLE_RPC_HOST = ["http://guardian:7071"];
 

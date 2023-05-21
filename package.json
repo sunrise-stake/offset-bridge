@@ -2,7 +2,9 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.17",
     "@ethersproject/units": "^5.7.0",
+    "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.76.0",
+    "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2"
   },
