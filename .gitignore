@@ -217,6 +217,6 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,node
 
-node_modules
-target
+node_modules/
+target/
 token-swap/sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN.json
