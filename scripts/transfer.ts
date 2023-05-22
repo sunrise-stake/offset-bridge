@@ -1,4 +1,6 @@
 // Transfer from Solana to Ethereum using Wormhole SDK 
+import * as os from "os";
+
 const { ethers } = require("ethers");
 require("dotenv").config(({ path: ".env" }));
 const POLYGON_PRIVATE_KEY = process.env.POLYGON_PRIVATE_KEY;
@@ -38,7 +40,7 @@ async function transfer() {
   const provider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
   const signer = new ethers.Wallet(POLYGON_PRIVATE_KEY, provider);
   // create a keypair for Solana
-  const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE_KEY));
+  const keypair = SOLANA_PRIVATE_KEY ? Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE_KEY)) : Keypair.fromSecretKey(Buffer.from(require(os.homedir() + '/.config/solana/id.json')));
   const payerAddress = keypair.publicKey.toString();
 
 
@@ -51,10 +53,11 @@ async function transfer() {
   ).toString();
 
   // const connection = new Connection(SOLANA_HOST, "confirmed");
-  const connection = new Connection(clusterApiUrl("devnet"));
+  const connection = new Connection(clusterApiUrl("devnet"), "finalized");
 
 
-  const amount = parseUnits("1", 9).toBigInt();
+  // Send 1 USDC
+  const amount = parseUnits("1", 6).toBigInt();
   // Submit transaction - results in a Wormhole message being published
   const transaction = await Wormhole.transferFromSolana(
     connection,
@@ -84,6 +87,8 @@ async function transfer() {
   );
   await connection.confirmTransaction(txid);
 
+  console.log("Transaction confirmed:", txid);
+
   // Get the sequence number and emitter address required to fetch the signedVAA of our message
   const info = await connection.getTransaction(txid);
   if (!info) {
@@ -93,6 +98,10 @@ async function transfer() {
   }
   const sequence = Wormhole.parseSequenceFromLogSolana(info);
   const emitterAddress = await Wormhole.getEmitterAddressSolana(SOL_TEST_TOKEN_BRIDGE_ADDRESS);
+
+  console.log("Emitter address:", emitterAddress);
+  console.log("Getting signed VAA from the Wormhole Network...");
+
   // Fetch the signedVAA from the Wormhole Network (this may require retries while you wait for confirmation)
   const { signedVAA } = await Wormhole.getSignedVAAWithRetry(
     WORMHOLE_RPC_HOST,
@@ -100,7 +109,11 @@ async function transfer() {
     emitterAddress,
     sequence
   );
-  // Redeem on Ethereum
+
+  console.log("Signed VAA:", signedVAA);
+  console.log("Redeeming on Polygon...");
+
+  // Redeem on Ethereum (Polygon in this case)
   await Wormhole.redeemOnEth(POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, signer, signedVAA);
 }
 
