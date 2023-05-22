@@ -1,5 +1,6 @@
 // Transfer from Solana to Ethereum using Wormhole SDK 
 import * as os from "os";
+import {NodeHttpTransport} from "@improbable-eng/grpc-web-node-http-transport";
 
 const { ethers } = require("ethers");
 require("dotenv").config(({ path: ".env" }));
@@ -103,18 +104,21 @@ async function transfer() {
   console.log("Getting signed VAA from the Wormhole Network...");
 
   // Fetch the signedVAA from the Wormhole Network (this may require retries while you wait for confirmation)
-  const { signedVAA } = await Wormhole.getSignedVAAWithRetry(
+  const { vaaBytes } = await Wormhole.getSignedVAAWithRetry(
     WORMHOLE_RPC_HOST,
     CHAIN_ID_SOLANA,
     emitterAddress,
-    sequence
+    sequence,
+      {
+        transport: NodeHttpTransport(),
+      }
   );
 
-  console.log("Signed VAA:", signedVAA);
+  console.log("Signed VAA:", vaaBytes);
   console.log("Redeeming on Polygon...");
 
   // Redeem on Ethereum (Polygon in this case)
-  await Wormhole.redeemOnEth(POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, signer, signedVAA);
+  await Wormhole.redeemOnEth(POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, signer, vaaBytes);
 }
 
 async function main() {

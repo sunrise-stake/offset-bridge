@@ -18,8 +18,8 @@ const USDC_TEST_TOKEN = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"; // inter
 // Holding contract deployed on sepolia testnet 
 const TARGET_CONTRACT = "0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb"; // this is just any contract rn 
 
-const WORMHOLE_RPC_HOST = ["http://guardian:7071"];
-// const WORMHOLE_RPC_HOST = ["https://wormhole-v2-testnet-api.certus.one"];
+// const WORMHOLE_RPC_HOST = ["http://guardian:7071"];
+const WORMHOLE_RPC_HOST = ["https://wormhole-v2-testnet-api.certus.one"];
 
 
 module.exports = { WORMHOLE_RPC_HOST, POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS, SOL_BRIDGE_ADDRESS, SOL_TEST_BRIDGE_ADDRESS, SOL_TEST_TOKEN_BRIDGE_ADDRESS, USDC_TEST_TOKEN, CHAIN_ID_POLYGON, CHAIN_ID_SOLANA, TARGET_CONTRACT };

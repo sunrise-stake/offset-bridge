@@ -7,6 +7,9 @@ dependencies:
   '@ethersproject/units':
     specifier: ^5.7.0
     version: 5.7.0
+  '@improbable-eng/grpc-web-node-http-transport':
+    specifier: ^0.15.0
+    version: 0.15.0(@improbable-eng/grpc-web@0.15.0)
   '@solana/spl-token':
     specifier: ^0.3.7
     version: 0.3.7(@solana/web3.js@1.76.0)
@@ -16,9 +19,6 @@ dependencies:
   '@types/node':
     specifier: ^20.2.3
     version: 20.2.3
-  bs58:
-    specifier: ^5.0.0
-    version: 5.0.0
   dotenv:
     specifier: ^16.0.3
     version: 16.0.3
@@ -28,6 +28,9 @@ dependencies:
   ts-node:
     specifier: ^10.9.1
     version: 10.9.1(@types/node@20.2.3)(typescript@5.0.4)
+  typescript:
+    specifier: ^5.0.4
+    version: 5.0.4
 
 packages:
 
@@ -618,6 +621,14 @@ packages:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
       graphql: 16.6.0
+    dev: false
+
+  /@improbable-eng/grpc-web-node-http-transport@0.15.0(@improbable-eng/grpc-web@0.15.0):
+    resolution: {integrity: sha512-HLgJfVolGGpjc9DWPhmMmXJx8YGzkek7jcCFO1YYkSOoO81MWRZentPOd/JiKiZuU08wtc4BG+WNuGzsQB5jZA==}
+    peerDependencies:
+      '@improbable-eng/grpc-web': '>=0.13.0'
+    dependencies:
+      '@improbable-eng/grpc-web': 0.15.0(google-protobuf@3.21.2)
     dev: false
 
   /@improbable-eng/grpc-web@0.14.1(google-protobuf@3.21.2):

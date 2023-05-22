@@ -2,13 +2,14 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.17",
     "@ethersproject/units": "^5.7.0",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.76.0",
     "@types/node": "^20.2.3",
-    "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
   },
   "name": "bridge",
   "version": "1.0.0",
