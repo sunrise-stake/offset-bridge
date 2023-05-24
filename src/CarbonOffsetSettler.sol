@@ -8,7 +8,7 @@ import "interfaces/IUniswapV2Router02.sol";
 import "../lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "forge-std/console.sol";
-import "@toucan/contracts/RetirementCertificates.sol";
+import "@toucan/RetirementCertificates.sol";
 
 /*
  * Only the Redeem Script on Polygon can call this contract.
