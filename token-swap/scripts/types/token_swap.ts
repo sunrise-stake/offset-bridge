@@ -48,8 +48,8 @@ export type TokenSwap = {
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "u64"
+          "name": "routeInfo",
+          "type": "bytes"
         }
       ]
     }
@@ -124,8 +124,8 @@ export const IDL: TokenSwap = {
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "u64"
+          "name": "routeInfo",
+          "type": "bytes"
         }
       ]
     }
