@@ -17,12 +17,17 @@ contract HoldingContract is Ownable {
     // USDC token contract
     address private usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
 
+    // Event emitted when funds are used to offset emissions
     event Offset(
         address indexed tco2,
         address indexed beneficiary,
         string beneficiaryName,
         uint256 amount
     );
+
+    // Errors
+    error InsufficientFunds();
+    error InvalidRetireContract();
 
     constructor(
         address newTco2,
@@ -34,10 +39,16 @@ contract HoldingContract is Ownable {
         beneficiaryName = newBeneficiaryName;
     }
 
+    /*
+     * @notice Set the address of the CarbonOffsetSettler contract
+     */
     function setRetireContract(address newRetireContract) external onlyOwner {
         retireContract = newRetireContract;
     }
 
+    /*
+     * @notice Set the details for the beneficiary of the carbon offset
+     */
     function setBeneficiary(
         address newBeneficiary,
         string calldata newBeneficiaryName
@@ -46,11 +57,20 @@ contract HoldingContract is Ownable {
         beneficiaryName = newBeneficiaryName;
     }
 
+    /*
+     * @notice Set the address of the TCO2 token contract
+     */
     function setTCO2(address newTco2) external onlyOwner {
         tco2 = newTco2;
     }
 
+    /*
+     * Offset carbon emissions by sending USDC to the CarbonOffsetSettler contract and using the funds to retire carbon tokens.
+     */
     function offset(string calldata entity, string calldata message) external {
+        if (retireContract == address(0)) revert InvalidRetireContract();
+        if (IERC20(usdc).balanceOf(address(this)) == 0)
+            revert InsufficientFunds();
         IERC20 usdcToken = IERC20(usdc);
         uint256 usdcBalance = usdcToken.balanceOf(address(this));
         usdcToken.transfer(retireContract, usdcBalance);
