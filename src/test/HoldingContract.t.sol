@@ -1,4 +1,5 @@
-// SP
+// SPDX-License-Identifier: MIT
+pragma solidity >0.8.0;
 
 import "forge-std/Test.sol";
 import "../HoldingContract.sol";
@@ -6,7 +7,6 @@ import "../CarbonOffsetSettler.sol";
 import "forge-std/console.sol";
 
 contract HoldingContractTest is Test {
-    Vm internal immutable vm = Vm(HEVM_ADDRESS);
     HoldingContract holdingContract;
     CarbonOffsetSettler carbonOffsetSettler;
     address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
@@ -58,13 +58,13 @@ contract HoldingContractTest is Test {
     }
 
     function test_revert_Offset_insufficientFunds() public {
-        vm.expectRevert(InsufficientFunds());
+        vm.expectRevert(InsufficientFunds.selector);
         holdingContract.offset("entity", "msg");
     }
 
     function test_revert_Offset_invalidRetireContract() public {
-        vm.expectRevert(InvalidRetireContract());
         holdingContract.setRetireContract(address(0));
+        vm.expectRevert(InvalidRetireContract.selector);
         holdingContract.offset("entity", "msg");
     }
 
@@ -85,19 +85,20 @@ contract HoldingContractTest is Test {
             )
         );
 
-        // Call offset and emit event
-        vm.expectEmit(true, true, true);
+        // Call offset and emit event with new details
+        vm.expectEmit(true, true, true, true);
         emit Offset(
             holdingContract.tco2(),
             newBeneficiary,
             newBeneficiaryName,
             amount
         );
+        holdingContract.offset("entity", "msg");
     }
 
     function test_revert_setRetirementDetails_onlyOwner() public {
         vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
-        // vm.expectRevert();
+        vm.expectRevert("Ownable: caller is not the owner");
         holdingContract.setBeneficiary(address(0), "0x0");
     }
 }
