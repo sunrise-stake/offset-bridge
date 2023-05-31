@@ -33,7 +33,7 @@ contract HoldingContract is Ownable {
         address newTco2,
         address newBeneficiary,
         string memory newBeneficiaryName
-    ) public {
+    ) {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
@@ -41,13 +41,19 @@ contract HoldingContract is Ownable {
 
     /*
      * @notice Set the address of the CarbonOffsetSettler contract
+     * @param newRetireContract address of the CarbonOffsetSettler contract
      */
     function setRetireContract(address newRetireContract) external onlyOwner {
+        if (newRetireContract == address(0)) revert InvalidRetireContract();
         retireContract = newRetireContract;
     }
 
+    // ------------------ Setting retirement details (admin-only, ensure valid values) ------------------ //
+
     /*
      * @notice Set the details for the beneficiary of the carbon offset
+     * @param newBeneficiary address of the beneficiary (in case you're retiring for someone else)
+     * @param newBeneficiaryName name of the beneficiary
      */
     function setBeneficiary(
         address newBeneficiary,
@@ -59,16 +65,19 @@ contract HoldingContract is Ownable {
 
     /*
      * @notice Set the address of the TCO2 token contract
+     * @param newTco2 address of the TCO2 token contract
      */
     function setTCO2(address newTco2) external onlyOwner {
         tco2 = newTco2;
     }
 
+    // --------------------------------- Permissionless retiring --------------------------------------- //
     /*
-     * Offset carbon emissions by sending USDC to the CarbonOffsetSettler contract and using the funds to retire carbon tokens.
+     * @notice Offset carbon emissions by sending USDC to the CarbonOffsetSettler contract and using the funds to retire carbon tokens.
+     * @param entity name of the entity that does the retirement (Sunrise Stake)
+     * @param message retirement message
      */
     function offset(string calldata entity, string calldata message) external {
-        if (retireContract == address(0)) revert InvalidRetireContract();
         if (IERC20(usdc).balanceOf(address(this)) == 0)
             revert InsufficientFunds();
         IERC20 usdcToken = IERC20(usdc);

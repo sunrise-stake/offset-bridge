@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: MIT
+pragma solidity >0.8.0;
+
+import "forge-std/Script.sol";
+import {CarbonOffsetSettler} from "../src/CarbonOffsetSettler.sol";
+import {HoldingContract} from "../src/HoldingContract.sol";
+
+contract Deploy is Script {
+    CarbonOffsetSettler retireContract;
+    HoldingContract holdingContract;
+
+    function run() external {
+        //read env variables and choose EOA for transaction signing
+        uint256 deployerPrivateKey = vm.envUint("POLYGON_PRIVATE_KEY");
+        address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
+        address beneficiary = address(0);
+        string memory beneficiaryName = "0x0";
+
+        vm.startBroadcast(deployerPrivateKey);
+        retireContract = new CarbonOffsetSettler();
+        holdingContract = new HoldingContract(
+            tco2,
+            beneficiary,
+            beneficiaryName
+        );
+        holdingContract.setRetireContract(address(retireContract));
+
+        console.log("Retire contract deployed to: %s", address(retireContract));
+        console.log(
+            "Holding contract deployed to: %s",
+            address(holdingContract)
+        );
+        vm.stopBroadcast();
+    }
+}

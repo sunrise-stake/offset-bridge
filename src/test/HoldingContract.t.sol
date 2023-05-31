@@ -63,15 +63,14 @@ contract HoldingContractTest is Test {
     }
 
     function test_revert_Offset_invalidRetireContract() public {
-        holdingContract.setRetireContract(address(0));
         vm.expectRevert(InvalidRetireContract.selector);
-        holdingContract.offset("entity", "msg");
+        holdingContract.setRetireContract(address(0));
     }
 
     function test_setRetirementDetails() public {
         // Set new retirement details
         address newBeneficiary = 0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb;
-        string memory newBeneficiaryName = "contract";
+        string memory newBeneficiaryName = "Sunrise Stake";
         holdingContract.setBeneficiary(newBeneficiary, newBeneficiaryName);
 
         // Fund holding contract with USDC
@@ -81,7 +80,7 @@ contract HoldingContractTest is Test {
             abi.encodeWithSignature(
                 "transfer(address,uint256)",
                 address(holdingContract),
-                100 * 1e6
+                amount
             )
         );
 
@@ -93,7 +92,7 @@ contract HoldingContractTest is Test {
             newBeneficiaryName,
             amount
         );
-        holdingContract.offset("entity", "msg");
+        holdingContract.offset("Sunrise", "Climate-Positive Staking on Solana");
     }
 
     function test_revert_setRetirementDetails_onlyOwner() public {
