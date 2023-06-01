@@ -37,14 +37,15 @@ contract HoldingContractTest is Test {
     function test_Offset() public {
         // fund holding contract with USDC
         uint amount = 100 * 1e6;
-        vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
-        usdc.call(
-            abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                address(holdingContract),
-                amount
-            )
-        );
+        deal(usdc, address(holdingContract), amount);
+        // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        // usdc.call(
+        //     abi.encodeWithSignature(
+        //         "transfer(address,uint256)",
+        //         address(holdingContract),
+        //         amount
+        //     )
+        // );
 
         // Call offset and emit event
         vm.expectEmit(true, true, true, true);
@@ -75,14 +76,15 @@ contract HoldingContractTest is Test {
 
         // Fund holding contract with USDC
         uint amount = 100 * 1e6;
-        vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
-        usdc.call(
-            abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                address(holdingContract),
-                amount
-            )
-        );
+        deal(usdc, address(holdingContract), amount);
+        // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        // usdc.call(
+        //     abi.encodeWithSignature(
+        //         "transfer(address,uint256)",
+        //         address(holdingContract),
+        //         amount
+        //     )
+        // );
 
         // Call offset and emit event with new details
         vm.expectEmit(true, true, true, true);

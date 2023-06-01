@@ -31,5 +31,18 @@ contract Deploy is Script {
             address(holdingContract)
         );
         vm.stopBroadcast();
+
+        // impersonate a whale to fund our contract with usdc
+        // forge script scripts/deploy.s.sol:Deploy --sender 0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307 --fork-url http://localhost:8545  --broadcast --unlocked
+        vm.startBroadcast(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+        usdc.call(
+            abi.encodeWithSignature(
+                "transfer(address,uint256)",
+                address(holdingContract),
+                100 * 1e6
+            )
+        );
+        vm.stopBroadcast();
     }
 }

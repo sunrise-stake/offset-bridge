@@ -12,7 +12,8 @@ const signer = new ethers.Wallet(POLYGON_PRIVATE_KEY, provider);
 async function redeem() {
     console.log("Redeeming Wormhole message on Polygon and depositing the funds into the Holding Contract...");
     const receipt = await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, signer, vaaBytes);
-    // console.log("Redeem was successful! Transaction: ", txid)
+    const txid = receipt.transactionHash;
+    console.log("Redeem was successful! Transaction: ", txid)
 }
 
 // Call offset function on HoldingContract to retire carbon tokens using the funds 
