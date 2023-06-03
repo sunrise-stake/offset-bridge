@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "redeemAndRetire": "ts-node scripts/redeemAndRetire.ts"
+    "holding": "ts-node scripts/redeemAndRetire.ts",
+    "nft": "ts-node scripts/transferNFT.ts"
   },
   "keywords": [],
   "author": "",

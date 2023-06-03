@@ -1,6 +1,14 @@
-const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
+const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a"; // test!! 
 // still test addresses! 
-const HOLDING_CONTRACT_ADDRESS = "0x1E63E3B3B1a2903F22c79d566Daeb7921894EFEe";
+const HOLDING_CONTRACT_ADDRESS = "0x6BaDED26EdbF029104A56C177d0a67218ef9F1AD";
+//on testnet "0x24a15f3FA07F85A5C2E569A1429d39a553A9c5A6";
+//"0x1E63E3B3B1a2903F22c79d566Daeb7921894EFEe";
+
+const POLYGON_NFT_BRIDGE_ADDRESS = "0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf";
+
+// https://app.toucan.earth/contracts 
+const TOUCAN_NFT_ADDRESS = "0x5e377f16E4ec6001652befD737341a28889Af002";
+
 const HOLDING_CONTRACT_ABI = [
     {
         "inputs": [
@@ -232,4 +240,6 @@ const HOLDING_CONTRACT_ABI = [
     }
 ];
 
-module.exports = { POLYGON_TOKEN_BRIDGE_ADDRESS, HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS };
+const TOUCAN_NFT_ABI = [{ "inputs": [{ "internalType": "address", "name": "_logic", "type": "address" }, { "internalType": "address", "name": "", "type": "address" }, { "internalType": "bytes", "name": "_data", "type": "bytes" }], "stateMutability": "payable", "type": "constructor" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "address", "name": "previousAdmin", "type": "address" }, { "indexed": false, "internalType": "address", "name": "newAdmin", "type": "address" }], "name": "AdminChanged", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "beacon", "type": "address" }], "name": "BeaconUpgraded", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "implementation", "type": "address" }], "name": "Upgraded", "type": "event" }, { "stateMutability": "payable", "type": "fallback" }, { "stateMutability": "payable", "type": "receive" }];
+
+module.exports = { POLYGON_TOKEN_BRIDGE_ADDRESS, HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS, TOUCAN_NFT_ABI, TOUCAN_NFT_ADDRESS };
