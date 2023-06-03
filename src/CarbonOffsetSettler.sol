@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >0.8.0;
 
-import "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import "../lib/OffsetHelper/contracts/interfaces/IToucanPoolToken.sol";
-import "../lib/OffsetHelper/contracts/interfaces/IToucanCarbonOffsets.sol";
-import "./interfaces/IUniswapV2Router02.sol";
-import "../lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import "../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
+import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import "lib/OffsetHelper/contracts/interfaces/IToucanPoolToken.sol";
+import "lib/OffsetHelper/contracts/interfaces/IToucanCarbonOffsets.sol";
+import "src/interfaces/IUniswapV2Router02.sol";
+import "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "forge-std/console.sol";
-import "@toucan/RetirementCertificates.sol";
+import "toucan/RetirementCertificates.sol";
 import "forge-std/console.sol";
 
 contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
