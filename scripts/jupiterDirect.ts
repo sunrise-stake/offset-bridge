@@ -9,7 +9,7 @@ import {
     VersionedTransaction
 } from '@solana/web3.js';
 import { Jupiter, RouteInfo, TOKEN_LIST_URL } from '@jup-ag/core';
-import {ENV, STARTING_MINT_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, JupiterToken, USER_KEYPAIR} from "./constants";
+import {ENV, WRAPPED_SOL_TOKEN_MINT, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, JupiterToken, USER_KEYPAIR} from "./constants";
 
 (async () => {
     // Setup Solana RPC connection
@@ -31,7 +31,7 @@ import {ENV, STARTING_MINT_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOI
 
     const routeMap: Map<string, string[]> = jupiter.getRouteMap()
 
-    const inputToken = tokens.find((t) => t.address == STARTING_MINT_ADDRESS);
+    const inputToken = tokens.find((t) => t.address == WRAPPED_SOL_TOKEN_MINT);
     const outputToken = tokens.find((t) => t.address == BRIDGE_INPUT_MINT_ADDRESS);
 
     if (!inputToken || !outputToken) {

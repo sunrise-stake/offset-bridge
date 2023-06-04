@@ -4,7 +4,7 @@ import {
     SystemProgram,
     Transaction
 } from "@solana/web3.js";
-import {STARTING_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
+import {WRAPPED_SOL_TOKEN_MINT, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
 import {createSyncNativeInstruction, getAssociatedTokenAddressSync} from "spl-token-latest";
 import {tokenAuthority} from "./util";
 
@@ -12,7 +12,7 @@ const lamportsToSend = 1_000_000; // 0.1 SOL
 
 (async () => {
     const connection = new Connection(SOLANA_RPC_ENDPOINT);
-    const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(STARTING_MINT_ADDRESS), tokenAuthority, true);
+    const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
 
     const tx = new Transaction().add(
         SystemProgram.transfer({
