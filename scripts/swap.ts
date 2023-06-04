@@ -5,6 +5,7 @@ import {
     PublicKey,
     VersionedTransaction, MessageV0, TransactionMessage, TransactionInstruction, AccountMeta
 } from '@solana/web3.js';
+import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from '@jup-ag/core';
 import {
     ENV,
@@ -15,10 +16,8 @@ import {
     USER_KEYPAIR,
     PROGRAM_ID, STATE_ADDRESS
 } from "./constants";
-import {Program, AnchorProvider } from "@coral-xyz/anchor";
+import {Program, AnchorProvider, Wallet} from "@coral-xyz/anchor";
 import {IDL, TokenSwap} from "./types/token_swap";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {tokenAuthority} from "./util";
 
 (async () => {
@@ -28,6 +27,8 @@ import {tokenAuthority} from "./util";
     // Fetch token list from Jupiter API
     // This token list contains token meta data
     const tokens: JupiterToken[] = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
+
+    console.log("TOKEN AUTHORITY", tokenAuthority.toBase58())
 
     //  Load Jupiter
     const jupiter = await Jupiter.load({
@@ -77,7 +78,7 @@ import {tokenAuthority} from "./util";
     const jupiterTx = swapTransaction as VersionedTransaction;
 
     // create the swap instruction proxying the jupiter instruction
-    const provider = new AnchorProvider(connection, new NodeWallet(USER_KEYPAIR), {});
+    const provider = new AnchorProvider(connection, new Wallet(USER_KEYPAIR), {});
     const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
 
     const message = jupiterTx.message as MessageV0;
@@ -104,7 +105,8 @@ import {tokenAuthority} from "./util";
 
     // create the swap instruction
     const swapIx = await program.methods.swap(routeInfo).accounts({
-        state: STATE_ADDRESS
+        state: STATE_ADDRESS,
+        jupiterProgram: JUPITER_PROGRAM_ID,
     }).remainingAccounts([
         ...accountMetas
     ]).instruction()

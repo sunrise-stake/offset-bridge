@@ -12,7 +12,7 @@ Note: This is a work in progress, and these steps will change as the project evo
 1. Initialize
 
 ```shell
-pnpm run initialize
+yarn initialize
 ```
 
 Sets up a new State on solana and derives a Token Authority PDA.
@@ -21,7 +21,7 @@ This should be done only once.
 2. Wrap SOL
 
 ```shell
-pnpm run wrap-sol
+yarn wrap-sol
 ```
 
 Transfers SOL to the Solana "Token Authority" PDA
@@ -32,11 +32,11 @@ NOTE 2: When paying with an SPL Token like USDC, this step can be skipped
 3. Swap SOL for USDCpo
 
 ```shell
-pnpm run swap
+yarn swap
 ```
 
 4. Bridge USDCpo to Polygon
 
 ```shell
-pnpm run bridge
+yarn bridge
 ```

@@ -1,7 +1,7 @@
 // A helper function to help us find which output pair is possible
 import {BRIDGE_INPUT_MINT_ADDRESS, PROGRAM_ID, SOL_TOKEN_BRIDGE_ADDRESS, STATE_ADDRESS, JupiterToken} from "./constants";
 import {PublicKey} from "@solana/web3.js";
-import {getAssociatedTokenAddressSync} from "@solana/spl-token";
+import {getAssociatedTokenAddressSync} from "spl-token-latest";
 
 const getPossiblePairsTokenInfo = ({
                                        tokens,

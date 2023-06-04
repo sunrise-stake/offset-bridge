@@ -1,4 +1,4 @@
-// Transfer from Solana to Ethereum using Wormhole SDK 
+// Transfer from Solana to Polygon using Wormhole SDK
 import {PublicKey, Connection, Keypair, TransactionInstruction} from "@solana/web3.js";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import {parseUnits} from "@ethersproject/units";
@@ -7,7 +7,7 @@ import {ethers} from "ethers";
 import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
-  POLYGON_TEST_TOKEN_BRIDGE_ADDRESS,
+  POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, POLYGON_TOKEN_BRIDGE_ADDRESS,
   PROGRAM_ID,
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
@@ -196,6 +196,7 @@ async function bridge() {
   const sequence = Wormhole.parseSequenceFromLogSolana(info);
   const emitterAddress = await Wormhole.getEmitterAddressSolana(SOL_TOKEN_BRIDGE_ADDRESS);
 
+  console.log("Sequence:", sequence);
   console.log("Emitter address:", emitterAddress);
   console.log("Getting signed VAA from the Wormhole Network...");
 
@@ -210,11 +211,11 @@ async function bridge() {
       }
   );
 
-  console.log("Signed VAA:", vaaBytes);
+  console.log("Signed VAA:", Buffer.from(vaaBytes).toString("base64"));
   console.log("Redeeming on Polygon...");
 
   // Redeem on Ethereum (Polygon in this case)
-  await Wormhole.redeemOnEth(POLYGON_TEST_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes);
+  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes);
 }
 
 async function main() {

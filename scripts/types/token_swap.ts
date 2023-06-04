@@ -40,6 +40,11 @@ export type TokenSwap = {
           "name": "state",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "jupiterProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -163,6 +168,11 @@ export const IDL: TokenSwap = {
       "accounts": [
         {
           "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "jupiterProgram",
           "isMut": false,
           "isSigner": false
         }

@@ -1,6 +1,6 @@
 import {ConfirmOptions, Connection, PublicKey, sendAndConfirmTransaction, Signer, Transaction} from "@solana/web3.js";
 import {STARTING_MINT_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
-import {createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {createAssociatedTokenAccountInstruction, getAssociatedTokenAddressSync, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "spl-token-latest";
 import {tokenAuthority} from "./util";
 
 // copied from @solana/spl-token but allows owner off curve (ie PDA)
@@ -13,7 +13,7 @@ async function createAssociatedTokenAccount(
     programId = TOKEN_PROGRAM_ID,
     associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
 ): Promise<PublicKey> {
-    const associatedToken = await getAssociatedTokenAddress(mint, owner, true);
+    const associatedToken = getAssociatedTokenAddressSync(mint, owner, true);
 
     const transaction = new Transaction().add(
         createAssociatedTokenAccountInstruction(
