@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "types": ["mocha", "chai"],
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "target": "esnext",
+    "esModuleInterop": true,
+    "preserveSymlinks": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true
+  }
+}
