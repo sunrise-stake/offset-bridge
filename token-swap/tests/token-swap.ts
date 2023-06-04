@@ -1,6 +1,7 @@
-import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
-import { TokenSwap } from "../target/types/token_swap";
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { Keypair } from "@solana/web3.js";
+import { TokenSwap } from "../../scripts/types/token_swap";
 
 describe("token-swap", () => {
   // Configure the client to use the local cluster.
@@ -10,7 +11,9 @@ describe("token-swap", () => {
 
   it("Is initialized!", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
+    const tx = await program.methods.initialize(
+        Keypair.generate().publicKey,
+    ).rpc();
     console.log("Your transaction signature", tx);
   });
 });

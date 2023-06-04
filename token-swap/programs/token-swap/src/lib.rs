@@ -1,6 +1,9 @@
 mod util;
 
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+use crate::util::bridge::Wormhole;
+use crate::util::swap::Jupiter;
 
 declare_id!("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 
@@ -8,25 +11,12 @@ declare_id!("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 pub mod token_swap {
     use anchor_lang::solana_program::instruction::Instruction;
     use anchor_lang::solana_program::program;
-    use crate::util::token::create_token_account;
+    use crate::util::bridge::call_bridge;
+    use crate::util::token::{approve_delegate};
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, input_mint: Pubkey, output_mint: Pubkey) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, output_mint: Pubkey) -> Result<()> {
         ctx.accounts.state.output_mint = output_mint;
-        ctx.accounts.state.output_account = output_account;
-        let state_address = ctx.accounts.state.key();
-        let (input_account, input_account_bump) = State::get_input_account(&state_address);
-
-        // // create ATA for the input and output mints
-        // create_token_account(
-        //     &ctx.accounts.associated_token_program,
-        //     payer,
-        //     &ctx.accounts.input_token_account,
-        //     state_address,
-        //     &ctx.accounts.input_mint,
-        //     &ctx.accounts.system_program,
-        //     &ctx.accounts.token_program,
-        // )?;
 
         Ok(())
     }
@@ -34,53 +24,62 @@ pub mod token_swap {
     pub fn swap(ctx: Context<Swap>, route_info: Vec<u8>) -> Result<()> {
 
         let mut router_accounts = vec![];
-        // router_accounts.push(
-        //     AccountMeta::new(*account.key, is_signer)
-        // );
         let state_address = ctx.accounts.state.key();
-        let (input_account, input_account_bump) = State::get_input_account(&state_address);
-        let mut i = 0;
+        let (token_authority, token_authority_bump) = State::get_token_authority(&state_address);
         for account in &ctx.remaining_accounts[..] {
-            let is_signer = account.key == &input_account;
-            // if is_signer {
-            //     msg!("{}, Account: {} is signer: {}", i, account.key, is_signer);
-            // }
-            i = i + 1;
+            let is_signer = account.key == &token_authority;
             router_accounts.push(if account.is_writable {
                 AccountMeta::new(*account.key, is_signer)
             } else {
                 AccountMeta::new_readonly(*account.key, is_signer)
             });
         }
+
+        // TODO: Check that the jupiter output account (the account that receives the tokens)
+        // is the account in the state
+
+        // TODO: Oracle check to ensure the price is correct
+
         let swap_ix = Instruction {
             program_id: jupiter_cpi::ID,
             accounts: router_accounts,
             data: route_info.clone(),
         };
 
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[input_account_bump]];
+        let authority_seeds= [State::SEED, state_address.as_ref(), &[token_authority_bump]];
 
         program::invoke_signed(
             &swap_ix,
             &ctx.remaining_accounts[..],
             &[&authority_seeds[..]],
         )?;
-        // let swap_ix = Instruction {
-        //     program_id: jupiter_cpi::ID,
-        //     accounts,
-        //     data: jupiter_override::Route {
-        //         swap_leg,
-        //         in_amount: quote_response.in_amount,
-        //         quoted_out_amount: 0,
-        //         slippage_bps: 0,
-        //         platform_fee_bps: 0,
-        //     }.data(),
-        // };
 
         Ok(())
     }
 
-    // pub fn bridge()
+    pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
+        let state_address = ctx.accounts.state.key();
+        let authority_seeds= [State::SEED, state_address.as_ref(), &[*ctx.bumps.get("token_account_authority").unwrap()]];
+
+        approve_delegate(
+            amount,
+            &ctx.accounts.token_account.to_account_info(),
+            &ctx.accounts.token_account_authority.to_account_info(),
+            &ctx.accounts.bridge_authority.to_account_info(),
+            &ctx.accounts.token_program,
+            &authority_seeds
+        )?;
+
+        call_bridge(
+            bridge_data,
+            &ctx.remaining_accounts,
+            &ctx.accounts.token_account_authority.to_account_info(),
+            &ctx.accounts.wormhole_program,
+            &authority_seeds
+        )?;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -99,20 +98,44 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
-    pub state: Account<'info, State>
+    pub state: Account<'info, State>,
+    pub jupiter_program: Program<'info, Jupiter>,
+}
+
+#[derive(Accounts)]
+pub struct Bridge<'info> {
+    /// The state account that identifies the mint of the token being transferred through the bridge
+    /// and is also the token account authority
+    pub state: Account<'info, State>,
+    /// The wormhole bridge authority. This is the authority that will sign the bridge transaction
+    /// and therefore needs to be a delegate on the token account.
+    /// It will also be listed in the remainingAccounts list that are populated directly from the generated wormhole transaction on the client
+    /// CHECK: this must be the wormhole token bridge authority signer, or the transaction will fail overall
+    pub bridge_authority: UncheckedAccount<'info>,
+    #[account(
+    seeds = [State::SEED, state.key().as_ref()],
+    bump
+    )]
+    /// CHECK: Derived from the state account
+    pub token_account_authority: UncheckedAccount<'info>,
+    /// The account containing tokens that will be transferred through the bridge
+    #[account(token::authority = token_account_authority.key())]
+    pub token_account: Account<'info, TokenAccount>,
+    pub token_program: Program<'info, Token>,
+    pub wormhole_program: Program<'info, Wormhole>,
 }
 
 #[account]
 pub struct State {
     output_mint: Pubkey,     // The target token mint
-    output_account: Pubkey   // The target token account for the mint (must already exist)
 }
+
 impl State {
     pub const SIZE: usize = 8 + 32 + 32 + 32; // include 8 bytes for the anchor discriminator
 
-    pub const SEED: &'static [u8] = b"input_account";
+    pub const SEED: &'static [u8] = b"input_account"; // TODO rename to token_authority
 
-    pub fn get_input_account(state_address: &Pubkey) -> (Pubkey, u8) {
+    pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
             &[Self::SEED, state_address.as_ref()],
             &id(),
