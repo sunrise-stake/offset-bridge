@@ -12,9 +12,7 @@
     "jsbi": "^4.3.0",
     "node-fetch": "^2.6.11",
     "spl-token-latest": "npm:@solana/spl-token",
-        "dotenv": "^16.1.3",
     "ethers": "^5.7.2"
-
   },
   "devDependencies": {
     "@coral-xyz/anchor-cli": "^0.27.0",
@@ -41,8 +39,7 @@
     "swap": "ts-node scripts/swap.ts",
     "bridge": "ts-node scripts/bridge.ts",
     "redeem": "ts-node scripts/redeemPolygonVAA.ts",
-        "retire": "ts-node scripts/retireFunds.ts"
-
+    "retire": "ts-node scripts/retireFunds.ts"
   },
   "repository": {
     "type": "git",

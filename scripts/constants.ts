@@ -1,8 +1,8 @@
-import {Cluster, PublicKey, Keypair} from "@solana/web3.js";
+import { Cluster, PublicKey, Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import os from "os";
 
-// require("dotenv").config();
+require("dotenv").config();
 
 // Endpoints, connection
 export const ENV: Cluster = (process.env.CLUSTER as Cluster) || "mainnet-beta";
