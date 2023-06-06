@@ -1,0 +1,113 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+note left of User
+TX 1 - Deposit
+end note
+
+User -> RetirementProgram_S: Create ticket for 5 tCO2
+note left
+ticket in "AWAITING_FUNDS" state
+end note
+RetirementProgram_S --> User: <<ticket>>
+User->RetirementProgram_S: Deposit USDC to <<ticket>>
+note right
+USDC to send =
+current price of carbon
+x amount of tCO2 in ticket
++ buffer
+Deposited into token account
+derived from the ticket.
+end note
+RetirementProgram_S->DEX_S: Swap USDC for USDCpo
+DEX_S-->RetirementProgram_S: <<USDCpo>>
+RetirementProgram_S-->User: OK
+
+note left of User
+TX 2 - Retire (Solana)
+end note
+
+note left
+The following step may be
+combined with the previous one,
+if both fit in a single Solana transaction.
+end note
+User->RetirementProgram_S: Retire
+note right
+Set State of ticket to "BRIDGING"
+end note
+RetirementProgram_S->Wormhole_S: Bridge USDCpo to HoldingContract_P
+Wormhole_S-->RetirementProgram_S: <<VAA>>
+RetirementProgram_S-->User: <<VAA>>
+
+note left of User
+TX 3 - Redeem bridged tokens
+end note
+
+User->Wormhole_P: Poll for VAA
+note left
+TODO is this correct?
+end note
+Wormhole_P-->User: <<VAA available>>
+User->HoldingContract_P: Redeem from Bridge
+HoldingContract_P->Wormhole_P:Redeem VAA
+Wormhole_P-->HoldingContract_P: <<USDC>>
+note left
+TODO can we store the originator
+of the bridge here, ie the solana address?
+end note
+HoldingContract_P-->User: <<OK>>
+
+note left of User
+TX 4 - Retire (Polygon)
+end note
+
+User->HoldingContract_P:Retire
+HoldingContract_P->CarbonOffsetSettler_P:Retire x USDC
+CarbonOffsetSettler_P->SushiSwap_P: Swap USDC for 5 NCT
+note left
+The actual amount may differ slightly
+end note
+SushiSwap_P-->CarbonOffsetSettler_P: <<NCT>>
+
+CarbonOffsetSettler_P-->NCTContract_P: Redeem 5 NCT for tCO2
+NCTContract_P-->CarbonOffsetSettler_P:<<tCO2>>
+CarbonOffsetSettler_P->TCO2Contract_P:retireAndMintCertificate
+TCO2Contract_P-->CarbonOffsetSettler_P:<<retirement certificate>>
+CarbonOffsetSettler_P-->HoldingContract_P: <<OK>>
+HoldingContract_P-->User: <<OK>>
+
+note left
+TODO any work required here to convert it to an ERC721?
+end note
+
+note left of User
+TX 5 - Bridge Retirement Certificate
+end note
+
+User->HoldingContract_P:Bridge retirement certificate
+HoldingContract_P->Wormhole_P: Bridge NFT
+Wormhole_P-->HoldingContract_P: <<VAA>>
+HoldingContract_P-->User: <<VAA>>
+
+note left of User
+TX 6 - Redeem Retirement Certificate
+end note
+
+User->Wormhole_S: Poll for VAA
+note left
+TODO is this correct?
+end note
+Wormhole_S-->User: <<VAA available>>
+User->RetirementProgram_S: Redeem ticket (pass VAA)
+RetirementProgram_S->Wormhole_S: Redeem VAA
+Wormhole_S-->RetirementProgram_S: <<Retirement NFT>>
+note right
+ticket in "RETIRED" state
+end note
+RetirementProgram_S-->User:<<Retirement NFT>>
+
+
+@enduml
