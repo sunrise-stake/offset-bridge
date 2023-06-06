@@ -32,22 +32,22 @@ contract Deploy is Script {
         );
 
         // Change beneficiary so that the NFT will be minted to the holding contract - TODO hardcode?
-        holdingContract.setBeneficiary(address(holdingContract));
+        holdingContract.setBeneficiary(address(holdingContract), "Solana");
         vm.stopBroadcast();
 
         // impersonate a whale to fund our contract with usdc. to run:
         // cast rpc anvil_impersonateAccount 0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307
         // forge script scripts/deploy.s.sol:Deploy --sender 0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307 --rpc-url http://localhost:8545  --broadcast --unlocked
-        vm.startBroadcast(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
-        address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
-        // deal(usdc, address(holdingContract), 100 * 1e6);
-        usdc.call(
-            abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                address(holdingContract),
-                100 * 1e6
-            )
-        );
-        vm.stopBroadcast();
+        // vm.startBroadcast(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        // address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+        // // deal(usdc, address(holdingContract), 100 * 1e6);
+        // usdc.call(
+        //     abi.encodeWithSignature(
+        //         "transfer(address,uint256)",
+        //         address(holdingContract),
+        //         100 * 1e6
+        //     )
+        // );
+        // vm.stopBroadcast();
     }
 }

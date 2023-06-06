@@ -21,8 +21,9 @@ export const USER_KEYPAIR =
 export const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkcJ1d4MHS5");
 
-
+// Wormhole 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
+export const POLYGON_TEST_BRIDGE_ADDRESS = "0x0CBE91CF822c73C2315FB05100C2F714765d5c20";
 export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";
 export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe";
 "B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE";
@@ -32,6 +33,9 @@ export const SOL_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLB
 export const SOL_BRIDGE_ADDRESS = "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth";
 export const CHAIN_ID_POLYGON = 5;
 export const CHAIN_ID_SOLANA = 1;
+
+//NFT 
+export const POLYGON_TEST_NFT_BRIDGE_ADDRESS = "0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9";
 
 // Token Mints
 // usdc test token on solana , https://developers.circle.com/developer/docs/usdc-on-testnet#usdc-on-solana-testnet

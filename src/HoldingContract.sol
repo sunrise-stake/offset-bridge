@@ -6,6 +6,9 @@ import "forge-std/console.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
+import "src/interfaces/INFTBridge.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+
 contract HoldingContract is Ownable {
     // Retirement contract (mundo CarbonOffsetSettler)
     address public retireContract;
@@ -13,6 +16,12 @@ contract HoldingContract is Ownable {
     address public tco2;
     address public beneficiary;
     string public beneficiaryName;
+
+    // Wormhole bridge
+    address private bridge = 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
+    // mainnet 0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf
+    // Toucan Retirement Certificate Contract
+    address public certificate = 0x5e377f16E4ec6001652befD737341a28889Af002;
 
     // USDC token contract
     address private usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
@@ -93,5 +102,30 @@ contract HoldingContract is Ownable {
         );
 
         emit Offset(tco2, beneficiary, beneficiaryName, usdcBalance);
+    }
+
+    // --------------------------------- Permissionless bridging using Wormhole --------------------------------------- //
+    function bridgeNFT(uint256 tokenId) external returns (uint256 sequence) {
+        address nft = 0x2230D9a57766E8Af195999A154B7A14ab47D5d04;
+        bytes32 recipient = stringToBytes32(
+            "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq"
+        );
+        ERC721(nft).approve(bridge, tokenId);
+        sequence = INFTBridge(bridge).transferNFT(
+            nft,
+            tokenId,
+            1, //Solana Chain ID
+            recipient, // recipient
+            0 // 0 nonce
+        );
+    }
+
+    function stringToBytes32(
+        string memory str
+    ) public pure returns (bytes32 result) {
+        bytes memory strBytes = bytes(str);
+        assembly {
+            result := mload(add(strBytes, 32))
+        }
     }
 }
