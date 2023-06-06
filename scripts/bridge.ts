@@ -215,7 +215,7 @@ async function bridge() {
   console.log("Redeeming on Polygon...");
 
   // Redeem on Ethereum (Polygon in this case)
-  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes);
+  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes, { gasLimit: 500000, gasPrice: ethers.utils.parseUnits('150', 'gwei') });
 }
 
 async function main() {

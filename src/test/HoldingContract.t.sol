@@ -48,6 +48,8 @@ contract HoldingContractTest is Test {
         // );
 
         // Call offset and emit event
+        assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 100 * 1e6);
+
         vm.expectEmit(true, true, true, true);
         emit Offset(
             holdingContract.tco2(),
@@ -56,6 +58,7 @@ contract HoldingContractTest is Test {
             amount
         );
         holdingContract.offset("entity", "msg");
+        assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 0);
     }
 
     function test_revert_Offset_insufficientFunds() public {

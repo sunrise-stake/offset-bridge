@@ -1,6 +1,6 @@
 // Transfer from Solana to Polygon using Wormhole SDK
 import * as Wormhole from "@certusone/wormhole-sdk";
-import {ethers} from "ethers";
+import { ethers } from "ethers";
 import {
   POLYGON_TOKEN_BRIDGE_ADDRESS,
 } from "./constants";
@@ -18,8 +18,7 @@ async function redeemPolygonVAA() {
   const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
   const ethSigner = new ethers.Wallet(POLYGON_PRIVATE_KEY, ethProvider);
 
-  // Redeem on Ethereum (Polygon in this case)
-  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes);
+  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes, { gasLimit: 500000, gasPrice: ethers.utils.parseUnits('150', 'gwei') });
 }
 
 async function main() {

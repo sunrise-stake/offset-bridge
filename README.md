@@ -35,8 +35,13 @@ NOTE 2: When paying with an SPL Token like USDC, this step can be skipped
 yarn swap
 ```
 
-4. Bridge USDCpo to Polygon
+4. Bridge USDCpo to Polygon and receive USDC in Holding Contract
 
 ```shell
 yarn bridge
+```
+
+5. Use the funds to retire carbon tokens on Toucan 
+```shell
+yarn retire
 ```

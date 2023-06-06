@@ -36,6 +36,7 @@
     "build": "tsc",
     "initialize": "ts-node scripts/initialize.ts",
     "wrap-sol": "ts-node scripts/wrapSOL.ts",
+    "deposit-usdc": "ts-node scripts/depositUSDC.ts",
     "swap": "ts-node scripts/swap.ts",
     "bridge": "ts-node scripts/bridge.ts",
     "redeem": "ts-node scripts/redeemPolygonVAA.ts",
