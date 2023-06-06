@@ -1,5 +1,5 @@
 import {ConfirmOptions, Connection, PublicKey, sendAndConfirmTransaction, Signer, Transaction} from "@solana/web3.js";
-import {STARTING_MINT_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
+import {WRAPPED_SOL_TOKEN_MINT, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
 import {createAssociatedTokenAccountInstruction, getAssociatedTokenAddressSync, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "spl-token-latest";
 import {tokenAuthority} from "./util";
 
@@ -34,7 +34,7 @@ async function createAssociatedTokenAccount(
 (async () => {
     const connection = new Connection(SOLANA_RPC_ENDPOINT);
 
-    const inputMintATA = await createAssociatedTokenAccount(connection, USER_KEYPAIR, new PublicKey(STARTING_MINT_ADDRESS), tokenAuthority);
+    const inputMintATA = await createAssociatedTokenAccount(connection, USER_KEYPAIR, new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority);
     const outputMintATA = await createAssociatedTokenAccount(connection, USER_KEYPAIR, new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), tokenAuthority);
 
     console.log("inputMintATA", inputMintATA.toBase58());

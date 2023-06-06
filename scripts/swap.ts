@@ -9,16 +9,19 @@ import {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from '@jup-ag/core';
 import {
     ENV,
-    STARTING_MINT_ADDRESS,
+    WRAPPED_SOL_TOKEN_MINT,
     BRIDGE_INPUT_MINT_ADDRESS,
     SOLANA_RPC_ENDPOINT,
     JupiterToken,
     USER_KEYPAIR,
-    PROGRAM_ID, STATE_ADDRESS
+    PROGRAM_ID, STATE_ADDRESS, USDC_TOKEN_SOLANA
 } from "./constants";
 import {Program, AnchorProvider, Wallet} from "@coral-xyz/anchor";
 import {IDL, TokenSwap} from "./types/token_swap";
 import {tokenAuthority} from "./util";
+
+// Assume the input token is SOL unless specified otherwise
+const SWAP_INPUT_TOKEN_MINT = process.argv[2] === "USDC" ? USDC_TOKEN_SOLANA : WRAPPED_SOL_TOKEN_MINT;
 
 (async () => {
     // Setup Solana RPC connection
@@ -44,7 +47,7 @@ import {tokenAuthority} from "./util";
 
     // const routeMap: Map<string, string[]> = jupiter.getRouteMap()
 
-    const inputToken = tokens.find((t) => t.address == STARTING_MINT_ADDRESS);
+    const inputToken = tokens.find((t) => t.address == SWAP_INPUT_TOKEN_MINT);
     const outputToken = tokens.find((t) => t.address == BRIDGE_INPUT_MINT_ADDRESS);
 
     if (!inputToken || !outputToken) {
