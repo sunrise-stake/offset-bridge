@@ -5,7 +5,7 @@ import os from "os";
 require("dotenv").config();
 
 // Endpoints, connection
-export const ENV: Cluster = (process.env.CLUSTER as Cluster) || "mainnet-beta";
+export const ENV: Cluster = (process.env.REACT_APP_CLUSTER as Cluster) || "mainnet-beta";
 
 // Sometimes, your RPC endpoint may reject you if you spam too many RPC calls. Sometimes, your PRC server
 // may have invalid cache and cause problems. Also, a paid RPC server is always recommended.
@@ -25,9 +25,9 @@ export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkc
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
 export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";
 export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe";
-"B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE";
+// "B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE";
 export const SOL_TEST_BRIDGE_ADDRESS = "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5";
-"Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o";
+// "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o";
 export const SOL_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
 export const SOL_BRIDGE_ADDRESS = "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth";
 export const CHAIN_ID_POLYGON = 5;
