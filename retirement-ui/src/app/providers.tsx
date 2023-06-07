@@ -24,6 +24,7 @@ import {clusterApiUrl} from "@solana/web3.js";
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
+import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [
@@ -116,7 +117,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <WalletModalProvider>
                     <WagmiConfig config={wagmiConfig}>
                         <RainbowKitProvider chains={chains} appInfo={appInfo}>
-                            {mounted && children}
+                            <SolanaRetirementProvider>
+                                {mounted && children}
+                            </SolanaRetirementProvider>
                         </RainbowKitProvider>
                     </WagmiConfig>
                 </WalletModalProvider>
