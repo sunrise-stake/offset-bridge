@@ -14,14 +14,13 @@ import {
     PROGRAM_ID,
     STATE_ADDRESS,
 } from "@/lib/constants";
-import fetch from "node-fetch";
 import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from "@jup-ag/core";
 import {IDL, TokenSwap} from "./types/token_swap";
 import JSBI from "jsbi";
-import {AnchorProvider, Program, Wallet} from "@coral-xyz/anchor";
+import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, createTransferInstruction} from "spl-token-latest";
 import {tokenAuthority} from "@/lib/util";
-import {USDC_TOKEN_SOLANA, USER_KEYPAIR} from "../../../scripts/constants";
+import {USDC_TOKEN_SOLANA} from "@/lib/constants";
 
 export class SolanaRetirement {
     ready: boolean = false;
@@ -44,7 +43,7 @@ export class SolanaRetirement {
     }
 
     async deposit(inputMint: PublicKey, amount: bigint) : Promise<Transaction> {
-        const from = getAssociatedTokenAddressSync(new PublicKey(USDC_TOKEN_SOLANA), USER_KEYPAIR.publicKey);
+        const from = getAssociatedTokenAddressSync(new PublicKey(USDC_TOKEN_SOLANA), this.wallet.publicKey);
         const to = getAssociatedTokenAddressSync(new PublicKey(USDC_TOKEN_SOLANA), tokenAuthority, true);
 
         return new Transaction().add(createTransferInstruction(
