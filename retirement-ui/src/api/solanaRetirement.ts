@@ -22,12 +22,31 @@ import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRA
 import {tokenAuthority} from "@/lib/util";
 import {USDC_TOKEN_SOLANA} from "@/lib/constants";
 
+type UnsubscribeCallback = () => void;
+
 export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
     jupiter: Jupiter | undefined;
 
     constructor(readonly wallet: AnchorWallet, readonly connection: Connection) {
+    }
+
+    listenToBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
+        const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
+
+        const notify = () => {
+            this.connection.getTokenAccountBalance(tokenAccount).then((balance) => {
+                callback(BigInt(balance.value.amount));
+            });
+        }
+
+        notify();
+        const subscriptionId = this.connection.onAccountChange(tokenAccount, notify);
+
+        return () => {
+            this.connection.removeAccountChangeListener(subscriptionId);
+        }
     }
 
     async init(): Promise<void> {
@@ -43,8 +62,8 @@ export class SolanaRetirement {
     }
 
     async deposit(inputMint: PublicKey, amount: bigint) : Promise<Transaction> {
-        const from = getAssociatedTokenAddressSync(new PublicKey(USDC_TOKEN_SOLANA), this.wallet.publicKey);
-        const to = getAssociatedTokenAddressSync(new PublicKey(USDC_TOKEN_SOLANA), tokenAuthority, true);
+        const from = getAssociatedTokenAddressSync(inputMint, this.wallet.publicKey);
+        const to = getAssociatedTokenAddressSync(inputMint, tokenAuthority, true);
 
         return new Transaction().add(createTransferInstruction(
             from,

@@ -3,6 +3,12 @@
 import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
 import {SolanaRetirement} from "@/api/solanaRetirement";
 import {createContext, FC, PropsWithChildren, useContext, useEffect, useState} from "react";
+import {USDC_TOKEN_SOLANA} from "@/lib/constants";
+
+// TODO generalise
+export const tokenMint = USDC_TOKEN_SOLANA;
+export const tokenDecimals = 6;
+export const tokenSymbol = "USDC";
 
 interface SolanaRetirementContextProps {
     api: SolanaRetirement | undefined;

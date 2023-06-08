@@ -91,7 +91,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
-    const solanaEndpoint = process.env.REACT_APP_SOLANA_RPC_HOST || clusterApiUrl("mainnet-beta");
+    const solanaEndpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_HOST || clusterApiUrl("mainnet-beta");
     const solanaWallets = useMemo(
         () => [
             new BackpackWalletAdapter(),

@@ -3,19 +3,27 @@ import {FaCheckCircle, FaHourglassHalf, FaRocket} from "react-icons/fa";
 import clsx from "clsx";
 import {useAppStore} from "@/app/providers";
 
+const Icon: FC<{step: number, currentStep: number}> = ({step, currentStep}) => {
+    if (step < currentStep) return <FaCheckCircle className="text-blue-600 mr-2 mt-1"/>;
+    if (step === currentStep) return <FaRocket className="text-blue-600 mr-2 mt-1"/>;
+    return <FaHourglassHalf className="text-blue-600 mr-2 mt-1"/>;
+}
+
 const Step:FC<{step: number, text: string}> = ({step, text}) => {
-    const isCurrentStep = useAppStore(state => state.step === step)
+    const currentStep = useAppStore(state => state.step)
+    const isCurrentStep = step === currentStep;
+
     return (
         <li className={clsx("flex items-center", { "bg-blue-300 text-white" : isCurrentStep})}>
             <a onClick={() => useAppStore.setState({step})} href="#" className="flex">
-                { isCurrentStep ? <FaRocket className="text-blue-600 mr-2 mt-1"/> : <FaCheckCircle className="text-blue-600 mr-2 mt-1"/>}
+                <Icon step={step} currentStep={currentStep} />
                 <span>{text}</span>
             </a>
         </li>
     );
 }
 
-const steps = [ "Step 1", "Step 2", "Step 3"];
+export const steps = [ "Step 1", "Step 2", "Step 3"];
 
 export const StepBar:FC = () => {
     return (
