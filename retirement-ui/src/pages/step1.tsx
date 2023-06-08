@@ -6,7 +6,7 @@ import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {formatDecimal, tokenAmountFromString, tokenAuthority} from "@/lib/util";
 import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/context/solanaRetirementContext";
 import { toast } from 'react-toastify';
-import {ExplorerLink} from "@/components/explorerLink";
+import {SolExplorerLink} from "@/components/solExplorerLink";
 import {NextButton} from "@/components/nextButton";
 import {TokenBalance} from "@/components/tokenBalance";
 
@@ -30,7 +30,7 @@ export default function Step1() {
 
     const depositSuccessful = (txSig: string) => {
         toast.success(<div>
-            Deposit successful!{' '}<ExplorerLink address={txSig} type="tx"/>
+            Deposit successful!{' '}<SolExplorerLink address={txSig} type="tx"/>
         </div>);
     }
 

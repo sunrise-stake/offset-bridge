@@ -1,6 +1,6 @@
 import {FC} from "react";
 
-export const ExplorerLink:FC<{
+export const SolExplorerLink:FC<{
     address: string,
     type: 'tx' | 'address' | 'token',
 }> = ({ address, type }) => {

@@ -76,11 +76,17 @@ export interface AppState {
         vaaBytes?: Uint8Array;  // set if wormhole has seen the tx
         polygonTxHash?: string // set if the tx has been redeemed
     };
+    activeRetirementCertificateBridgeTransaction?: {
+        solanaTxSignature?: string; // must be set
+        vaaBytes?: Uint8Array;  // set if wormhole has seen the tx
+        polygonTxHash?: string // set if the tx has been redeemed
+    };
 }
 
 export interface Actions {
     setStep: (newStep: number) => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) => void;
+    updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<AppState['activeRetirementCertificateBridgeTransaction']>) => void;
 }
 
 export const useAppStore = create<AppState & Actions>()(
@@ -95,6 +101,12 @@ export const useAppStore = create<AppState & Actions>()(
                     (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) =>
                         set((state) =>
                         ({ activeUSDCBridgeTransaction: { ...(state.activeUSDCBridgeTransaction || {}), ...newTx } })),
+
+                activeRetirementCertificateBridgeTransaction: undefined,
+                updateActiveRetirementCertificateBridgeTransaction:
+                    (newTx: Partial<AppState['activeRetirementCertificateBridgeTransaction']>) =>
+                        set((state) =>
+                            ({ activeRetirementCertificateBridgeTransaction: { ...(state.activeRetirementCertificateBridgeTransaction || {}), ...newTx } })),
             }),
             {
                 name: 'solana-carbon-retirement-storage',

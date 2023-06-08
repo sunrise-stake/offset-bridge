@@ -11,6 +11,7 @@ import {SolExplorerLink} from "@/components/solExplorerLink";
 import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKEN_SYMBOL} from "@/lib/constants";
 import {useAppStore} from "@/app/providers";
 import {FaCheckCircle, FaCircle} from "react-icons/fa";
+import {PolyExplorerLink} from "@/components/polyExplorerLink";
 
 const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
@@ -22,44 +23,44 @@ const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
     <FaCircle className="text-gray-300"/>
 );
 
-const BridgeSubSteps:FC<{ solBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnPolygon: boolean }> = ({ solBridgeTxComplete, vaaRetrieved, redeemedOnPolygon }) => (
+const BridgeSubSteps:FC<{ polygonBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnSolana: boolean }> = ({ polygonBridgeTxComplete, vaaRetrieved, redeemedOnSolana }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold mb-4">Bridge Operation</h2>
         <ul className="list-none">
             <li className="flex items-center mb-2">
-                <SubStepIcon complete={solBridgeTxComplete} />
-                <span className="ml-2">Solana bridge transaction</span>
+                <SubStepIcon complete={polygonBridgeTxComplete} />
+                <span className="ml-2">Polygon bridge transaction</span>
             </li>
             <li className="flex items-center mb-2">
                 <SubStepIcon complete={vaaRetrieved} />
                 <span className="ml-2">Retrieve VAA from bridge</span>
             </li>
             <li className="flex items-center mb-2">
-                <SubStepIcon complete={redeemedOnPolygon} />
-                <span className="ml-2">Redeem on Polygon</span>
+                <SubStepIcon complete={redeemedOnSolana} />
+                <span className="ml-2">Redeem on Solana</span>
             </li>
         </ul>
     </div>
 );
 
 
-export default function Step3() {
+export default function Step5() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
     const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
 
     const {api : solanaAPI} = useSolanaRetirement();
-    const activeBridgeTransaction = useAppStore(state => state.activeUSDCBridgeTransaction)
-    const updateBridgeTransaction = useAppStore(state => state.updateActiveUSDCBridgeTransaction)
+    const activeBridgeTransaction = useAppStore(state => state.activeRetirementCertificateBridgeTransaction)
+    const updateBridgeTransaction = useAppStore(state => state.updateActiveRetirementCertificateBridgeTransaction)
 
     const [bridgeEnabled, setBridgeEnabled] = useState(false);
     const [redeemEnabled, setRedeemEnabled] = useState(
         activeBridgeTransaction?.vaaBytes !== undefined &&
-        activeBridgeTransaction?.polygonTxHash === undefined
+        activeBridgeTransaction?.solanaTxSignature === undefined
     );
 
-    const setBridgeSolanaTransaction = (txSig: string) => {
-        updateBridgeTransaction({ solanaTxSignature: txSig });
+    const setBridgePolygonTransaction = (txHash: string) => {
+        updateBridgeTransaction({ polygonTxHash: txHash });
     }
 
     const setVAABytes = (vaaBytes: Uint8Array) => {
@@ -74,18 +75,19 @@ export default function Step3() {
         }
     }, [bridgeInputBalance, solanaAPI]);
 
-    const bridgeSolanaTxSuccessful = (txSig: string) => {
-        setBridgeSolanaTransaction(txSig);
+    const bridgePolygonTxSuccessful = (txHash: string) => {
+        setBridgePolygonTransaction(txHash);
         toast.success(<div>
-            Solana bridge transaction successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
+            Polygon bridge transaction successful:{' '} <PolyExplorerLink address={txHash} type="tx"/>
         </div>);
 
-        solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAABytes).catch(getVAAFailed);
+        // TODO
+        // solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAABytes).catch(getVAAFailed);
     }
 
-    const bridgeSolanaTxFailed = (error: Error) => {
+    const bridgePolygonTxFailed = (error: Error) => {
         toast.error(<div>
-            Solana bridge transaction failed: {error.message}
+            Polygon bridge transaction failed: {error.message}
         </div>);
     }
 
@@ -96,26 +98,19 @@ export default function Step3() {
     }
 
     const handleBridge = async () => {
-        if (!solanaAPI) return;
-        const {tx, messageKey } = await solanaAPI.bridge();
-        return wallet.sendTransaction(tx, connection, { signers: [messageKey]}).then(bridgeSolanaTxSuccessful).catch(bridgeSolanaTxFailed);
     };
 
     const handleRedeem = async () => {
-        // if (!polygonAPI || !activeBridgeTransaction?.vaaBytes) return;
-        // await polygonAPI.redeem(activeBridgeTransaction.vaaBytes);
     };
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 3 - Bridge</h1>
-        <div className="mb-2">Balance to bridge:  <TokenBalance balance={bridgeInputBalance} decimals={bridgeInputTokenDecimals}/> {bridgeInputTokenSymbol}</div>
+        <h1 className="text-2xl mb-4">Step 5 - Redeem Retirement Certificate</h1>
         <div className="flex items-center space-x-2 mb-2">
             <button
                 className="btn btn-primary"
                 disabled={!bridgeEnabled}
                 onClick={handleBridge}
             >
-                Bridge
             </button>
             <button
                 className="btn btn-primary"
@@ -126,9 +121,9 @@ export default function Step3() {
             </button>
         </div>
         <BridgeSubSteps
-            solBridgeTxComplete={!!activeBridgeTransaction?.solanaTxSignature}
+            polygonBridgeTxComplete={!!activeBridgeTransaction?.polygonTxHash}
             vaaRetrieved={!!activeBridgeTransaction?.vaaBytes}
-            redeemedOnPolygon={!!activeBridgeTransaction?.polygonTxHash}
+            redeemedOnSolana={!!activeBridgeTransaction?.solanaTxSignature}
         />
         <div className="flex items-center space-x-2">
             <NextButton disabled={ false }/>

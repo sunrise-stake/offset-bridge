@@ -5,7 +5,7 @@ import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/cont
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
 import {tokenAmountFromString, tokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
-import {ExplorerLink} from "@/components/explorerLink";
+import {SolExplorerLink} from "@/components/solExplorerLink";
 import {NextButton} from "@/components/nextButton";
 import {TokenBalance} from "@/components/tokenBalance";
 import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKEN_SYMBOL} from "@/lib/constants";
@@ -32,7 +32,7 @@ export default function Step2() {
 
     const swapSuccessful = (txSig: string) => {
         toast.success(<div>
-            Swap successful:{' '}<ExplorerLink address={txSig} type="tx"/>
+            Swap successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
         </div>);
     }
 
