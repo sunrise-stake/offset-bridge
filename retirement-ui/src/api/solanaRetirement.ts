@@ -1,7 +1,7 @@
 import {AnchorWallet} from "@solana/wallet-adapter-react";
 import {
     AccountMeta,
-    Connection,
+    Connection, Keypair,
     MessageV0,
     PublicKey, Transaction,
     TransactionInstruction, TransactionMessage,
@@ -20,7 +20,16 @@ import JSBI from "jsbi";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, createTransferInstruction} from "spl-token-latest";
 import {tokenAuthority} from "@/lib/util";
-import {USDC_TOKEN_SOLANA} from "@/lib/constants";
+import {
+    CHAIN_ID_POLYGON,
+    HOLDING_CONTRACT_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS,
+    CHAIN_ID_SOLANA, WORMHOLE_RPC_HOSTS_MAINNET
+} from "@/lib/constants";
+import {bridgeAuthority, bridgeInputTokenAccount} from "@/lib/util";
+import {parseUnits} from "@ethersproject/units";
+import * as Wormhole from "@certusone/wormhole-sdk";
+import BN from "bn.js";
+import {createWormholeWrappedTransfer} from "@/lib/bridge";
 
 type UnsubscribeCallback = () => void;
 
@@ -29,30 +38,33 @@ export class SolanaRetirement {
     tokens: JupiterToken[] = [];
     jupiter: Jupiter | undefined;
 
-    constructor(readonly wallet: AnchorWallet, readonly connection: Connection) {
+    constructor(
+        readonly solWallet: AnchorWallet,
+        readonly solConnection: Connection,
+    ) {
     }
 
     listenToBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
         const notify = () => {
-            this.connection.getTokenAccountBalance(tokenAccount).then((balance) => {
+            this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
             });
         }
 
         notify();
-        const subscriptionId = this.connection.onAccountChange(tokenAccount, notify);
+        const subscriptionId = this.solConnection.onAccountChange(tokenAccount, notify);
 
         return () => {
-            this.connection.removeAccountChangeListener(subscriptionId);
+            this.solConnection.removeAccountChangeListener(subscriptionId);
         }
     }
 
     async init(): Promise<void> {
         this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
         this.jupiter = await Jupiter.load({
-            connection: this.connection,
+            connection: this.solConnection,
             cluster: ENV,
             user: tokenAuthority, // PDA owned by the swap program
             wrapUnwrapSOL: false // wrapping and unwrapping will try to sign with the inputAcount which is a PDA
@@ -62,13 +74,13 @@ export class SolanaRetirement {
     }
 
     async deposit(inputMint: PublicKey, amount: bigint) : Promise<Transaction> {
-        const from = getAssociatedTokenAddressSync(inputMint, this.wallet.publicKey);
+        const from = getAssociatedTokenAddressSync(inputMint, this.solWallet.publicKey);
         const to = getAssociatedTokenAddressSync(inputMint, tokenAuthority, true);
 
         return new Transaction().add(createTransferInstruction(
             from,
             to,
-            this.wallet.publicKey,
+            this.solWallet.publicKey,
             amount
         ));
     }
@@ -95,7 +107,7 @@ export class SolanaRetirement {
         const jupiterTx = swapTransaction as VersionedTransaction;
 
         // create the swap instruction proxying the jupiter instruction
-        const provider = new AnchorProvider(this.connection, this.wallet, {});
+        const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
         const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
 
         const message = jupiterTx.message as MessageV0;
@@ -163,7 +175,7 @@ export class SolanaRetirement {
                 // and make the owner not a signer
 
                 keys[0] = {
-                    pubkey: this.wallet.publicKey,
+                    pubkey: this.solWallet.publicKey,
                     isSigner: true,
                     isWritable: true
                 }
@@ -188,11 +200,11 @@ export class SolanaRetirement {
         }).filter((ix): ix is TransactionInstruction => ix !== null);
 
         // generate a versioned transaction from the new instructions, using the same ALTs as before)
-        const blockhash = await this.connection
+        const blockhash = await this.solConnection
             .getLatestBlockhash()
             .then((res) => res.blockhash);
         const messageV0 = new TransactionMessage({
-            payerKey: this.wallet.publicKey,
+            payerKey: this.solWallet.publicKey,
             recentBlockhash: blockhash,
             instructions: ixes,
         }).compileToV0Message(addressLookupTableAccounts);
@@ -210,8 +222,69 @@ export class SolanaRetirement {
         return transaction;
     }
 
-    static async build(wallet: AnchorWallet, connection: Connection): Promise<SolanaRetirement> {
-        const instance = new SolanaRetirement(wallet, connection);
+    async bridge(): Promise<{ tx: Transaction, messageKey: Keypair }> {
+        const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
+        const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
+
+        // Send 0.001 USDC
+        const amount = parseUnits("1", 3).toBigInt();
+
+        const { instruction, messageKey } = await createWormholeWrappedTransfer(
+            this.solWallet.publicKey,
+            bridgeInputTokenAccount,
+            tokenAuthority,
+            amount,
+            Wormhole.tryNativeToUint8Array(HOLDING_CONTRACT_ADDRESS, CHAIN_ID_POLYGON),
+        );
+
+        const tx = await program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
+            state: STATE_ADDRESS,
+            bridgeAuthority,
+            tokenAccountAuthority: tokenAuthority,
+            tokenAccount: bridgeInputTokenAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
+        }).remainingAccounts(instruction.keys)
+            .signers([messageKey]) // appears to get erased when calling transaction()  - TODO remove?
+            .transaction();
+
+        return { tx, messageKey };
+    }
+
+    async getVAAFromSolanaTransactionSignature(txSignature: string): Promise<Uint8Array> {
+        const info = await this.solConnection.getTransaction(txSignature);
+        if (!info) {
+            throw new Error(
+                "An error occurred while fetching the transaction info"
+            );
+        }
+        const sequence = Wormhole.parseSequenceFromLogSolana(info);
+        const emitterAddress = await Wormhole.getEmitterAddressSolana(SOL_TOKEN_BRIDGE_ADDRESS);
+
+        console.log("Sequence:", sequence);
+        console.log("Emitter address:", emitterAddress);
+        console.log("Getting signed VAA from the Wormhole Network...");
+
+        // Fetch the signedVAA from the Wormhole Network (this may require retries while you wait for confirmation)
+        const { vaaBytes } = await Wormhole.getSignedVAAWithRetry(
+            WORMHOLE_RPC_HOSTS_MAINNET,
+            CHAIN_ID_SOLANA,
+            emitterAddress,
+            sequence,
+            // use on Node only
+            // {
+            //     transport: NodeHttpTransport(),
+            // }
+        );
+
+        return vaaBytes;
+    }
+
+    static async build(
+        solWallet: AnchorWallet,
+        solConnection: Connection,
+    ): Promise<SolanaRetirement> {
+        const instance = new SolanaRetirement(solWallet, solConnection);
         await instance.init();
         return instance;
     }

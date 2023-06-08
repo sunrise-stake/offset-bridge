@@ -1,7 +1,7 @@
 import {FC, useEffect, useState} from "react";
 import {useAnchorWallet, useConnection, useWallet} from "@solana/wallet-adapter-react";
 import {USDC_TOKEN_SOLANA} from "@/lib/constants";
-import {useTokenBalance} from "@/hooks/useTokenBalance";
+import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {formatDecimal, tokenAmountFromString, tokenAuthority} from "@/lib/util";
 import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/context/solanaRetirementContext";
@@ -14,8 +14,8 @@ export default function Step1() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
     const {api} = useSolanaRetirement();
-    const myBalance = useTokenBalance(tokenMint, wallet.publicKey);
-    const depositedBalance = useTokenBalance(tokenMint, tokenAuthority);
+    const myBalance = useSolanaTokenBalance(tokenMint, wallet.publicKey);
+    const depositedBalance = useSolanaTokenBalance(tokenMint, tokenAuthority);
     const [amount, setAmount] = useState('');
     const [depositEnabled, setDepositEnabled] = useState(false);
 

@@ -71,14 +71,30 @@ const wagmiConfig = createConfig({
 export interface AppState {
     // TODO temp
     step: number;
+    activeUSDCBridgeTransaction?: {
+        solanaTxSignature?: string; // must be set
+        vaaBytes?: Uint8Array;  // set if wormhole has seen the tx
+        polygonTxHash?: string // set if the tx has been redeemed
+    };
 }
 
-export const useAppStore = create<AppState>()(
+export interface Actions {
+    setStep: (newStep: number) => void;
+    updateActiveUSDCBridgeTransaction: (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) => void;
+}
+
+export const useAppStore = create<AppState & Actions>()(
     devtools(
         persist(
             (set) => ({
                 step: 1,
                 setStep: (newStep:number) => set((state) => ({ step: state.step + newStep })),
+
+                activeUSDCBridgeTransaction: undefined,
+                updateActiveUSDCBridgeTransaction:
+                    (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) =>
+                        set((state) =>
+                        ({ activeUSDCBridgeTransaction: { ...(state.activeUSDCBridgeTransaction || {}), ...newTx } })),
             }),
             {
                 name: 'solana-carbon-retirement-storage',

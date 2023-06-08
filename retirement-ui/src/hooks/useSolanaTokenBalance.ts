@@ -2,7 +2,7 @@ import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useEffect, useState} from "react";
 import {PublicKey} from "@solana/web3.js";
 
-export const useTokenBalance = (mint: PublicKey, owner: PublicKey): bigint | undefined => {
+export const useSolanaTokenBalance = (mint: PublicKey, owner: PublicKey): bigint | undefined => {
     const { api} = useSolanaRetirement();
     const [balance, setBalance] = useState<bigint>();
 
