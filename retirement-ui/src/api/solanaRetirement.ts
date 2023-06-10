@@ -73,25 +73,15 @@ export class SolanaRetirement {
         this.ready = true;
     }
 
-    async deposit(inputMint: PublicKey, amount: bigint) : Promise<Transaction> {
-        const from = getAssociatedTokenAddressSync(inputMint, this.solWallet.publicKey);
-        const to = getAssociatedTokenAddressSync(inputMint, tokenAuthority, true);
 
-        return new Transaction().add(createTransferInstruction(
-            from,
-            to,
-            this.solWallet.publicKey,
-            amount
-        ));
-    }
 
-    async swap(inputMint: PublicKey):Promise<VersionedTransaction> {
+    async swap(inputMint: PublicKey, amount: bigint, depositIx?: TransactionInstruction):Promise<VersionedTransaction> {
         if (!this.ready || !this.jupiter) throw new Error("Not initialized");
 
         const routes = await this.jupiter.computeRoutes({
             inputMint,
             outputMint: BRIDGE_INPUT_MINT_ADDRESS,
-            amount: JSBI.BigInt(100000), // 100k lamports
+            amount: JSBI.BigInt(amount.toString(10)), // 100k lamports
             slippageBps: 10,  // 1 bps = 0.01%.
         });
 
@@ -199,6 +189,11 @@ export class SolanaRetirement {
             })
         }).filter((ix): ix is TransactionInstruction => ix !== null);
 
+        if (depositIx) {
+            // add the deposit instruction to the start
+            ixes.unshift(depositIx);
+        }
+
         // generate a versioned transaction from the new instructions, using the same ALTs as before)
         const blockhash = await this.solConnection
             .getLatestBlockhash()
@@ -222,12 +217,29 @@ export class SolanaRetirement {
         return transaction;
     }
 
-    async bridge(): Promise<{ tx: Transaction, messageKey: Keypair }> {
+    private makeDepositIx(inputMint: PublicKey, amount: bigint) : TransactionInstruction {
+        const from = getAssociatedTokenAddressSync(inputMint, this.solWallet.publicKey);
+        const to = getAssociatedTokenAddressSync(inputMint, tokenAuthority, true);
+
+        return createTransferInstruction(
+            from,
+            to,
+            this.solWallet.publicKey,
+            amount
+        );
+    }
+
+    async deposit(inputMint: PublicKey, amount: bigint) : Promise<Transaction> {
+        return new Transaction().add(this.makeDepositIx(inputMint, amount));
+    }
+
+    async depositAndSwap(inputMint: PublicKey, amount: bigint) : Promise<VersionedTransaction> {
+        return this.swap(inputMint, amount, this.makeDepositIx(inputMint, amount));
+    }
+
+    async bridge(amount: bigint): Promise<{ tx: Transaction, messageKey: Keypair }> {
         const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
         const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
-
-        // Send 0.001 USDC
-        const amount = parseUnits("1", 3).toBigInt();
 
         const { instruction, messageKey } = await createWormholeWrappedTransfer(
             this.solWallet.publicKey,

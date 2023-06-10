@@ -22,7 +22,7 @@ import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
 import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
 import {clusterApiUrl} from "@solana/web3.js";
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { devtools, persist, StateStorage } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
 
@@ -68,46 +68,57 @@ const wagmiConfig = createConfig({
     webSocketPublicClient,
 });
 
+type BridgeTransactionStored = {
+    solanaTxSignature?: string; // set if the tx originates from solana or has been redeemed on solana
+    vaaBytes?: string;  // set if wormhole has seen the tx (bytes in hex)
+    polygonTxHash?: string // set if the tx originates from polygon or has been redeemed on polygon
+}
+
+type BridgeTransaction = Omit<BridgeTransactionStored, 'vaaBytes'> & {
+    vaaBytes?: Uint8Array
+}
+
 export interface AppState {
-    // TODO temp
     step: number;
-    activeUSDCBridgeTransaction?: {
-        solanaTxSignature?: string; // must be set
-        vaaBytes?: Uint8Array;  // set if wormhole has seen the tx
-        polygonTxHash?: string // set if the tx has been redeemed
-    };
-    activeRetirementCertificateBridgeTransaction?: {
-        solanaTxSignature?: string; // must be set
-        vaaBytes?: Uint8Array;  // set if wormhole has seen the tx
-        polygonTxHash?: string // set if the tx has been redeemed
-    };
+    activeUSDCBridgeTransaction?: BridgeTransactionStored;
+    activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
 }
 
 export interface Actions {
     setStep: (newStep: number) => void;
-    updateActiveUSDCBridgeTransaction: (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) => void;
-    updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<AppState['activeRetirementCertificateBridgeTransaction']>) => void;
+    updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
+    updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
+}
+
+const convertBridgeTransaction = (newTx: Partial<BridgeTransaction>): Partial<BridgeTransactionStored> => {
+    return {
+        ...newTx,
+        ...(newTx?.vaaBytes ? {vaaBytes: Buffer.from(newTx.vaaBytes).toString('hex')} : {})
+    } as Partial<BridgeTransactionStored>;
 }
 
 export const useAppStore = create<AppState & Actions>()(
     devtools(
         persist(
-            (set) => ({
-                step: 1,
-                setStep: (newStep:number) => set((state) => ({ step: state.step + newStep })),
+            (set) => {
+                return ({
+                    step: 1,
+                    setStep: (newStep: number) => set((state) => ({step: state.step + newStep})),
 
-                activeUSDCBridgeTransaction: undefined,
-                updateActiveUSDCBridgeTransaction:
-                    (newTx: Partial<AppState['activeUSDCBridgeTransaction']>) =>
-                        set((state) =>
-                        ({ activeUSDCBridgeTransaction: { ...(state.activeUSDCBridgeTransaction || {}), ...newTx } })),
+                    activeUSDCBridgeTransaction: undefined,
+                    updateActiveUSDCBridgeTransaction:
+                        (newTx: Partial<BridgeTransaction>) => {
+                            set((state) =>
+                                ({activeUSDCBridgeTransaction: {...(state.activeUSDCBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}}));
+                        },
 
-                activeRetirementCertificateBridgeTransaction: undefined,
-                updateActiveRetirementCertificateBridgeTransaction:
-                    (newTx: Partial<AppState['activeRetirementCertificateBridgeTransaction']>) =>
-                        set((state) =>
-                            ({ activeRetirementCertificateBridgeTransaction: { ...(state.activeRetirementCertificateBridgeTransaction || {}), ...newTx } })),
-            }),
+                    activeRetirementCertificateBridgeTransaction: undefined,
+                    updateActiveRetirementCertificateBridgeTransaction:
+                        (newTx: Partial<BridgeTransaction>) =>
+                            set((state) =>
+                                ({activeRetirementCertificateBridgeTransaction: {...(state.activeRetirementCertificateBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}})),
+                });
+            },
             {
                 name: 'solana-carbon-retirement-storage',
             }
@@ -136,7 +147,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         router.push('/step' + currentStep);
-    }, [router, currentStep]);
+    }, [currentStep]);
 
 
     return (
@@ -144,7 +155,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <WalletProvider wallets={solanaWallets} autoConnect>
                 <WalletModalProvider>
                     <WagmiConfig config={wagmiConfig}>
-                        <RainbowKitProvider chains={chains} appInfo={appInfo}>
+                        <RainbowKitProvider chains={chains} appInfo={appInfo} showRecentTransactions={true}>
                             <SolanaRetirementProvider>
                                 {mounted && children}
                             </SolanaRetirementProvider>

@@ -298,4 +298,18 @@ export const HOLDING_CONTRACT_ABI = [
         "stateMutability": "nonpayable",
         "type": "function"
     }
-];
+] as const;
+
+export const WORMHOLE_BRIDGE_ABI = [{
+    inputs: [
+        {
+            internalType: "bytes",
+            name: "encodedVm",
+            type: "bytes",
+        },
+    ],
+    name: "completeTransfer",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+}] as const;

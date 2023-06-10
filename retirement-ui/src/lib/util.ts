@@ -11,6 +11,7 @@ export const formatDecimal = (value: bigint, decimals: number): string => {
     const beforeDecimal = valueStringWithLeadingZeros.slice(0, -decimals);
     const afterDecimal = valueStringWithLeadingZeros.slice(-decimals);
     const afterDecimalTrimmed = afterDecimal.replace(/0+$/, "");
+    if (afterDecimalTrimmed.length === 0) return beforeDecimal;
     return `${beforeDecimal}.${afterDecimalTrimmed}`;
 }
 

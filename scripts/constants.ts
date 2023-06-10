@@ -56,7 +56,8 @@ export const WORMHOLE_RPC_HOSTS_MAINNET = ["https://wormhole-v2-mainnet-api.cert
     "https://wormhole-v2-mainnet-api.mcf.rocks",
     "https://wormhole-v2-mainnet-api.chainlayer.network",
     "https://wormhole-v2-mainnet-api.staking.fund",
-    "https://wormhole-v2-mainnet.01node.com"];
+    // "https://wormhole-v2-mainnet.01node.com" // CORS restriction
+];
 
 // const WORMHOLE_RPC_HOST = ["https://wormhole-v2-testnet-api.certus.one"];
 

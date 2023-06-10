@@ -1,68 +1,160 @@
 import {FC, useEffect, useState} from "react";
+import {TokenBalance} from "@/components/tokenBalance";
+import {useSolanaRetirement} from "@/context/solanaRetirementContext";
+import {NextButton} from "@/components/nextButton";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
-import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
-import {tokenAmountFromString, tokenAuthority} from "@/lib/util";
+import {tokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
 import {SolExplorerLink} from "@/components/solExplorerLink";
-import {NextButton} from "@/components/nextButton";
-import {TokenBalance} from "@/components/tokenBalance";
-import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKEN_SYMBOL} from "@/lib/constants";
+import {
+    BRIDGE_INPUT_MINT_ADDRESS,
+    BRIDGE_INPUT_MINT_DECIMALS,
+    BRIDGE_INPUT_TOKEN_SYMBOL,
+} from "@/lib/constants";
+import {useAppStore} from "@/app/providers";
+import {FaCheckCircle, FaCircle} from "react-icons/fa";
+import {useRedeemVAA} from "@/hooks/useRedeemVAA";
+import {useAccount} from "wagmi";
 
-const swapInputToken = tokenMint;
-const swapInputTokenSymbol = tokenSymbol;
-const swapInputTokenDecimals = tokenDecimals;
-const swapOutputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
-const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
-const swapOutputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
+const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
+const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
+const bridgeInputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
+
+const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
+    <FaCheckCircle className="text-green-500"/>
+) : (
+    <FaCircle className="text-gray-300"/>
+);
+
+const BridgeSubSteps:FC<{ solBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnPolygon: boolean }> = ({ solBridgeTxComplete, vaaRetrieved, redeemedOnPolygon }) => (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold mb-4">Bridge Operation</h2>
+        <ul className="list-none">
+            <li className="flex items-center mb-2">
+                <SubStepIcon complete={solBridgeTxComplete} />
+                <span className="ml-2">Solana bridge transaction</span>
+            </li>
+            <li className="flex items-center mb-2">
+                <SubStepIcon complete={vaaRetrieved} />
+                <span className="ml-2">Retrieve VAA from bridge</span>
+            </li>
+            <li className="flex items-center mb-2">
+                <SubStepIcon complete={redeemedOnPolygon} />
+                <span className="ml-2">Redeem on Polygon</span>
+            </li>
+        </ul>
+    </div>
+);
+
 
 export default function Step2() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
-    const {api} = useSolanaRetirement();
-    const depositedBalance = useSolanaTokenBalance(tokenMint, tokenAuthority);
-    const swappedBalance = useSolanaTokenBalance(swapOutputTokenMint, tokenAuthority);
+    const { address } = useAccount();
+    const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
+    const {api : solanaAPI} = useSolanaRetirement();
+    const activeBridgeTransaction = useAppStore(state => state.activeUSDCBridgeTransaction)
+    const updateBridgeTransaction = useAppStore(state => state.updateActiveUSDCBridgeTransaction)
+    const redeemVAA = useRedeemVAA(activeBridgeTransaction?.vaaBytes);
 
-    const [swapEnabled, setSwapEnabled] = useState(false);
+    const [bridgeEnabled, setBridgeEnabled] = useState(false);
+    const [redeemEnabled, setRedeemEnabled] = useState(false);
 
     useEffect(() => {
-        setSwapEnabled(api !== undefined && depositedBalance !== undefined && Number(depositedBalance) > 0);
-    }, [depositedBalance, api]);
+        setRedeemEnabled(
+            activeBridgeTransaction?.vaaBytes !== undefined &&
+            activeBridgeTransaction?.polygonTxHash === undefined &&
+            address !== undefined
+        );
+    }, [activeBridgeTransaction]);
 
-    const swapSuccessful = (txSig: string) => {
+    const setBridgeSolanaTransaction = (txSig: string) => {
+        updateBridgeTransaction({ solanaTxSignature: txSig });
+    }
+
+    const setBridgePolygonTransaction = (txHash: string) => {
+        updateBridgeTransaction({ polygonTxHash: txHash });
+    }
+
+    const setVAABytes = (vaaBytes: Uint8Array) => {
+        updateBridgeTransaction({ vaaBytes });
+    }
+
+    useEffect(() => {
+        setBridgeEnabled(solanaAPI !== undefined && !activeBridgeTransaction && bridgeInputBalance !== undefined && Number(bridgeInputBalance) > 0);
+
+        if (activeBridgeTransaction && activeBridgeTransaction.solanaTxSignature && !activeBridgeTransaction.vaaBytes) {
+            solanaAPI?.getVAAFromSolanaTransactionSignature(activeBridgeTransaction.solanaTxSignature).then(setVAABytes).catch(getVAAFailed);
+        }
+    }, [bridgeInputBalance, solanaAPI]);
+
+    const bridgeSolanaTxSuccessful = (txSig: string) => {
+        setBridgeSolanaTransaction(txSig);
         toast.success(<div>
-            Swap successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
+            Solana bridge transaction successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
         </div>);
+
+        solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAABytes).catch(getVAAFailed);
     }
 
-    const swapFailed = (error: Error) => {
+    const bridgeSolanaTxFailed = (error: Error) => {
         toast.error(<div>
-            Swap failed: {error.message}
+            Solana bridge transaction failed: {error.message}
         </div>);
     }
 
-    const handleSwap = async () => {
-        if (!api) return;
-        const tx = await api.swap(swapInputToken);
-        return wallet.sendTransaction(tx, connection).then(swapSuccessful).catch(swapFailed);
+    const getVAAFailed = (error: Error) => {
+        toast.error(<div>
+            Failed to retrieve information from bridge: {error.message}
+        </div>);
+    }
+
+    const bridgePolygonTxFailed = (error: Error) => {
+        toast.error(<div>
+            Polygon bridge transaction failed: {error.message}
+        </div>);
+    }
+
+    const handleBridge = async () => {
+        if (!solanaAPI || !bridgeInputBalance) return;
+        const {tx, messageKey } = await solanaAPI.bridge(bridgeInputBalance);
+        return wallet.sendTransaction(tx, connection, { signers: [messageKey]}).then(bridgeSolanaTxSuccessful).catch(bridgeSolanaTxFailed);
+    };
+
+    const handleRedeem = async () => {
+        if (!redeemVAA || !redeemVAA.writeAsync || !activeBridgeTransaction?.vaaBytes) return;
+        redeemVAA.writeAsync().then(result => setBridgePolygonTransaction(result.hash))
+            .catch(bridgePolygonTxFailed);
     };
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 2 - Swap</h1>
-        <div className="mb-2">Deposited Balance:  <TokenBalance balance={depositedBalance} decimals={swapInputTokenDecimals}/> {swapInputTokenSymbol}</div>
-        <div className="mb-2">Swapped Balance:  <TokenBalance balance={swappedBalance} decimals={swapOutputTokenDecimals}/> {swapOutputTokenSymbol}</div>
+        <h1 className="text-2xl mb-4">Step 3 - Bridge</h1>
+        <div className="mb-2">Balance to bridge:  <TokenBalance balance={bridgeInputBalance} decimals={bridgeInputTokenDecimals}/> {bridgeInputTokenSymbol}</div>
         <div className="flex items-center space-x-2 mb-2">
             <button
                 className="btn btn-primary"
-                disabled={!swapEnabled}
-                onClick={handleSwap}
+                disabled={!bridgeEnabled}
+                onClick={handleBridge}
             >
-                Swap
+                Bridge
+            </button>
+            <button
+                className="btn btn-primary"
+                disabled={!redeemEnabled}
+                onClick={handleRedeem}
+            >
+                Redeem
             </button>
         </div>
+        <BridgeSubSteps
+            solBridgeTxComplete={!!activeBridgeTransaction?.solanaTxSignature}
+            vaaRetrieved={!!activeBridgeTransaction?.vaaBytes}
+            redeemedOnPolygon={!!activeBridgeTransaction?.polygonTxHash}
+        />
         <div className="flex items-center space-x-2">
-            <NextButton disabled={ swappedBalance === undefined || Number(swappedBalance) === 0 }/>
+            <NextButton disabled={ false }/>
         </div>
     </div>)
 }
