@@ -12,6 +12,7 @@ import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKE
 import {useAppStore} from "@/app/providers";
 import {FaCheckCircle, FaCircle} from "react-icons/fa";
 import {PolyExplorerLink} from "@/components/polyExplorerLink";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
@@ -24,7 +25,7 @@ const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
 );
 
 const BridgeSubSteps:FC<{ polygonBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnSolana: boolean }> = ({ polygonBridgeTxComplete, vaaRetrieved, redeemedOnSolana }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <div className="p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold mb-4">Bridge Operation</h2>
         <ul className="list-none">
             <li className="flex items-center mb-2">
@@ -111,6 +112,7 @@ export default function Step4() {
                 disabled={!bridgeEnabled}
                 onClick={handleBridge}
             >
+                Bridge
             </button>
             <button
                 className="btn btn-primary"
@@ -119,13 +121,14 @@ export default function Step4() {
             >
                 Redeem
             </button>
+            <ConnectButton/>
         </div>
         <BridgeSubSteps
             polygonBridgeTxComplete={!!activeBridgeTransaction?.polygonTxHash}
             vaaRetrieved={!!activeBridgeTransaction?.vaaBytes}
             redeemedOnSolana={!!activeBridgeTransaction?.solanaTxSignature}
         />
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ false }/>
         </div>
     </div>)

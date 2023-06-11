@@ -69,14 +69,14 @@ export default function Step1() {
                 placeholder="Amount"
             />
             <button
-                className="btn btn-primary"
+                className="btn btn-primary w-32"
                 disabled={!swapEnabled}
                 onClick={handleSwap}
             >
                 Deposit
             </button>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ swappedBalance === undefined || Number(swappedBalance) === 0 }/>
         </div>
     </div>)

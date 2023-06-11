@@ -17,6 +17,7 @@ import {useAppStore} from "@/app/providers";
 import {FaCheckCircle, FaCircle} from "react-icons/fa";
 import {useRedeemVAA} from "@/hooks/useRedeemVAA";
 import {useAccount} from "wagmi";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
@@ -29,7 +30,7 @@ const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
 );
 
 const BridgeSubSteps:FC<{ solBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnPolygon: boolean }> = ({ solBridgeTxComplete, vaaRetrieved, redeemedOnPolygon }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <div className="dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold mb-4">Bridge Operation</h2>
         <ul className="list-none">
             <li className="flex items-center mb-2">
@@ -130,30 +131,31 @@ export default function Step2() {
     };
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 3 - Bridge</h1>
+        <h1 className="text-2xl mb-4">Step 2 - Bridge</h1>
         <div className="mb-2">Balance to bridge:  <TokenBalance balance={bridgeInputBalance} decimals={bridgeInputTokenDecimals}/> {bridgeInputTokenSymbol}</div>
         <div className="flex items-center space-x-2 mb-2">
             <button
-                className="btn btn-primary"
+                className="btn btn-primary w-32"
                 disabled={!bridgeEnabled}
                 onClick={handleBridge}
             >
                 Bridge
             </button>
             <button
-                className="btn btn-primary"
+                className="btn btn-primary w-32"
                 disabled={!redeemEnabled}
                 onClick={handleRedeem}
             >
                 Redeem
             </button>
+            <ConnectButton/>
         </div>
         <BridgeSubSteps
             solBridgeTxComplete={!!activeBridgeTransaction?.solanaTxSignature}
             vaaRetrieved={!!activeBridgeTransaction?.vaaBytes}
             redeemedOnPolygon={!!activeBridgeTransaction?.polygonTxHash}
         />
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center mt-2 space-x-2">
             <NextButton disabled={ false }/>
         </div>
     </div>)

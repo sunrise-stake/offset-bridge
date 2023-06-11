@@ -1,7 +1,7 @@
 import {FC} from "react";
 
 export const Footer: FC = () => (
-    <footer className="footer shrink-0 b-0 h-16 w-full pb-8">
+    <footer className="footer shrink-0 b-0 h-4 w-full">
         <div className="content has-text-centered">
             <p>
                 <strong>Carbon Retirement</strong> by{' '}

@@ -27,13 +27,7 @@ import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-    [
-        // mainnet,
-        polygon,
-        // optimism,
-        // arbitrum,
-        // ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [goerli] : []),
-    ],
+    [polygon],
     [publicProvider()]
 );
 

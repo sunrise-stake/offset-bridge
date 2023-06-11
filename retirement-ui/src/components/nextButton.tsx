@@ -18,7 +18,7 @@ export const NextButton: FC<{disabled?: boolean}> = ({ disabled = false}) => {
     }
 
     return <button
-        className="btn btn-primary"
+        className="btn btn-primary w-32"
         disabled={disabledNext}
         onClick={nextStep}
     >

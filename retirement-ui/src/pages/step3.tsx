@@ -13,6 +13,7 @@ import {PolyExplorerLink} from "@/components/polyExplorerLink";
 import {useHoldingContractBalance} from "@/hooks/useHoldingContractBalance";
 import {useRedeemVAA} from "@/hooks/useRedeemVAA";
 import {useOffset} from "@/hooks/useOffset";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 export default function Step3() {
     const holdingContractBalance = useHoldingContractBalance();
@@ -42,18 +43,19 @@ export default function Step3() {
     };
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 4 - Retire</h1>
+        <h1 className="text-2xl mb-4">Step 3 - Retire</h1>
         <div className="mb-2">Balance ready to retire:  <TokenBalance balance={holdingContractBalance.balance} decimals={tokenDecimals}/> {tokenSymbol}</div>
-        <div className="flex items-center space-x-2 mb-2">
+        <ConnectButton/>
+        <div className="flex items-center space-x-2 mt-2">
             <button
-                className="btn btn-primary"
+                className="btn btn-primary w-32"
                 disabled={!retireEnabled}
                 onClick={handleRetire}
             >
                 Retire
             </button>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ false }/>
         </div>
     </div>)
