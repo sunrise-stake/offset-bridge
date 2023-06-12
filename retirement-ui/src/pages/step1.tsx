@@ -1,35 +1,49 @@
-import {FC, useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
 import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
-import {tokenAmountFromString, tokenAuthority} from "@/lib/util";
+import {tokenAmountFromString, tokenAuthority, usdcTokenAmountFromCents} from "@/lib/util";
 import {toast} from "react-toastify";
 import {SolExplorerLink} from "@/components/solExplorerLink";
 import {NextButton} from "@/components/nextButton";
 import {TokenBalance} from "@/components/tokenBalance";
-import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKEN_SYMBOL} from "@/lib/constants";
+import {
+    BRIDGE_INPUT_MINT_ADDRESS,
+    BRIDGE_INPUT_MINT_DECIMALS,
+    BRIDGE_INPUT_TOKEN_SYMBOL,
+} from "@/lib/constants";
+import {useAppStore} from "@/app/providers";
+import {HoldingContractSelector} from "@/components/holdingContractSelector";
+import {USDCarbonAmount} from "@/components/USDCarbonAmount";
+import {carbonToUsdcCents} from "@/lib/prices";
 
 const swapInputToken = tokenMint;
-const swapInputTokenSymbol = tokenSymbol;
 const swapInputTokenDecimals = tokenDecimals;
-const swapOutputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
-const swapOutputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
 
 export default function Step1() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
     const {api} = useSolanaRetirement();
     const myBalance = useSolanaTokenBalance(tokenMint, wallet.publicKey);
-    const depositedBalance = useSolanaTokenBalance(tokenMint, tokenAuthority);
     const swappedBalance = useSolanaTokenBalance(swapOutputTokenMint, tokenAuthority);
     const [amount, setAmount] = useState('');
     const [swapEnabled, setSwapEnabled] = useState(false);
+    const [amountInputAsUSDC, setAmountInputAsUSDC] = useState(true);
+
+    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
+
+    const getInputAmountAsUSD = useCallback((): bigint => {
+        if (amountInputAsUSDC && !!amount) return tokenAmountFromString(amount, tokenDecimals);
+
+        return usdcTokenAmountFromCents(carbonToUsdcCents(Number(amount)));
+    }, [amount, amountInputAsUSDC]);
 
     useEffect(() => {
         try {
-            const amountBigInt = tokenAmountFromString(amount, tokenDecimals);
+            const amountBigInt = getInputAmountAsUSD();
             setSwapEnabled(api !== undefined && amountBigInt > 0 && myBalance !== undefined && amountBigInt <= myBalance);
         } catch (e) {
             setSwapEnabled(false);
@@ -48,25 +62,31 @@ export default function Step1() {
         </div>);
     }
 
+
+    const handleAmountToggleChange = () => {
+        setAmountInputAsUSDC(!amountInputAsUSDC);
+    };
+
     const handleSwap = async () => {
         if (!api || !swapEnabled) return;
-        const amountBigInt = tokenAmountFromString(amount, tokenDecimals);
+        const amountBigInt = getInputAmountAsUSD();
         const tx = await api.depositAndSwap(swapInputToken, amountBigInt);
         return wallet.sendTransaction(tx, connection).then(swapSuccessful).catch(swapFailed);
     };
 
     return (<div>
         <h1 className="text-2xl mb-4">Step 1 - Deposit</h1>
-        <div className="mb-2">My Balance: <TokenBalance balance={myBalance} decimals={tokenDecimals}/> {tokenSymbol}</div>
-        <div className="mb-2">Deposited Balance:  <TokenBalance balance={depositedBalance} decimals={swapInputTokenDecimals}/> {swapInputTokenSymbol}</div>
-        <div className="mb-2">Swapped Balance:  <TokenBalance balance={swappedBalance} decimals={swapOutputTokenDecimals}/> {swapOutputTokenSymbol}</div>
+        <div className="mb-2">My Balance: <TokenBalance balance={myBalance} decimals={swapInputTokenDecimals}/> {tokenSymbol}</div>
+        <div className="mb-2">Deposited:  <USDCarbonAmount usdAmount={swappedBalance}/></div>
+        <div className="mb-2">To deposit:  <USDCarbonAmount usdAmount={getInputAmountAsUSD()}/></div>
+        <HoldingContractSelector selected={holdingContractTarget} setSelected={setHoldingContractTarget} />
         <div className="flex items-center space-x-2 mb-2">
             <input
                 type="number"
                 className="input input-bordered w-32"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Amount"
+                placeholder={ amountInputAsUSDC ? "$" : "tCO₂E"}
             />
             <button
                 className="btn btn-primary w-32"
@@ -75,6 +95,18 @@ export default function Step1() {
             >
                 Deposit
             </button>
+        </div>
+        <div>
+            <div className="flex items-center space-x-2">
+                <span className="text-gray-600">USD</span>
+
+                <div className="form-toggle">
+                    <input type="checkbox" className="toggle" checked={!amountInputAsUSDC} onChange={handleAmountToggleChange} />
+                    <label htmlFor="toggle"></label>
+                </div>
+
+                <span className="text-gray-600">Carbon</span>
+            </div>
         </div>
         <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ swappedBalance === undefined || Number(swappedBalance) === 0 }/>

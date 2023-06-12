@@ -22,16 +22,16 @@ import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRA
 import {tokenAuthority} from "@/lib/util";
 import {
     CHAIN_ID_POLYGON,
-    HOLDING_CONTRACT_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS,
     CHAIN_ID_SOLANA, WORMHOLE_RPC_HOSTS_MAINNET
 } from "@/lib/constants";
 import {bridgeAuthority, bridgeInputTokenAccount} from "@/lib/util";
-import {parseUnits} from "@ethersproject/units";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import BN from "bn.js";
 import {createWormholeWrappedTransfer} from "@/lib/bridge";
 
 type UnsubscribeCallback = () => void;
+export type VAAResult = { vaaBytes: Uint8Array, sequence: string, emitterAddress: string, emitterChain: number };
 
 export class SolanaRetirement {
     ready: boolean = false;
@@ -41,6 +41,7 @@ export class SolanaRetirement {
     constructor(
         readonly solWallet: AnchorWallet,
         readonly solConnection: Connection,
+        public holdingContractTarget: string,
     ) {
     }
 
@@ -246,7 +247,7 @@ export class SolanaRetirement {
             bridgeInputTokenAccount,
             tokenAuthority,
             amount,
-            Wormhole.tryNativeToUint8Array(HOLDING_CONTRACT_ADDRESS, CHAIN_ID_POLYGON),
+            Wormhole.tryNativeToUint8Array(this.holdingContractTarget, CHAIN_ID_POLYGON),
         );
 
         const tx = await program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
@@ -263,7 +264,7 @@ export class SolanaRetirement {
         return { tx, messageKey };
     }
 
-    async getVAAFromSolanaTransactionSignature(txSignature: string): Promise<Uint8Array> {
+    async getVAAFromSolanaTransactionSignature(txSignature: string): Promise<VAAResult> {
         const info = await this.solConnection.getTransaction(txSignature);
         if (!info) {
             throw new Error(
@@ -289,14 +290,15 @@ export class SolanaRetirement {
             // }
         );
 
-        return vaaBytes;
+        return {vaaBytes, sequence, emitterAddress, emitterChain: CHAIN_ID_SOLANA};
     }
 
     static async build(
         solWallet: AnchorWallet,
         solConnection: Connection,
+        holdingContractTarget: string,
     ): Promise<SolanaRetirement> {
-        const instance = new SolanaRetirement(solWallet, solConnection);
+        const instance = new SolanaRetirement(solWallet, solConnection, holdingContractTarget);
         await instance.init();
         return instance;
     }

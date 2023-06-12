@@ -25,11 +25,15 @@ export const SOL_BRIDGE_ADDRESS = new PublicKey("worm2ZoG2kUd4vFXhvjh93UUH596ayR
 export const CHAIN_ID_POLYGON = 5;
 export const CHAIN_ID_SOLANA = 1;
 
+export const MAX_NUM_PRECISION = 5;
+
 // Token Mints
 // usdc test token on solana , https://developers.circle.com/developer/docs/usdc-on-testnet#usdc-on-solana-testnet
 export const USDC_TEST_TOKEN_SOLANA = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"); // interface: https://spl-token-faucet.com/?token-name=USDC
 export const USDC_TOKEN_SOLANA = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 export const USDC_TOKEN_POLYGON = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+
+export const USDC_TOKEN_DECIMALS = 6;
 
 
 export const WRAPPED_SOL_TOKEN_MINT = new PublicKey("So11111111111111111111111111111111111111112");
@@ -42,8 +46,18 @@ export const BRIDGE_OUTPUT_TOKEN_CONTRACT = USDC_TOKEN_POLYGON; // USDC on polyg
 export const BRIDGE_OUTPUT_TOKEN_DECIMALS = 6;
 export const BRIDGE_OUTPUT_TOKEN_SYMBOL = "USDC";
 
+export type HoldingContract = {
+    name: string;
+    description: string;
+    address: string;
+}
 // Holding contract deployed on Polygon mainnet
 export const HOLDING_CONTRACT_ADDRESS = "0x7022404732CB3ec5aC95c2c75080A76226AA74F5";
+export const HOLDING_CONTRACTS: HoldingContract[]= [{
+    name: "Default",
+    description: "Using Toucan's default retirement strategy",
+    address: HOLDING_CONTRACT_ADDRESS,
+}]
 
 // export const WORMHOLE_RPC_HOSTS = ["http://guardian:7071"];
 export const WORMHOLE_RPC_HOSTS_TESTNET = ["https://wormhole-v2-testnet-api.certus.one"];

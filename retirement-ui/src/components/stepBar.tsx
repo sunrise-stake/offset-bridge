@@ -32,7 +32,7 @@ export const steps = [ "Deposit", "Bridge", "Retire", "Redeem"];
 export const StepBar:FC = () => {
     return (
         <aside className="w-64 mr-4 p-4 rounded-lg shadow-lg">
-            <ul className="">
+            <ul>
                 {
                     steps.map((text, index) => (
                         <Step key={index} step={index + 1} text={text}/>

@@ -25,6 +25,8 @@ import { create } from 'zustand'
 import { devtools, persist, StateStorage } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
+import {VAAResult} from "@/api/solanaRetirement";
+import {HOLDING_CONTRACTS} from "@/lib/constants";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
@@ -62,32 +64,37 @@ const wagmiConfig = createConfig({
     webSocketPublicClient,
 });
 
+export type VAAResultStored = Omit<VAAResult, 'vaaBytes'> & { vaaBytes: string };
+
 type BridgeTransactionStored = {
     solanaTxSignature?: string; // set if the tx originates from solana or has been redeemed on solana
-    vaaBytes?: string;  // set if wormhole has seen the tx (bytes in hex)
+    vaaResult?: VAAResultStored;  // set if wormhole has seen the tx (bytes in hex)
     polygonTxHash?: string // set if the tx originates from polygon or has been redeemed on polygon
 }
 
-type BridgeTransaction = Omit<BridgeTransactionStored, 'vaaBytes'> & {
-    vaaBytes?: Uint8Array
+type BridgeTransaction = Omit<BridgeTransactionStored, 'vaaResult'> & {
+    vaaResult?: VAAResult;
 }
 
 export interface AppState {
     step: number;
+    holdingContractTarget: string;
     activeUSDCBridgeTransaction?: BridgeTransactionStored;
     activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
 }
 
 export interface Actions {
     setStep: (newStep: number) => void;
+    setHoldingContractTarget: (newTarget: string) => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
+    clearActiveUSDCBridgeTransaction: () => void;
     updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
 }
 
 const convertBridgeTransaction = (newTx: Partial<BridgeTransaction>): Partial<BridgeTransactionStored> => {
     return {
         ...newTx,
-        ...(newTx?.vaaBytes ? {vaaBytes: Buffer.from(newTx.vaaBytes).toString('hex')} : {})
+        ...(newTx?.vaaResult ? {vaaResult: { ...newTx.vaaResult, vaaBytes: Buffer.from(newTx.vaaResult.vaaBytes).toString('hex')}} : {})
     } as Partial<BridgeTransactionStored>;
 }
 
@@ -99,12 +106,16 @@ export const useAppStore = create<AppState & Actions>()(
                     step: 1,
                     setStep: (newStep: number) => set((state) => ({step: state.step + newStep})),
 
+                    holdingContractTarget: HOLDING_CONTRACTS[0].address,
+                    setHoldingContractTarget: (newTarget: string) => set((state) => ({holdingContractTarget: newTarget})),
+
                     activeUSDCBridgeTransaction: undefined,
                     updateActiveUSDCBridgeTransaction:
                         (newTx: Partial<BridgeTransaction>) => {
                             set((state) =>
                                 ({activeUSDCBridgeTransaction: {...(state.activeUSDCBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}}));
                         },
+                    clearActiveUSDCBridgeTransaction: () => set((state) => ({activeUSDCBridgeTransaction: undefined})),
 
                     activeRetirementCertificateBridgeTransaction: undefined,
                     updateActiveRetirementCertificateBridgeTransaction:

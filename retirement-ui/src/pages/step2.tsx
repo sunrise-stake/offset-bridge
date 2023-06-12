@@ -1,4 +1,4 @@
-import {FC, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {TokenBalance} from "@/components/tokenBalance";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {NextButton} from "@/components/nextButton";
@@ -14,41 +14,32 @@ import {
     BRIDGE_INPUT_TOKEN_SYMBOL,
 } from "@/lib/constants";
 import {useAppStore} from "@/app/providers";
-import {FaCheckCircle, FaCircle} from "react-icons/fa";
 import {useRedeemVAA} from "@/hooks/useRedeemVAA";
 import {useAccount} from "wagmi";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
+import {VAAResult} from "@/api/solanaRetirement";
+import {PolyExplorerLink} from "@/components/polyExplorerLink";
+import {WormholeLink} from "@/components/wormholeLink";
+import {BridgeSubsteps, Substep, SubstepInfo} from "@/components/bridgeSubsteps";
 
 const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 const bridgeInputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
 
-const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
-    <FaCheckCircle className="text-green-500"/>
-) : (
-    <FaCircle className="text-gray-300"/>
-);
-
-const BridgeSubSteps:FC<{ solBridgeTxComplete: boolean, vaaRetrieved: boolean, redeemedOnPolygon: boolean }> = ({ solBridgeTxComplete, vaaRetrieved, redeemedOnPolygon }) => (
-    <div className="dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">Bridge Operation</h2>
-        <ul className="list-none">
-            <li className="flex items-center mb-2">
-                <SubStepIcon complete={solBridgeTxComplete} />
-                <span className="ml-2">Solana bridge transaction</span>
-            </li>
-            <li className="flex items-center mb-2">
-                <SubStepIcon complete={vaaRetrieved} />
-                <span className="ml-2">Retrieve VAA from bridge</span>
-            </li>
-            <li className="flex items-center mb-2">
-                <SubStepIcon complete={redeemedOnPolygon} />
-                <span className="ml-2">Redeem on Polygon</span>
-            </li>
-        </ul>
-    </div>
-);
-
+const substepInfos: SubstepInfo[] = [
+    {
+        name: 'Solana bridge transaction',
+        description: 'Send USDC to the Wormhole bridge',
+    },
+    {
+        name: 'Retrieve receipt from bridge',
+        description: 'Retrieve VAA (Verified Action Approval) from Wormhole. This can take up to five minutes.',
+    },
+    {
+        name: 'Redeem on Polygon',
+        description: 'Receive the USDC on Polygon. It will be deposited into a holding contract.'
+    }
+]
 
 export default function Step2() {
     const wallet = useWalletSafe();
@@ -58,14 +49,14 @@ export default function Step2() {
     const {api : solanaAPI} = useSolanaRetirement();
     const activeBridgeTransaction = useAppStore(state => state.activeUSDCBridgeTransaction)
     const updateBridgeTransaction = useAppStore(state => state.updateActiveUSDCBridgeTransaction)
-    const redeemVAA = useRedeemVAA(activeBridgeTransaction?.vaaBytes);
+    const redeemVAA = useRedeemVAA(activeBridgeTransaction?.vaaResult?.vaaBytes);
 
     const [bridgeEnabled, setBridgeEnabled] = useState(false);
     const [redeemEnabled, setRedeemEnabled] = useState(false);
 
     useEffect(() => {
         setRedeemEnabled(
-            activeBridgeTransaction?.vaaBytes !== undefined &&
+            activeBridgeTransaction?.vaaResult !== undefined &&
             activeBridgeTransaction?.polygonTxHash === undefined &&
             address !== undefined
         );
@@ -79,15 +70,15 @@ export default function Step2() {
         updateBridgeTransaction({ polygonTxHash: txHash });
     }
 
-    const setVAABytes = (vaaBytes: Uint8Array) => {
-        updateBridgeTransaction({ vaaBytes });
+    const setVAAResult = (vaaResult: VAAResult) => {
+        updateBridgeTransaction({ vaaResult });
     }
 
     useEffect(() => {
         setBridgeEnabled(solanaAPI !== undefined && !activeBridgeTransaction && bridgeInputBalance !== undefined && Number(bridgeInputBalance) > 0);
 
-        if (activeBridgeTransaction && activeBridgeTransaction.solanaTxSignature && !activeBridgeTransaction.vaaBytes) {
-            solanaAPI?.getVAAFromSolanaTransactionSignature(activeBridgeTransaction.solanaTxSignature).then(setVAABytes).catch(getVAAFailed);
+        if (activeBridgeTransaction && activeBridgeTransaction.solanaTxSignature && !activeBridgeTransaction.vaaResult) {
+            solanaAPI?.getVAAFromSolanaTransactionSignature(activeBridgeTransaction.solanaTxSignature).then(setVAAResult).catch(getVAAFailed);
         }
     }, [bridgeInputBalance, solanaAPI]);
 
@@ -97,7 +88,7 @@ export default function Step2() {
             Solana bridge transaction successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
         </div>);
 
-        solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAABytes).catch(getVAAFailed);
+        solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAAResult).catch(getVAAFailed);
     }
 
     const bridgeSolanaTxFailed = (error: Error) => {
@@ -125,14 +116,38 @@ export default function Step2() {
     };
 
     const handleRedeem = async () => {
-        if (!redeemVAA || !redeemVAA.writeAsync || !activeBridgeTransaction?.vaaBytes) return;
+        if (!redeemVAA || !redeemVAA.writeAsync || !activeBridgeTransaction?.vaaResult) return;
         redeemVAA.writeAsync().then(result => setBridgePolygonTransaction(result.hash))
             .catch(bridgePolygonTxFailed);
     };
 
+    const substeps: Substep[] = [{
+        ...substepInfos[0],
+        status: !!activeBridgeTransaction?.solanaTxSignature ? 'complete' : 'pending',
+        details: {
+            ...(activeBridgeTransaction?.solanaTxSignature ? {txSig: <SolExplorerLink address={activeBridgeTransaction.solanaTxSignature} type="tx"/>} : {})
+        }
+    },{
+        ...substepInfos[1],
+        status: !!activeBridgeTransaction?.vaaResult ? 'complete' : (activeBridgeTransaction?.solanaTxSignature ? 'running' : 'pending'),
+        details: {
+            ...(activeBridgeTransaction?.vaaResult ? {
+                sequence: <WormholeLink details={activeBridgeTransaction?.vaaResult}/>,
+            } : {})
+        }
+    },{
+        ...substepInfos[2],
+        status: !!activeBridgeTransaction?.polygonTxHash ? 'complete' :
+            (redeemVAA?.data ? 'running' : 'pending'),
+        details: {
+            ...(activeBridgeTransaction?.polygonTxHash ? {txHash: <PolyExplorerLink address={activeBridgeTransaction.polygonTxHash} type="tx"/>} : {})
+        }
+    }
+    ];
+
     return (<div>
         <h1 className="text-2xl mb-4">Step 2 - Bridge</h1>
-        <div className="mb-2">Balance to bridge:  <TokenBalance balance={bridgeInputBalance} decimals={bridgeInputTokenDecimals}/> {bridgeInputTokenSymbol}</div>
+        <div className="mb-2">Balance to bridge:  $<TokenBalance balance={bridgeInputBalance} decimals={bridgeInputTokenDecimals}/></div>
         <div className="flex items-center space-x-2 mb-2">
             <button
                 className="btn btn-primary w-32"
@@ -150,13 +165,9 @@ export default function Step2() {
             </button>
             <ConnectButton/>
         </div>
-        <BridgeSubSteps
-            solBridgeTxComplete={!!activeBridgeTransaction?.solanaTxSignature}
-            vaaRetrieved={!!activeBridgeTransaction?.vaaBytes}
-            redeemedOnPolygon={!!activeBridgeTransaction?.polygonTxHash}
-        />
+        <BridgeSubsteps substeps={substeps}/>
         <div className="flex items-center mt-2 space-x-2">
-            <NextButton disabled={ false }/>
+            <NextButton disabled={ !activeBridgeTransaction?.polygonTxHash }/>
         </div>
     </div>)
 }
