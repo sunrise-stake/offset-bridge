@@ -15,13 +15,16 @@ contract Deploy is Script {
         address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
         address beneficiary = address(0);
         string memory beneficiaryName = "0x0";
+        string memory solanaAccountAddress = "0";
+        address sunriseAdmin = address(0);
 
         vm.startBroadcast(deployerPrivateKey);
         retireContract = new CarbonOffsetSettler();
         holdingContract = new HoldingContract(
             tco2,
             beneficiary,
-            beneficiaryName
+            beneficiaryName,
+            solanaAccountAddress
         );
         holdingContract.setRetireContract(address(retireContract));
 
@@ -31,8 +34,8 @@ contract Deploy is Script {
             address(holdingContract)
         );
 
-        // Change beneficiary so that the NFT will be minted to the holding contract - TODO hardcode?
         holdingContract.setBeneficiary(address(holdingContract), "Solana");
+        // holdingContract.transferOwnership(sunriseAdmin);
         vm.stopBroadcast();
 
         // impersonate a whale to fund our contract with usdc. to run:

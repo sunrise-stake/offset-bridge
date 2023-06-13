@@ -27,7 +27,8 @@ contract HoldingContractTest is Test {
         holdingContract = new HoldingContract(
             tco2,
             beneficiary,
-            beneficiaryName
+            beneficiaryName,
+            "0"
         );
         carbonOffsetSettler = new CarbonOffsetSettler();
         holdingContract.setRetireContract(address(carbonOffsetSettler));

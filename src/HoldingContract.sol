@@ -6,16 +6,23 @@ import "forge-std/console.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
+import "forge-std/console.sol";
+
 import "src/interfaces/INFTBridge.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
 contract HoldingContract is Ownable {
+    using Counters for Counters.Counter;
+    Counters.Counter private _nonce;
+
     // Retirement contract (mundo CarbonOffsetSettler)
     address public retireContract;
     // Retirement details
     address public tco2;
     address public beneficiary;
     string public beneficiaryName;
+    string public SolanaAccountAddress;
 
     // Wormhole bridge
     address private bridge = 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
@@ -41,11 +48,13 @@ contract HoldingContract is Ownable {
     constructor(
         address newTco2,
         address newBeneficiary,
-        string memory newBeneficiaryName
+        string memory newBeneficiaryName,
+        string memory newSolanaAccountAddress
     ) {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
+        SolanaAccountAddress = newSolanaAccountAddress;
     }
 
     /*
@@ -80,6 +89,17 @@ contract HoldingContract is Ownable {
         tco2 = newTco2;
     }
 
+    /*
+     * @notice Set the Solana Account that receives the retirement certificate
+     * @dev This is read out to calculate the associated token account for the Wormhole message
+     * @param newSolanaAccountAddress address of the Solana Account
+     */
+    function setSolanaAccountAddress(
+        string calldata newSolanaAccountAddress
+    ) external onlyOwner {
+        SolanaAccountAddress = newSolanaAccountAddress;
+    }
+
     // --------------------------------- Permissionless retiring --------------------------------------- //
     /*
      * @notice Offset carbon emissions by sending USDC to the CarbonOffsetSettler contract and using the funds to retire carbon tokens.
@@ -105,18 +125,20 @@ contract HoldingContract is Ownable {
     }
 
     // --------------------------------- Permissionless bridging using Wormhole --------------------------------------- //
-    function bridgeNFT(uint256 tokenId) external returns (uint256 sequence) {
-        address nft = 0x2230D9a57766E8Af195999A154B7A14ab47D5d04;
-        bytes32 recipient = stringToBytes32(
-            "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq"
-        );
+    function bridgeNFT(
+        uint256 tokenId,
+        bytes32 recipient
+    ) external returns (uint256 sequence) {
+        address nft = 0xC15133D0Fc527AD38eaB2627ee89FD8faf728859;
+        uint32 nonce = uint32(_nonce.current());
+        _nonce.increment();
         ERC721(nft).approve(bridge, tokenId);
         sequence = INFTBridge(bridge).transferNFT(
             nft,
             tokenId,
             1, //Solana Chain ID
             recipient, // recipient
-            0 // 0 nonce
+            nonce
         );
     }
 
