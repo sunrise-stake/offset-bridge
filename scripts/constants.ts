@@ -36,6 +36,7 @@ export const CHAIN_ID_SOLANA = 1;
 
 //NFT 
 export const POLYGON_TEST_NFT_BRIDGE_ADDRESS = "0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9";
+export const SOLANA_TEST_NFT_BRIDGE_ADDRESS = "2rHhojZ7hpu1zA91nvZmT8TqWWvMcKmmNBCr2mKTtMq4";
 
 // Token Mints
 // usdc test token on solana , https://developers.circle.com/developer/docs/usdc-on-testnet#usdc-on-solana-testnet
