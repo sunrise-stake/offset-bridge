@@ -5,11 +5,13 @@ import "forge-std/Test.sol";
 import "src/HoldingContract.sol";
 import "src/CarbonOffsetSettler.sol";
 import "forge-std/console.sol";
+import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
 
 contract HoldingContractTest is Test {
     HoldingContract holdingContract;
     CarbonOffsetSettler carbonOffsetSettler;
     address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+    address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
 
     event Offset(
         address indexed tco2,
@@ -27,10 +29,9 @@ contract HoldingContractTest is Test {
         holdingContract = new HoldingContract(
             tco2,
             beneficiary,
-            beneficiaryName,
-            "0"
+            beneficiaryName
         );
-        carbonOffsetSettler = new CarbonOffsetSettler();
+        carbonOffsetSettler = new CarbonOffsetSettler(address(holdingContract));
         holdingContract.setRetireContract(address(carbonOffsetSettler));
         console.log("Tco2 address: %s", holdingContract.tco2());
     }
@@ -49,6 +50,9 @@ contract HoldingContractTest is Test {
         // );
 
         // Call offset and emit event
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+        assertEq(cert.balanceOf(address(holdingContract)), 0);
+
         assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 100 * 1e6);
 
         vm.expectEmit(true, true, true, true);
@@ -60,6 +64,7 @@ contract HoldingContractTest is Test {
         );
         holdingContract.offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 0);
+        assertEq(cert.balanceOf(address(holdingContract)), 1);
     }
 
     function test_revert_Offset_insufficientFunds() public {

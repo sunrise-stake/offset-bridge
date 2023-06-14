@@ -8,9 +8,10 @@ import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import "src/interfaces/INFTBridge.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
-contract HoldingContract is Ownable {
+contract HoldingContract is Ownable, IERC721Receiver {
     using Counters for Counters.Counter;
     Counters.Counter private _nonce;
 
@@ -137,12 +138,12 @@ contract HoldingContract is Ownable {
         );
     }
 
-    function stringToBytes32(
-        string memory str
-    ) public pure returns (bytes32 result) {
-        bytes memory strBytes = bytes(str);
-        assembly {
-            result := mload(add(strBytes, 32))
-        }
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
