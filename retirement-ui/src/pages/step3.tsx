@@ -1,17 +1,8 @@
 import {FC, useEffect, useState} from "react";
-import {useWalletSafe} from "@/hooks/useWalletSafe";
-import {useConnection} from "@solana/wallet-adapter-react";
-import {tokenDecimals, tokenMint, tokenSymbol, useSolanaRetirement} from "@/context/solanaRetirementContext";
-import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
-import {tokenAmountFromString, tokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
-import {SolExplorerLink} from "@/components/solExplorerLink";
 import {NextButton} from "@/components/nextButton";
-import {TokenBalance} from "@/components/tokenBalance";
-import {BRIDGE_INPUT_MINT_ADDRESS, BRIDGE_INPUT_MINT_DECIMALS, BRIDGE_INPUT_TOKEN_SYMBOL} from "@/lib/constants";
 import {PolyExplorerLink} from "@/components/polyExplorerLink";
 import {useHoldingContractBalance} from "@/hooks/useHoldingContractBalance";
-import {useRedeemVAA} from "@/hooks/useRedeemVAA";
 import {useOffset} from "@/hooks/useOffset";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {useAppStore} from "@/app/providers";
@@ -27,12 +18,21 @@ export default function Step3() {
         setRetireEnabled(!!holdingContractBalance?.balance && (holdingContractBalance.balance > 0));
     }, [holdingContractBalance?.balance]);
 
-    const retireSuccessful = (txHash: string) => {
-        clearBridgeTransaction();
-        toast.success(<div>
-            Retirement successful:{' '}<PolyExplorerLink address={txHash} type="tx"/>
+    const retireInProgress = (txHash: string) => {
+        toast.info(<div>
+            Retirement in progress:{' '}<PolyExplorerLink address={txHash} type="tx"/>
         </div>);
     }
+
+    // handle retire success
+    useEffect(() => {
+        if (offset?.isSuccess) {
+            clearBridgeTransaction();
+            toast.info(<div>
+                Retirement successful:{' '}<PolyExplorerLink address={offset.data?.hash || ''} type="tx"/>
+            </div>);
+        }
+    }, [offset?.isSuccess]);
 
     const retireFailed = (error: Error) => {
         toast.error(<div>
@@ -42,7 +42,7 @@ export default function Step3() {
 
     const handleRetire = async () => {
         if (!offset || !offset.writeAsync || !retireEnabled) return;
-        offset.writeAsync().then(result => retireSuccessful(result.hash))
+        offset.writeAsync().then(result => retireInProgress(result.hash))
             .catch(retireFailed);
     };
 

@@ -1,5 +1,4 @@
 import { Cluster, PublicKey, Keypair } from "@solana/web3.js";
-import bs58 from "bs58";
 
 // Endpoints, connection
 export const ENV: Cluster = (process.env.CLUSTER as Cluster) || "mainnet-beta";
@@ -18,6 +17,7 @@ export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkc
 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
 export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";
+export const POLYGON_BRIDGE_ADDRESS = "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7";
 export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = new PublicKey("DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe");
 export const SOL_TEST_BRIDGE_ADDRESS = new PublicKey("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5");
 export const SOL_TOKEN_BRIDGE_ADDRESS = new PublicKey("wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb");

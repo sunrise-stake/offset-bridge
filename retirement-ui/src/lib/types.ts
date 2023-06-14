@@ -1,0 +1,1 @@
+export type VAAResult = { vaaBytes: Uint8Array, sequence: string, emitterAddress: string, emitterChain: number };

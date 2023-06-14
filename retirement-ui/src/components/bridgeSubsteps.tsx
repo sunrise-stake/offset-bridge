@@ -37,7 +37,7 @@ export const BridgeSubsteps:FC<{ substeps: Substep[] }> = ({ substeps}) => {
                                     setExpandedItem(expandedItem === index ? null : index)
                                 }
                             >
-                               {expandedItem === index ? <FaChevronDown/> : <FaChevronUp/>}
+                               {expandedItem === index ? <FaChevronUp/> : <FaChevronDown/>}
                             </span>
                         </div>
                         {expandedItem === index && (

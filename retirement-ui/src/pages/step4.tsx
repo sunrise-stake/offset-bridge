@@ -1,8 +1,6 @@
 import {FC, useEffect, useState} from "react";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {NextButton} from "@/components/nextButton";
-import {useWalletSafe} from "@/hooks/useWalletSafe";
-import {useConnection} from "@solana/wallet-adapter-react";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
 import {tokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
@@ -13,7 +11,10 @@ import {PolyExplorerLink} from "@/components/polyExplorerLink";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {WormholeLink} from "@/components/wormholeLink";
 import {BridgeSubsteps, Substep, SubstepInfo} from "@/components/bridgeSubsteps";
-import {VAAResult} from "@/api/solanaRetirement";
+import {useBridgeRetirementCert} from "@/hooks/useBridgeRetirementCert";
+import {SolExplorerLink} from "@/components/solExplorerLink";
+import * as polygonAPI from "@/api/polygonRetirement";
+import {VAAResult} from "@/lib/types";
 
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 
@@ -32,19 +33,12 @@ const substepInfos: SubstepInfo[] = [
     }
 ]
 
-
-const SubStepIcon:FC<{ complete: boolean }> = ({ complete }) => complete ? (
-    <FaCheckCircle className="text-green-500"/>
-) : (
-    <FaCircle className="text-gray-300"/>
-);
-
 export default function Step4() {
-    const wallet = useWalletSafe();
-    const { connection } = useConnection();
     const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
 
     const {api : solanaAPI} = useSolanaRetirement();
+    const bridgeRetirementCert = useBridgeRetirementCert();
+
     const activeBridgeTransaction = useAppStore(state => state.activeRetirementCertificateBridgeTransaction)
     const updateBridgeTransaction = useAppStore(state => state.updateActiveRetirementCertificateBridgeTransaction)
 
@@ -71,15 +65,23 @@ export default function Step4() {
         // }
     }, [bridgeInputBalance, solanaAPI]);
 
-    const bridgePolygonTxSuccessful = (txHash: string) => {
+    const bridgePolygonTxInProgress = (txHash: string) => {
         setBridgePolygonTransaction(txHash);
-        toast.success(<div>
-            Polygon bridge transaction successful:{' '} <PolyExplorerLink address={txHash} type="tx"/>
+        toast.info(<div>
+            Polygon bridge transaction in progress:{' '} <PolyExplorerLink address={txHash} type="tx"/>
         </div>);
-
-        // TODO
-        // solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAABytes).catch(getVAAFailed);
     }
+
+    // handle polygon bridge success
+    useEffect(() => {
+        if (bridgeRetirementCert?.isSuccess && bridgeRetirementCert?.wait?.data) {
+            toast.success(<div>
+                Polygon bridge transaction successful:{' '}<PolyExplorerLink address={bridgeRetirementCert.data?.hash || ''} type="tx"/>
+            </div>);
+
+            polygonAPI.getVAAFromPolygonTransactionSignature(bridgeRetirementCert.wait.data).then(setVAAResult).catch(getVAAFailed);
+        }
+    }, [bridgeRetirementCert?.isSuccess, bridgeRetirementCert?.wait?.data]);
 
     const bridgePolygonTxFailed = (error: Error) => {
         toast.error(<div>
@@ -94,6 +96,9 @@ export default function Step4() {
     }
 
     const handleBridge = async () => {
+        if (!bridgeRetirementCert || !bridgeRetirementCert.writeAsync) return;
+        bridgeRetirementCert.writeAsync().then(result => bridgePolygonTxInProgress(result.hash))
+            .catch(bridgePolygonTxFailed);
     };
 
     const handleRedeem = async () => {
@@ -101,13 +106,13 @@ export default function Step4() {
 
     const substeps: Substep[] = [{
         ...substepInfos[0],
-        status: !!activeBridgeTransaction?.polygonTxHash ? 'complete' : 'pending',
+        status: !!activeBridgeTransaction?.polygonTxHash ? (bridgeRetirementCert?.isLoading ? 'running' : 'complete') : 'pending',
         details: {
             ...(activeBridgeTransaction?.polygonTxHash ? {txSig: <PolyExplorerLink address={activeBridgeTransaction.polygonTxHash} type="tx"/>} : {})
         }
     },{
         ...substepInfos[1],
-        status: !!activeBridgeTransaction?.vaaResult ? 'complete' : (activeBridgeTransaction?.polygonTxHash ? 'running' : 'pending'),
+        status: !!activeBridgeTransaction?.vaaResult ? 'complete' : (activeBridgeTransaction?.solanaTxSignature ? 'running' : 'pending'),
         details: {
             ...(activeBridgeTransaction?.vaaResult ? {
                 sequence: <WormholeLink details={activeBridgeTransaction?.vaaResult}/>,
@@ -115,12 +120,9 @@ export default function Step4() {
         }
     },{
         ...substepInfos[2],
-        status: !!activeBridgeTransaction?.polygonTxHash ? 'complete' : 'pending',
-        // TODO polygon
-            // :
-            // (redeemVAA?.data ? 'running' : 'pending'),
+        status: !!activeBridgeTransaction?.solanaTxSignature ? 'complete' : 'pending',
         details: {
-            ...(activeBridgeTransaction?.polygonTxHash ? {txHash: <PolyExplorerLink address={activeBridgeTransaction.polygonTxHash} type="tx"/>} : {})
+            ...(activeBridgeTransaction?.solanaTxSignature ? {txHash: <SolExplorerLink address={activeBridgeTransaction.solanaTxSignature} type="tx"/>} : {})
         }
     }
     ];

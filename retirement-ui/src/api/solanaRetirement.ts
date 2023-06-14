@@ -1,37 +1,45 @@
 import {AnchorWallet} from "@solana/wallet-adapter-react";
 import {
     AccountMeta,
-    Connection, Keypair,
+    Connection,
+    Keypair,
     MessageV0,
-    PublicKey, Transaction,
-    TransactionInstruction, TransactionMessage,
+    PublicKey,
+    Transaction,
+    TransactionInstruction,
+    TransactionMessage,
     VersionedTransaction
 } from "@solana/web3.js";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
+    CHAIN_ID_POLYGON,
+    CHAIN_ID_SOLANA,
     ENV,
     JupiterToken,
     PROGRAM_ID,
+    SOL_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS,
     STATE_ADDRESS,
+    WORMHOLE_RPC_HOSTS_MAINNET,
 } from "@/lib/constants";
 import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from "@jup-ag/core";
 import {IDL, TokenSwap} from "./types/token_swap";
 import JSBI from "jsbi";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
-import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, createTransferInstruction} from "spl-token-latest";
-import {tokenAuthority} from "@/lib/util";
 import {
-    CHAIN_ID_POLYGON,
-    SOL_TOKEN_BRIDGE_ADDRESS,
-    CHAIN_ID_SOLANA, WORMHOLE_RPC_HOSTS_MAINNET
-} from "@/lib/constants";
-import {bridgeAuthority, bridgeInputTokenAccount} from "@/lib/util";
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    createTransferInstruction,
+    getAssociatedTokenAddressSync,
+    TOKEN_PROGRAM_ID
+} from "spl-token-latest";
+import {bridgeAuthority, bridgeInputTokenAccount, tokenAuthority} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
+import {createWrappedOnSolana, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
 import {createWormholeWrappedTransfer} from "@/lib/bridge";
+import {VAAResult} from "@/lib/types";
 
 type UnsubscribeCallback = () => void;
-export type VAAResult = { vaaBytes: Uint8Array, sequence: string, emitterAddress: string, emitterChain: number };
 
 export class SolanaRetirement {
     ready: boolean = false;
@@ -73,8 +81,6 @@ export class SolanaRetirement {
 
         this.ready = true;
     }
-
-
 
     async swap(inputMint: PublicKey, amount: bigint, depositIx?: TransactionInstruction):Promise<VersionedTransaction> {
         if (!this.ready || !this.jupiter) throw new Error("Not initialized");
@@ -291,6 +297,25 @@ export class SolanaRetirement {
         );
 
         return {vaaBytes, sequence, emitterAddress, emitterChain: CHAIN_ID_SOLANA};
+    }
+
+    async redeemVAA(vaaBytes: Uint8Array) {
+        await postVaaSolanaWithRetry(
+            this.solConnection,
+            this.solWallet.signTransaction.bind(this.solWallet),
+            SOL_BRIDGE_ADDRESS,
+            this.solWallet.publicKey,
+            Buffer.from(vaaBytes)
+        );
+
+        // create the wrapped token
+        return createWrappedOnSolana(
+            this.solConnection,
+            SOL_BRIDGE_ADDRESS,
+            SOL_TOKEN_BRIDGE_ADDRESS,
+            this.solWallet.publicKey,
+            vaaBytes
+        );
     }
 
     static async build(

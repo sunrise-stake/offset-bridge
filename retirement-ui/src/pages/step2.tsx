@@ -11,7 +11,6 @@ import {SolExplorerLink} from "@/components/solExplorerLink";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
     BRIDGE_INPUT_MINT_DECIMALS,
-    BRIDGE_INPUT_TOKEN_SYMBOL,
 } from "@/lib/constants";
 import {useAppStore} from "@/app/providers";
 import {useRedeemVAA} from "@/hooks/useRedeemVAA";
@@ -22,7 +21,6 @@ import {PolyExplorerLink} from "@/components/polyExplorerLink";
 import {WormholeLink} from "@/components/wormholeLink";
 import {BridgeSubsteps, Substep, SubstepInfo} from "@/components/bridgeSubsteps";
 
-const bridgeInputTokenSymbol = BRIDGE_INPUT_TOKEN_SYMBOL;
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 const bridgeInputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
 
@@ -88,7 +86,9 @@ export default function Step2() {
             Solana bridge transaction successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
         </div>);
 
-        solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAAResult).catch(getVAAFailed);
+        setTimeout(() => {
+            solanaAPI?.getVAAFromSolanaTransactionSignature(txSig).then(setVAAResult).catch(getVAAFailed);
+        }, 5000);
     }
 
     const bridgeSolanaTxFailed = (error: Error) => {
@@ -102,6 +102,15 @@ export default function Step2() {
             Failed to retrieve information from bridge: {error.message}
         </div>);
     }
+
+    // handle polygon bridge success
+    useEffect(() => {
+        if (redeemVAA?.isSuccess) {
+            toast.success(<div>
+                Polygon bridge transaction successful:{' '}<PolyExplorerLink address={redeemVAA.data?.hash || ''} type="tx"/>
+            </div>);
+        }
+    }, [redeemVAA?.isSuccess]);
 
     const bridgePolygonTxFailed = (error: Error) => {
         toast.error(<div>
@@ -137,8 +146,7 @@ export default function Step2() {
         }
     },{
         ...substepInfos[2],
-        status: !!activeBridgeTransaction?.polygonTxHash ? 'complete' :
-            (redeemVAA?.data ? 'running' : 'pending'),
+        status: !!activeBridgeTransaction?.polygonTxHash ? (redeemVAA?.isLoading ? 'running' : 'complete') : 'pending',
         details: {
             ...(activeBridgeTransaction?.polygonTxHash ? {txHash: <PolyExplorerLink address={activeBridgeTransaction.polygonTxHash} type="tx"/>} : {})
         }
