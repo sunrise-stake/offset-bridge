@@ -19,14 +19,16 @@ contract Deploy is Script {
         address sunriseAdmin = address(0);
 
         vm.startBroadcast(deployerPrivateKey);
-        retireContract = new CarbonOffsetSettler();
         holdingContract = new HoldingContract(
             tco2,
             beneficiary,
-            beneficiaryName,
-            solanaAccountAddress
+            beneficiaryName
         );
+        retireContract = new CarbonOffsetSettler(address(holdingContract));
+
         holdingContract.setRetireContract(address(retireContract));
+        holdingContract.setBeneficiary(address(holdingContract), "Solana");
+        // retireContract.initialize(address(holdingContract), sunriseAdmin);
 
         console.log("Retire contract deployed to: %s", address(retireContract));
         console.log(
@@ -34,8 +36,6 @@ contract Deploy is Script {
             address(holdingContract)
         );
 
-        holdingContract.setBeneficiary(address(holdingContract), "Solana");
-        // holdingContract.transferOwnership(sunriseAdmin);
         vm.stopBroadcast();
 
         // impersonate a whale to fund our contract with usdc. to run:

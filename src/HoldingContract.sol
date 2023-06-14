@@ -6,10 +6,8 @@ import "forge-std/console.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import "forge-std/console.sol";
-
 import "src/interfaces/INFTBridge.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
 contract HoldingContract is Ownable {
@@ -25,13 +23,14 @@ contract HoldingContract is Ownable {
     string public SolanaAccountAddress;
 
     // Wormhole bridge
-    address private bridge = 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
-    // mainnet 0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf
+    address public constant BRIDGE = 0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf;
+    // testnet 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
+
     // Toucan Retirement Certificate Contract
-    address public certificate = 0x5e377f16E4ec6001652befD737341a28889Af002;
+    address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
 
     // USDC token contract
-    address private usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+    address public constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
 
     // Event emitted when funds are used to offset emissions
     event Offset(
@@ -48,13 +47,11 @@ contract HoldingContract is Ownable {
     constructor(
         address newTco2,
         address newBeneficiary,
-        string memory newBeneficiaryName,
-        string memory newSolanaAccountAddress
+        string memory newBeneficiaryName
     ) {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
-        SolanaAccountAddress = newSolanaAccountAddress;
     }
 
     /*
@@ -107,10 +104,9 @@ contract HoldingContract is Ownable {
      * @param message retirement message
      */
     function offset(string calldata entity, string calldata message) external {
-        if (IERC20(usdc).balanceOf(address(this)) == 0)
-            revert InsufficientFunds();
-        IERC20 usdcToken = IERC20(usdc);
+        IERC20 usdcToken = IERC20(USDC);
         uint256 usdcBalance = usdcToken.balanceOf(address(this));
+        if (usdcBalance == 0) revert InsufficientFunds();
         usdcToken.transfer(retireContract, usdcBalance);
         CarbonOffsetSettler(retireContract).retire(
             tco2,
@@ -129,12 +125,11 @@ contract HoldingContract is Ownable {
         uint256 tokenId,
         bytes32 recipient
     ) external returns (uint256 sequence) {
-        address nft = 0xC15133D0Fc527AD38eaB2627ee89FD8faf728859;
         uint32 nonce = uint32(_nonce.current());
         _nonce.increment();
-        ERC721(nft).approve(bridge, tokenId);
-        sequence = INFTBridge(bridge).transferNFT(
-            nft,
+        IERC721Upgradeable(CERT).approve(BRIDGE, tokenId);
+        INFTBridge(BRIDGE).transferNFT(
+            CERT,
             tokenId,
             1, //Solana Chain ID
             recipient, // recipient
