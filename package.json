@@ -11,8 +11,7 @@
     "ethers": "^5.7.2",
     "jsbi": "^4.3.0",
     "node-fetch": "^2.6.11",
-    "spl-token-latest": "npm:@solana/spl-token",
-    "ethers": "^5.7.2"
+    "spl-token-latest": "npm:@solana/spl-token"
   },
   "devDependencies": {
     "@coral-xyz/anchor-cli": "^0.27.0",

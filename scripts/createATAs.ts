@@ -15,6 +15,8 @@ async function createAssociatedTokenAccount(
 ): Promise<PublicKey> {
     const associatedToken = getAssociatedTokenAddressSync(mint, owner, true);
 
+    console.log("https://explorer.solana.com/address/" + associatedToken.toBase58());
+
     const transaction = new Transaction().add(
         createAssociatedTokenAccountInstruction(
             payer.publicKey,
