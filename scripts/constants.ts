@@ -59,7 +59,7 @@ export const BRIDGE_INPUT_MINT_ADDRESS = "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufa
 export const BRIDGE_OUTPUT_TOKEN_CONTRACT = USDC_TOKEN_POLYGON; // USDC on polygon
 
 // Holding contract deployed on Polygon mainnet
-export const HOLDING_CONTRACT_ADDRESS = "0x41Cc3339611cD89F307c52F60fcB176AF2fD890F"
+export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3"
 //"0x7022404732CB3ec5aC95c2c75080A76226AA74F5";
 // retire: 0xef1996E77FA763B8A97F34d2318C6611f108878f
 
@@ -291,6 +291,40 @@ export const HOLDING_CONTRACT_ABI = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "operator",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            }
+        ],
+        "name": "onERC721Received",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -378,25 +412,6 @@ export const HOLDING_CONTRACT_ABI = [
         "name": "setTCO2",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "str",
-                "type": "string"
-            }
-        ],
-        "name": "stringToBytes32",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "result",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "pure",
         "type": "function"
     },
     {

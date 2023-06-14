@@ -389,7 +389,7 @@ async function transferNFT() {
     console.log("Transferring NFT from Polygon to Wormhole...");
     const contract = new ethers.Contract(HOLDING_CONTRACT_ADDRESS, HOLDING_CONTRACT_ABI, ethSigner);
     const recipient = await getRecipient();
-    const tx = await contract.bridgeNFT(tokenId, recipient, { gasLimit: 500000, gasPrice: ethers.utils.parseUnits("200", "gwei") });
+    const tx = await contract.bridgeNFT(tokenId, recipient, { gasLimit: 900000, gasPrice: ethers.utils.parseUnits("200", "gwei") });
     const receipt = await tx.wait();
     console.log("Transfer successful, tx hash: ", receipt.transactionHash);
 
