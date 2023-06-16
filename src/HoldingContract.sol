@@ -12,17 +12,19 @@ import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
 contract HoldingContract is Ownable, IERC721Receiver {
+    // nonce for sending the wormhole message
     using Counters for Counters.Counter;
     Counters.Counter private _nonce;
-
-    // Retirement contract (mundo CarbonOffsetSettler)
-    address public retireContract;
-    // Retirement details
+    // Retirement details specific to the Holding Contract owner
     address public tco2;
     address public beneficiary;
     string public beneficiaryName;
     string public SolanaAccountAddress;
 
+    // Factory contract address
+    address public factoryContract;
+    // Retirement contract (mundo CarbonOffsetSettler)
+    address public retireContract;
     // Wormhole bridge
     address public constant BRIDGE = 0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf;
     // testnet 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
@@ -45,14 +47,28 @@ contract HoldingContract is Ownable, IERC721Receiver {
     error InsufficientFunds();
     error InvalidRetireContract();
 
-    constructor(
+    modifier onlyInitializer() {
+        require(
+            msg.sender == factoryContract,
+            "Only the Factory can initialize the proxies"
+        );
+        _;
+    }
+
+    constructor(address newFactoryContract) {
+        factoryContract = newFactoryContract;
+    }
+
+    function initialize(
         address newTco2,
         address newBeneficiary,
-        string memory newBeneficiaryName
-    ) {
+        string calldata newBeneficiaryName,
+        string calldata newSolanaAccountAddress
+    ) external onlyInitializer {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
+        SolanaAccountAddress = newSolanaAccountAddress;
     }
 
     /*

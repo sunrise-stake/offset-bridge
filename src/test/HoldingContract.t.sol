@@ -26,13 +26,18 @@ contract HoldingContractTest is Test {
         address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
         address beneficiary = address(0);
         string memory beneficiaryName = "0x0";
-        holdingContract = new HoldingContract(
-            tco2,
-            beneficiary,
-            beneficiaryName
-        );
+        string
+            memory SolanaAccountAddress = "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq";
+        holdingContract = new HoldingContract(address(0));
         carbonOffsetSettler = new CarbonOffsetSettler(address(holdingContract));
         holdingContract.setRetireContract(address(carbonOffsetSettler));
+        vm.prank(address(0));
+        holdingContract.initialize(
+            tco2,
+            beneficiary,
+            beneficiaryName,
+            SolanaAccountAddress
+        );
         console.log("Tco2 address: %s", holdingContract.tco2());
     }
 
