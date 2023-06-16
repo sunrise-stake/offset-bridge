@@ -3,7 +3,7 @@ pragma solidity >0.8.0;
 
 import "src/CarbonOffsetSettler.sol";
 import "forge-std/console.sol";
-import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin/access/Ownable.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import "src/interfaces/INFTBridge.sol";
@@ -12,6 +12,9 @@ import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
 contract HoldingContract is Ownable, IERC721Receiver {
+    // Factory contract address
+    address public logicContract;
+
     // nonce for sending the wormhole message
     using Counters for Counters.Counter;
     Counters.Counter private _nonce;
@@ -21,8 +24,8 @@ contract HoldingContract is Ownable, IERC721Receiver {
     string public beneficiaryName;
     string public SolanaAccountAddress;
 
-    // Factory contract address
-    address public factoryContract;
+    bool private initialized;
+
     // Retirement contract (mundo CarbonOffsetSettler)
     address public retireContract;
     // Wormhole bridge
@@ -47,28 +50,29 @@ contract HoldingContract is Ownable, IERC721Receiver {
     error InsufficientFunds();
     error InvalidRetireContract();
 
-    modifier onlyInitializer() {
-        require(
-            msg.sender == factoryContract,
-            "Only the Factory can initialize the proxies"
-        );
+    modifier initializer() {
+        require(!initialized, "Contract instance has already been initialized");
+        initialized = true;
         _;
     }
 
-    constructor(address newFactoryContract) {
-        factoryContract = newFactoryContract;
-    }
+    // constructor(address newFactoryContract) {
+    //     factoryContract = newFactoryContract;
+    // }
 
     function initialize(
         address newTco2,
         address newBeneficiary,
         string calldata newBeneficiaryName,
         string calldata newSolanaAccountAddress
-    ) external onlyInitializer {
+    ) external initializer {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
         SolanaAccountAddress = newSolanaAccountAddress;
+
+        // __Ownable_init();
+        // transferOwnership(owner);
     }
 
     /*
@@ -79,6 +83,10 @@ contract HoldingContract is Ownable, IERC721Receiver {
         if (newRetireContract == address(0)) revert InvalidRetireContract();
         retireContract = newRetireContract;
     }
+
+    // function setFactoryContract(address newFactoryContract) external onlyOwner {
+    //     factoryContract = newFactoryContract;
+    // }
 
     // ------------------ Setting retirement details (admin-only, ensure valid values) ------------------ //
 
