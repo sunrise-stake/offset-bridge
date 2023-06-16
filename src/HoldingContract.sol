@@ -24,7 +24,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     address public tco2;
     address public beneficiary;
     string public beneficiaryName;
-    string public SolanaAccountAddress;
+    bytes32 public SolanaAccountAddress;
     // Retirement contract (mundo CarbonOffsetSettler)
     address public retireContract;
 
@@ -57,7 +57,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         address newTco2,
         address newBeneficiary,
         string calldata newBeneficiaryName,
-        string calldata newSolanaAccountAddress,
+        bytes32 newSolanaAccountAddress,
         address newRetireContract,
         address owner
     ) external initializer {
@@ -113,7 +113,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
      * @param newSolanaAccountAddress address of the Solana Account
      */
     function setSolanaAccountAddress(
-        string calldata newSolanaAccountAddress
+        bytes32 newSolanaAccountAddress
     ) external onlyOwner {
         SolanaAccountAddress = newSolanaAccountAddress;
     }
@@ -124,7 +124,10 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
      * @param entity name of the entity that does the retirement (Sunrise Stake)
      * @param message retirement message
      */
-    function offset(string calldata entity, string calldata message) external {
+    function offset(
+        string calldata entity,
+        string calldata message
+    ) external onlyOwner {
         IERC20 usdcToken = IERC20(USDC);
         uint256 usdcBalance = usdcToken.balanceOf(address(this));
         if (usdcBalance == 0) revert InsufficientFunds();
@@ -142,10 +145,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     }
 
     // --------------------------------- Permissionless bridging using Wormhole --------------------------------------- //
-    function bridgeNFT(
-        uint256 tokenId,
-        bytes32 recipient
-    ) external returns (uint256 sequence) {
+    function bridgeNFT(uint256 tokenId) external returns (uint256 sequence) {
         uint32 nonce = uint32(_nonce.current());
         _nonce.increment();
         IERC721Upgradeable(CERT).approve(BRIDGE, tokenId);
@@ -153,11 +153,14 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
             CERT,
             tokenId,
             1, //Solana Chain ID
-            recipient, // recipient
+            SolanaAccountAddress, // recipient
             nonce
         );
     }
 
+    /*
+     * @dev Necessary to receive ERC721 transfers
+     */
     function onERC721Received(
         address operator,
         address from,

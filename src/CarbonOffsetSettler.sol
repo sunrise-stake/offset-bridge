@@ -19,6 +19,18 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
     address public constant SUSHI_ROUTER =
         0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506;
 
+    // function initialize(
+    //     address newholdingContract,
+    //     address sunriseAdmin
+    // ) external {
+    //     transferOwnership(sunriseAdmin);
+    //     holdingContract = newholdingContract;
+    // }
+
+    // function setHoldingContract(address newHoldingContract) external onlyOwner {
+    //     holdingContract = newHoldingContract;
+    // }
+
     function retire(
         address _tco2,
         uint256 _amountUSDC,

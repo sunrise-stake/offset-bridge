@@ -26,7 +26,7 @@ contract HoldingContractFactory is Ownable {
         bytes32 salt,
         address newTco2,
         string calldata newBeneficiaryName,
-        string calldata newSolanaAccountAddress,
+        bytes32 newSolanaAccountAddress,
         address retireContract
     ) external returns (address) {
         // deploy a minimal proxy contract

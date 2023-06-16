@@ -19,8 +19,7 @@ contract HoldingContractTest is Test {
     address user = address(1234);
     address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
     string beneficiaryName = "0x0";
-    string SolanaAccountAddress =
-        "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq";
+    bytes32 SolanaAccountAddress = "";
 
     event Offset(
         address indexed tco2,
@@ -126,6 +125,7 @@ contract HoldingContractTest is Test {
             HoldingContract(proxy).beneficiaryName(),
             amount
         );
+        vm.prank(user);
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
         assertEq(cert.balanceOf(proxy), 1);
@@ -133,6 +133,7 @@ contract HoldingContractTest is Test {
 
     function test_revert_Offset_insufficientFunds() public {
         vm.expectRevert(InsufficientFunds.selector);
+        vm.prank(user);
         HoldingContract(proxy).offset("entity", "msg");
     }
 
@@ -146,6 +147,7 @@ contract HoldingContractTest is Test {
         // Set new retirement details
         address newBeneficiary = 0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb;
         string memory newBeneficiaryName = "Sunrise Stake";
+        vm.prank(user);
         HoldingContract(proxy).setBeneficiary(
             newBeneficiary,
             newBeneficiaryName
@@ -153,7 +155,7 @@ contract HoldingContractTest is Test {
 
         // Fund holding contract with USDC
         uint amount = 100 * 1e6;
-        deal(usdc, address(holdingContract), amount);
+        deal(usdc, proxy, amount);
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -166,11 +168,12 @@ contract HoldingContractTest is Test {
         // Call offset and emit event with new details
         vm.expectEmit(true, true, true, true);
         emit Offset(
-            holdingContract.tco2(),
+            HoldingContract(proxy).tco2(),
             newBeneficiary,
             newBeneficiaryName,
             amount
         );
+        vm.prank(user);
         HoldingContract(proxy).offset(
             "Sunrise",
             "Climate-Positive Staking on Solana"
