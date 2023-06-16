@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 import "openzeppelin/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "src/HoldingContract.sol";
+import "forge-std/console.sol";
 
 contract HoldingContractFactory is Ownable {
     address public implementationAddress; // TODO immutable?
@@ -25,7 +26,8 @@ contract HoldingContractFactory is Ownable {
         bytes32 salt,
         address newTco2,
         string calldata newBeneficiaryName,
-        string calldata newSolanaAccountAddress
+        string calldata newSolanaAccountAddress,
+        address retireContract
     ) external returns (address) {
         // deploy a minimal proxy contract
         address proxy = Clones.cloneDeterministic(implementationAddress, salt);
@@ -33,7 +35,9 @@ contract HoldingContractFactory is Ownable {
             newTco2,
             proxy,
             newBeneficiaryName,
-            newSolanaAccountAddress
+            newSolanaAccountAddress,
+            retireContract,
+            msg.sender
         );
 
         proxies.push(proxy);

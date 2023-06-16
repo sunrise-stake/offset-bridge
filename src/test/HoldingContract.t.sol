@@ -16,6 +16,12 @@ contract HoldingContractTest is Test {
     address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
 
+    address user = address(1234);
+    address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
+    string beneficiaryName = "0x0";
+    string SolanaAccountAddress =
+        "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq";
+
     event Offset(
         address indexed tco2,
         address indexed beneficiary,
@@ -47,35 +53,46 @@ contract HoldingContractTest is Test {
     }
 
     function setUp() public {
-        address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
-        address beneficiary = address(0);
-        string memory beneficiaryName = "0x0";
-        string
-            memory SolanaAccountAddress = "9wApiVNoU2xZ4eNrDPja2ypiiXZyNV2oy9MUxZ9TCTrq";
-
         // deploy an implementation contract
         holdingImplementation = new HoldingContract();
         // deploy factory contract pointing to implementation contract
         factory = new HoldingContractFactory(address(holdingImplementation));
-        carbonOffsetSettler = new CarbonOffsetSettler(
-            address(holdingImplementation)
-        );
+        carbonOffsetSettler = new CarbonOffsetSettler();
+        // address(holdingImplementation)
         // holdingImplementation.setFactoryContract(address(factory));
-        // holdingImplementation.setRetireContract(address(carbonOffsetSettler));
+
         //deploy proxy contract
-        vm.prank(address(0));
+        vm.prank(user);
         proxy = factory.createContract(
-            keccak256(abi.encode(address(this))),
+            keccak256(abi.encode(address(user))),
             tco2,
             beneficiaryName,
+            SolanaAccountAddress,
+            address(carbonOffsetSettler)
+        );
+    }
+
+    function test_proxy_setup() public {
+        assertEq(HoldingContract(proxy).beneficiary(), proxy);
+        assertEq(HoldingContract(proxy).beneficiaryName(), beneficiaryName);
+        assertEq(HoldingContract(proxy).tco2(), tco2);
+        assertEq(
+            HoldingContract(proxy).SolanaAccountAddress(),
             SolanaAccountAddress
+        );
+        assertEq(
+            HoldingContract(proxy).retireContract(),
+            address(carbonOffsetSettler)
         );
     }
 
     function test_proxy_call() public {
+        assertEq(HoldingContract(proxy).beneficiary(), proxy);
+
         // user calls createContract
-        vm.prank(address(0));
-        HoldingContract(proxy).setBeneficiary(address(0), "Sunrise");
+        vm.prank(user);
+        HoldingContract(proxy).setBeneficiary(user, "Sunrise");
+        assertEq(HoldingContract(proxy).beneficiary(), user);
     }
 
     function test_revert_ProxyOwnerAuthorizatioN() public {
@@ -83,79 +100,80 @@ contract HoldingContractTest is Test {
         HoldingContract(proxy).setBeneficiary(address(0), "Sunrise");
     }
 
-    //     function test_Offset() public {
-    //         // fund holding contract with USDC
-    //         uint amount = 100 * 1e6;
-    //         deal(usdc, address(holdingContract), amount);
-    //         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
-    //         // usdc.call(
-    //         //     abi.encodeWithSignature(
-    //         //         "transfer(address,uint256)",
-    //         //         address(holdingContract),
-    //         //         amount
-    //         //     )
-    //         // );
+    function test_Offset() public {
+        // fund holding contract with USDC
+        uint amount = 100 * 1e6;
+        deal(usdc, proxy, amount);
+        // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        // usdc.call(
+        //     abi.encodeWithSignature(
+        //         "transfer(address,uint256)",
+        //         address(holdingContract),
+        //         amount
+        //     )
+        // );
+        // check balances
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+        assertEq(cert.balanceOf(proxy), 0);
+        assertEq(IERC20(usdc).balanceOf(proxy), 100 * 1e6);
 
-    //         // Call offset and emit event
-    //         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
-    //         assertEq(cert.balanceOf(address(holdingContract)), 0);
+        // Call offset and emit event
 
-    //         assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 100 * 1e6);
+        vm.expectEmit(true, true, true, true);
+        emit Offset(
+            HoldingContract(proxy).tco2(),
+            HoldingContract(proxy).beneficiary(),
+            HoldingContract(proxy).beneficiaryName(),
+            amount
+        );
+        HoldingContract(proxy).offset("entity", "msg");
+        assertEq(IERC20(usdc).balanceOf(proxy), 0);
+        assertEq(cert.balanceOf(proxy), 1);
+    }
 
-    //         vm.expectEmit(true, true, true, true);
-    //         emit Offset(
-    //             holdingContract.tco2(),
-    //             holdingContract.beneficiary(),
-    //             holdingContract.beneficiaryName(),
-    //             amount
-    //         );
-    //         holdingContract.offset("entity", "msg");
-    //         assertEq(IERC20(usdc).balanceOf(address(holdingContract)), 0);
-    //         assertEq(cert.balanceOf(address(holdingContract)), 1);
-    //     }
+    function test_revert_Offset_insufficientFunds() public {
+        vm.expectRevert(InsufficientFunds.selector);
+        HoldingContract(proxy).offset("entity", "msg");
+    }
 
-    //     function test_revert_Offset_insufficientFunds() public {
-    //         vm.expectRevert(InsufficientFunds.selector);
-    //         holdingContract.offset("entity", "msg");
-    //     }
+    function test_revert_Offset_invalidRetireContract() public {
+        vm.expectRevert(InvalidRetireContract.selector);
+        vm.prank(user);
+        HoldingContract(proxy).setRetireContract(address(0));
+    }
 
-    //     function test_revert_Offset_invalidRetireContract() public {
-    //         vm.expectRevert(InvalidRetireContract.selector);
-    //         holdingContract.setRetireContract(address(0));
-    //     }
+    function test_setRetirementDetails() public {
+        // Set new retirement details
+        address newBeneficiary = 0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb;
+        string memory newBeneficiaryName = "Sunrise Stake";
+        HoldingContract(proxy).setBeneficiary(
+            newBeneficiary,
+            newBeneficiaryName
+        );
 
-    //     function test_setRetirementDetails() public {
-    //         // Set new retirement details
-    //         address newBeneficiary = 0xFed3CfC8Ea0bF293e499565b8ccdD46ff8B37Ccb;
-    //         string memory newBeneficiaryName = "Sunrise Stake";
-    //         holdingContract.setBeneficiary(newBeneficiary, newBeneficiaryName);
+        // Fund holding contract with USDC
+        uint amount = 100 * 1e6;
+        deal(usdc, address(holdingContract), amount);
+        // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
+        // usdc.call(
+        //     abi.encodeWithSignature(
+        //         "transfer(address,uint256)",
+        //         address(holdingContract),
+        //         amount
+        //     )
+        // );
 
-    //         // Fund holding contract with USDC
-    //         uint amount = 100 * 1e6;
-    //         deal(usdc, address(holdingContract), amount);
-    //         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
-    //         // usdc.call(
-    //         //     abi.encodeWithSignature(
-    //         //         "transfer(address,uint256)",
-    //         //         address(holdingContract),
-    //         //         amount
-    //         //     )
-    //         // );
-
-    //         // Call offset and emit event with new details
-    //         vm.expectEmit(true, true, true, true);
-    //         emit Offset(
-    //             holdingContract.tco2(),
-    //             newBeneficiary,
-    //             newBeneficiaryName,
-    //             amount
-    //         );
-    //         holdingContract.offset("Sunrise", "Climate-Positive Staking on Solana");
-    //     }
-
-    //     function test_revert_setRetirementDetails_onlyOwner() public {
-    //         vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
-    //         vm.expectRevert("Ownable: caller is not the owner");
-    //         holdingContract.setBeneficiary(address(0), "0x0");
-    //     }
+        // Call offset and emit event with new details
+        vm.expectEmit(true, true, true, true);
+        emit Offset(
+            holdingContract.tco2(),
+            newBeneficiary,
+            newBeneficiaryName,
+            amount
+        );
+        HoldingContract(proxy).offset(
+            "Sunrise",
+            "Climate-Positive Staking on Solana"
+        );
+    }
 }

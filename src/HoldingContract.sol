@@ -4,6 +4,8 @@ pragma solidity >0.8.0;
 import "src/CarbonOffsetSettler.sol";
 import "forge-std/console.sol";
 import "openzeppelin/access/Ownable.sol";
+import "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import "src/interfaces/INFTBridge.sol";
@@ -11,9 +13,9 @@ import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upg
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
-contract HoldingContract is Ownable, IERC721Receiver {
-    // Factory contract address
-    address public logicContract;
+contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
+    // Logic contract address
+    // address public logicContract;
 
     // nonce for sending the wormhole message
     using Counters for Counters.Counter;
@@ -23,11 +25,9 @@ contract HoldingContract is Ownable, IERC721Receiver {
     address public beneficiary;
     string public beneficiaryName;
     string public SolanaAccountAddress;
-
-    bool private initialized;
-
     // Retirement contract (mundo CarbonOffsetSettler)
     address public retireContract;
+
     // Wormhole bridge
     address public constant BRIDGE = 0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf;
     // testnet 0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9;
@@ -50,29 +50,25 @@ contract HoldingContract is Ownable, IERC721Receiver {
     error InsufficientFunds();
     error InvalidRetireContract();
 
-    modifier initializer() {
-        require(!initialized, "Contract instance has already been initialized");
-        initialized = true;
-        _;
-    }
-
-    // constructor(address newFactoryContract) {
-    //     factoryContract = newFactoryContract;
-    // }
-
+    /*
+     * @notice Initialize the proxy contract
+     */
     function initialize(
         address newTco2,
         address newBeneficiary,
         string calldata newBeneficiaryName,
-        string calldata newSolanaAccountAddress
+        string calldata newSolanaAccountAddress,
+        address newRetireContract,
+        address owner
     ) external initializer {
         tco2 = newTco2;
         beneficiary = newBeneficiary;
         beneficiaryName = newBeneficiaryName;
         SolanaAccountAddress = newSolanaAccountAddress;
-
-        // __Ownable_init();
-        // transferOwnership(owner);
+        retireContract = newRetireContract;
+        // initialize ownership of the proxy and transfer to the user
+        __Ownable_init();
+        transferOwnership(owner);
     }
 
     /*
