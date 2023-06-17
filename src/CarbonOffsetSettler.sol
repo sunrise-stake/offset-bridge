@@ -19,6 +19,8 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
     address public constant SUSHI_ROUTER =
         0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506;
 
+    uint public tokenId;
+
     // function initialize(
     //     address newholdingContract,
     //     address sunriseAdmin
@@ -65,6 +67,11 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
             _msg, // retirement message
             tco2Redeemed
         );
+        IERC721Upgradeable(CERT).safeTransferFrom(
+            address(this),
+            msg.sender,
+            tokenId
+        );
     }
 
     /*
@@ -73,14 +80,10 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
     function onERC721Received(
         address operator,
         address from,
-        uint256 tokenId,
+        uint256 newTokenId,
         bytes calldata data
     ) external returns (bytes4) {
-        // IERC721Upgradeable(CERT).safeTransferFrom(
-        //     address(this),
-        //     holdingContract,
-        //     tokenId
-        // );
+        tokenId = newTokenId;
         return IERC721Receiver.onERC721Received.selector;
     }
 
