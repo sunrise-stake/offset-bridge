@@ -52,7 +52,10 @@ export type HoldingContract = {
     address: string;
 }
 // Holding contract deployed on Polygon mainnet
-export const HOLDING_CONTRACT_ADDRESS = "0x7022404732CB3ec5aC95c2c75080A76226AA74F5";
+export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3";
+
+export const HOLDING_CONTRACT_FACTORY_ADDRESS = "";
+
 export const HOLDING_CONTRACTS: HoldingContract[]= [{
     name: "Default",
     description: "Using Toucan's default retirement strategy",
@@ -167,6 +170,58 @@ export const HOLDING_CONTRACT_ABI = [
     },
     {
         "inputs": [],
+        "name": "BRIDGE",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "CERT",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SolanaAccountAddress",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "USDC",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "beneficiary",
         "outputs": [
             {
@@ -189,6 +244,30 @@ export const HOLDING_CONTRACT_ABI = [
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "recipient",
+                "type": "bytes32"
+            }
+        ],
+        "name": "bridgeNFT",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "sequence",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -276,6 +355,19 @@ export const HOLDING_CONTRACT_ABI = [
     {
         "inputs": [
             {
+                "internalType": "string",
+                "name": "newSolanaAccountAddress",
+                "type": "string"
+            }
+        ],
+        "name": "setSolanaAccountAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "newTco2",
                 "type": "address"
@@ -284,6 +376,25 @@ export const HOLDING_CONTRACT_ABI = [
         "name": "setTCO2",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "str",
+                "type": "string"
+            }
+        ],
+        "name": "stringToBytes32",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "result",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -313,6 +424,8 @@ export const HOLDING_CONTRACT_ABI = [
         "type": "function"
     }
 ] as const;
+
+export const HOLDING_CONTRACT_FACTORY_ABI= [] as const;
 
 export const WORMHOLE_BRIDGE_ABI = [{
     inputs: [

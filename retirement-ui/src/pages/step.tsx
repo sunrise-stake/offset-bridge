@@ -26,7 +26,7 @@ const swapInputToken = tokenMint;
 const swapInputTokenDecimals = tokenDecimals;
 const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 
-export default function Step1() {
+export default function Step0() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
     const {api} = useSolanaRetirement();
@@ -85,7 +85,7 @@ export default function Step1() {
     };
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 1 - Deposit</h1>
+        <h1 className="text-2xl mb-4">Step 0 - Create Account</h1>
         <div className="mb-2">My Balance: <TokenBalance balance={myBalance} decimals={swapInputTokenDecimals}/> {tokenSymbol}</div>
         <div className="mb-2">Deposited:  <USDCarbonAmount usdAmount={swappedBalance}/></div>
         <div className="mb-2">To deposit:  <USDCarbonAmount usdAmount={getInputAmountAsUSD()}/></div>

@@ -3,7 +3,6 @@ pragma solidity >0.8.0;
 
 import "src/CarbonOffsetSettler.sol";
 import "forge-std/console.sol";
-import "openzeppelin/access/Ownable.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
