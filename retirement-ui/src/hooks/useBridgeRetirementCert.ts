@@ -5,7 +5,8 @@ export const useBridgeRetirementCert = () => {
     const { config, error, isError } = usePrepareContractWrite({
         address: HOLDING_CONTRACT_ADDRESS,
         abi: HOLDING_CONTRACT_ABI,
-        functionName: 'offset' // TODO
+        functionName: 'bridgeNFT',
+        args: [1n, "0x1"] // TODO
     })
     const redeem = useContractWrite(config)
     const wait = useWaitForTransaction({hash:redeem.data?.hash})

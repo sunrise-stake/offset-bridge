@@ -22,11 +22,11 @@ import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
 import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
 import {clusterApiUrl} from "@solana/web3.js";
 import { create } from 'zustand'
-import { devtools, persist, StateStorage } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
-import {VAAResult} from "@/api/solanaRetirement";
 import {HOLDING_CONTRACTS} from "@/lib/constants";
+import {VAAResult} from "@/lib/types";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
