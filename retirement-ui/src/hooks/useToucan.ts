@@ -1,5 +1,6 @@
 import ToucanClient, {TCO2TokenResponse} from "toucan-sdk";
 import {useEffect, useMemo, useState} from "react";
+import {gql} from "@urql/core";
 export const useToucan = () => {
     const toucan = useMemo(() => new ToucanClient("polygon"), []);
     const [allProjects, setAllProjects] = useState<TCO2TokenResponse[]>([]);
@@ -15,6 +16,22 @@ export const useToucan = () => {
         fetchAllTCO2Tokens().catch(setError).finally(() => setLoading(false));
     });
 
+    const fetchRetirementNFTs = async (holdingContract: string) => {
+        const query = gql`
+            query ($beneficiary: String) {
+                retirementCertificates(where: {beneficiary: $beneficiary}) {
+                    id
+                }
+            }
+        `;
+
+        const result = await toucan.fetchCustomQuery(query, { $beneficiary: holdingContract });
+
+        console.log(result)
+
+        return result;
+    }
+
     const getProjectById = async (id: string):Promise<TCO2TokenResponse | undefined> => toucan.fetchTCO2TokenByFullSymbol(id)
 
     return {
@@ -22,5 +39,6 @@ export const useToucan = () => {
         error,
         allProjects,
         getProjectById,
+        fetchRetirementNFTs
     }
 }

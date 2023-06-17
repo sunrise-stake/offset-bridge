@@ -1,17 +1,24 @@
-import {useCallback, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {NextButton} from "@/components/nextButton";
 import {TCO2TokenResponse} from "toucan-sdk";
 import {ToucanProjectsSelector} from "@/components/toucanProjectsSelector";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
 import {useVerra} from "@/hooks/useVerra";
+import {useToucan} from "@/hooks/useToucan";
 
 export default function Step1() {
     const [selectedProject, setSelectedProject] = useState<TCO2TokenResponse>();
     const factory = useHoldingContractFactory();
     const verraDetails = useVerra(selectedProject);
 
-    const createAccount = useCallback(async () => {
+    // TODO move out of here
+    const { fetchRetirementNFTs } = useToucan();
+    useEffect(() => {
+        fetchRetirementNFTs("0x669dd15b1a25f34e87e6ecae2a855ae5a336d9e3").then(console.log)
+    }, []);
 
+    const createAccount = useCallback(async () => {
+        factory?.create()
     }, [factory?.writeAsync, selectedProject]);
 
     return (<div>

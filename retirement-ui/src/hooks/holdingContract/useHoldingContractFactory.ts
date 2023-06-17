@@ -41,5 +41,10 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
 
     if (!deploy.writeAsync) return undefined;
 
-    return { ...deploy, contractAddress, error, isError }
+    const create = () => {
+        if (!deploy.writeAsync) return Promise.resolve();
+        return deploy.writeAsync();
+    }
+
+    return { ...deploy, contractAddress, create, error, isError }
 }

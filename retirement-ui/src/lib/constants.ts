@@ -54,7 +54,7 @@ export type HoldingContract = {
 // Holding contract deployed on Polygon mainnet
 export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3";
 
-export const HOLDING_CONTRACT_FACTORY_ADDRESS = "0x000" as const;
+export const HOLDING_CONTRACT_FACTORY_ADDRESS = "0x35270865296Fd8bC422fE21b4121FEe86a92fc70" as const;
 
 export const HOLDING_CONTRACTS: HoldingContract[]= [{
     name: "Default",
