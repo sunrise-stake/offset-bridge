@@ -54,13 +54,17 @@ export type HoldingContract = {
 // Holding contract deployed on Polygon mainnet
 export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3";
 
-export const HOLDING_CONTRACT_FACTORY_ADDRESS = "";
+export const HOLDING_CONTRACT_FACTORY_ADDRESS = "0x000" as const;
 
 export const HOLDING_CONTRACTS: HoldingContract[]= [{
     name: "Default",
     description: "Using Toucan's default retirement strategy",
     address: HOLDING_CONTRACT_ADDRESS,
 }]
+
+export const RETIREMENT_CONTRACT = "0x96059f36D58f38168860cE0978C20E586BB996b5";
+export const DEFAULT_RETIREMENT_PROJECT = "0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7" as const;
+export const DEFAULT_BENEFICIARY = "Solana";
 
 // export const WORMHOLE_RPC_HOSTS = ["http://guardian:7071"];
 export const WORMHOLE_RPC_HOSTS_TESTNET = ["https://wormhole-v2-testnet-api.certus.one"];
@@ -425,7 +429,194 @@ export const HOLDING_CONTRACT_ABI = [
     }
 ] as const;
 
-export const HOLDING_CONTRACT_FACTORY_ABI= [] as const;
+export const HOLDING_CONTRACT_FACTORY_ABI= [
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newImplementationAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "proxy",
+                "type": "address"
+            }
+        ],
+        "name": "ContractCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "salt",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "newTco2",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "newBeneficiaryName",
+                "type": "string"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newSolanaAccountAddress",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "retireContract",
+                "type": "address"
+            }
+        ],
+        "name": "createContract",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "salt",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "deployer",
+                "type": "address"
+            }
+        ],
+        "name": "getContractAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "implementationAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "proxies",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newImplementationAddress",
+                "type": "address"
+            }
+        ],
+        "name": "setImplementationAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] as const;
+
+export const HOLDING_CONTRACT_FACTORY_SALT = `0x${Buffer.from("sunrise-holding-contract-v0.0.1").toString("hex")}` as const;
 
 export const WORMHOLE_BRIDGE_ABI = [{
     inputs: [

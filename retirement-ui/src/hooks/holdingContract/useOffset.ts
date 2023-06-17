@@ -7,6 +7,7 @@ export const useOffset = (contractAddress: Address | undefined) => {
         address: contractAddress,
         abi: HOLDING_CONTRACT_ABI,
         functionName: 'offset',
+        enabled: !!contractAddress,
         args:[ "Sunrise", "Climate-Positive Staking on Solana" ],
     })
     const offset = useContractWrite(config)

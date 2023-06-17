@@ -1,16 +1,19 @@
-import {useBalance, useContractReads} from 'wagmi'
-import {HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS, USDC_TOKEN_POLYGON} from "@/lib/constants";
-import {useState} from "react";
+import {useContractReads} from 'wagmi'
+import { HOLDING_CONTRACT_ABI } from "@/lib/constants";
+import {useEffect, useState} from "react";
 import {Address} from "abitype/src/abi";
 import {useOffset} from "./useOffset";
-
-const contract = {
-    address: HOLDING_CONTRACT_ADDRESS,
-    abi: HOLDING_CONTRACT_ABI
-} as const;
+import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
+import {useHoldingContractBalance} from "@/hooks/holdingContract/useHoldingContractBalance";
 
 export const useHoldingContract = () => {
     const [contractAddress, setContractAddress] = useState<Address>();
+
+    const contract = {
+        address: contractAddress,
+        abi: HOLDING_CONTRACT_ABI
+    } as const;
+
     const reads = useContractReads({
         contracts: [{
             ...contract,
@@ -27,20 +30,24 @@ export const useHoldingContract = () => {
         }, {
             ...contract,
             functionName: 'tco2'
-        }]
+        }],
+        enabled: !!contractAddress
     });
-    const usdcBalance = useBalance({
-        address: contractAddress,
-        token: USDC_TOKEN_POLYGON,
-        watch: true
-    })
+    const usdcBalance = useHoldingContractBalance(contractAddress);
     const offset = useOffset(contractAddress)
+    const factory = useHoldingContractFactory()
 
+    useEffect(() => {
+        if (factory?.contractAddress) {
+            setContractAddress(factory.contractAddress)
+        }
+    }, [factory?.contractAddress])
 
     return {
         reads,
         usdcBalance,
         offset,
+        contractAddress,
         beneficiary: reads.data? reads.data[0].result : undefined,
         beneficiaryName: reads.data? reads.data[1].result : undefined,
         solanaAccountAddress: reads.data? reads.data[2].result : undefined,

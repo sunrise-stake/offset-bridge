@@ -76,11 +76,11 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
         uint256 tokenId,
         bytes calldata data
     ) external returns (bytes4) {
-        // IERC721Upgradeable(CERT).safeTransferFrom(
-        //     address(this),
-        //     holdingContract,
-        //     tokenId
-        // );
+//         IERC721Upgradeable(CERT).safeTransferFrom(
+//             address(this),
+//             holdingContract,
+//             tokenId
+//         );
         return IERC721Receiver.onERC721Received.selector;
     }
 
