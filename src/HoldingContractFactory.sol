@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import "openzeppelin/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "src/HoldingContract.sol";
 import "forge-std/console.sol";
+import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract HoldingContractFactory is Ownable {
     address public implementationAddress; // TODO immutable?
@@ -44,5 +44,16 @@ contract HoldingContractFactory is Ownable {
 
         emit ContractCreated(proxy);
         return proxy;
+    }
+
+    /**
+        * @dev Returns the address of the implementation given a particular salt
+        * @return The address of the implementation.
+        */
+    function getContractAddress(
+        bytes32 salt,
+        address deployer
+    ) external view returns (address) {
+        return Clones.predictDeterministicAddress(implementationAddress, salt, deployer);
     }
 }

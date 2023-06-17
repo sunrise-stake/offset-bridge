@@ -40,3 +40,5 @@ export const usdcTokenAmountFromCents = (cents: number): bigint => {
 }
 
 export const trimAddress = (address: string): string => address.slice(0, 4) + '...' + address.slice(-4);
+
+export const solanaAddressToHex = (address: PublicKey) => `0x${address.toBuffer().toString("hex")}` as const;
