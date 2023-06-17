@@ -18,7 +18,7 @@ async function redeemPolygonVAA() {
   const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
   const ethSigner = new ethers.Wallet(POLYGON_PRIVATE_KEY, ethProvider);
 
-  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes, { gasLimit: 500000, gasPrice: ethers.utils.parseUnits('150', 'gwei') });
+  await Wormhole.redeemOnEth(POLYGON_TOKEN_BRIDGE_ADDRESS, ethSigner, vaaBytes, { gasLimit: 800000, gasPrice: ethers.utils.parseUnits('200', 'gwei') });
 }
 
 async function main() {

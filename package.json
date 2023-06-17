@@ -39,7 +39,8 @@
     "swap": "ts-node scripts/swap.ts",
     "bridge": "ts-node scripts/bridge.ts",
     "redeem": "ts-node scripts/redeemPolygonVAA.ts",
-    "retire": "ts-node scripts/retireFunds.ts"
+    "retire": "ts-node scripts/retireFunds.ts",
+    "bridge-nft": "ts-node scripts/bridgeNFT.ts"
   },
   "repository": {
     "type": "git",

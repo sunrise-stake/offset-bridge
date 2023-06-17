@@ -21,17 +21,29 @@ export const USER_KEYPAIR =
 export const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkcJ1d4MHS5");
 
-
+// Wormhole 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
-export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";
+export const POLYGON_TEST_BRIDGE_ADDRESS = "0x0CBE91CF822c73C2315FB05100C2F714765d5c20";
 export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe";
-// "B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE";
 export const SOL_TEST_BRIDGE_ADDRESS = "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5";
+
+export const POLYGON_BRIDGE_ADDRESS = "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7";
+export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";
+// "B6RHG3mfcckmrYN1UhmJzyS1XX3fZKbkeUcpJe9Sy3FE";
 // "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o";
 export const SOL_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
 export const SOL_BRIDGE_ADDRESS = "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth";
+
 export const CHAIN_ID_POLYGON = 5;
 export const CHAIN_ID_SOLANA = 1;
+
+//NFT 
+export const POLYGON_TEST_NFT_BRIDGE_ADDRESS = "0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9";
+export const SOLANA_TEST_NFT_BRIDGE_ADDRESS = "2rHhojZ7hpu1zA91nvZmT8TqWWvMcKmmNBCr2mKTtMq4";
+export const POLYGON_NFT_BRIDGE_ADDRESS = "0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf"
+export const SOLANA_NFT_BRIDGE_ADDRESS = "WnFt12ZrnzZrFZkt2xsNsaNWoQribnuQ5B5FrDbwDhD";
+export const RETIREMENT_CERT = "0x5e377f16E4ec6001652befD737341a28889Af002";
+
 
 // Token Mints
 // usdc test token on solana , https://developers.circle.com/developer/docs/usdc-on-testnet#usdc-on-solana-testnet
@@ -47,7 +59,9 @@ export const BRIDGE_INPUT_MINT_ADDRESS = "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufa
 export const BRIDGE_OUTPUT_TOKEN_CONTRACT = USDC_TOKEN_POLYGON; // USDC on polygon
 
 // Holding contract deployed on Polygon mainnet
-export const HOLDING_CONTRACT_ADDRESS = "0x7022404732CB3ec5aC95c2c75080A76226AA74F5";
+export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3"
+//"0x7022404732CB3ec5aC95c2c75080A76226AA74F5";
+// retire: 0xef1996E77FA763B8A97F34d2318C6611f108878f
 
 // export const WORMHOLE_RPC_HOSTS = ["http://guardian:7071"];
 export const WORMHOLE_RPC_HOSTS_TESTNET = ["https://wormhole-v2-testnet-api.certus.one"];
@@ -158,6 +172,58 @@ export const HOLDING_CONTRACT_ABI = [
     },
     {
         "inputs": [],
+        "name": "BRIDGE",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "CERT",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SolanaAccountAddress",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "USDC",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "beneficiary",
         "outputs": [
             {
@@ -185,6 +251,30 @@ export const HOLDING_CONTRACT_ABI = [
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "recipient",
+                "type": "bytes32"
+            }
+        ],
+        "name": "bridgeNFT",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "sequence",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "string",
                 "name": "entity",
                 "type": "string"
@@ -197,6 +287,40 @@ export const HOLDING_CONTRACT_ABI = [
         ],
         "name": "offset",
         "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "operator",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            }
+        ],
+        "name": "onERC721Received",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
         "stateMutability": "nonpayable",
         "type": "function"
     },
@@ -260,6 +384,19 @@ export const HOLDING_CONTRACT_ABI = [
             }
         ],
         "name": "setRetireContract",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "newSolanaAccountAddress",
+                "type": "string"
+            }
+        ],
+        "name": "setSolanaAccountAddress",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
