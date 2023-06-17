@@ -2,12 +2,14 @@
 pragma solidity >0.8.0;
 
 import "forge-std/Script.sol";
-import {CarbonOffsetSettler} from "../src/CarbonOffsetSettler.sol";
-import {HoldingContract} from "../src/HoldingContract.sol";
+import {CarbonOffsetSettler} from "src/CarbonOffsetSettler.sol";
+import {HoldingContract} from "src/HoldingContract.sol";
+import {HoldingContractFactory} from "src/HoldingContractFactory.sol";
 
 contract Deploy is Script {
-    CarbonOffsetSettler retireContract;
-    HoldingContract holdingContract;
+    CarbonOffsetSettler carbonOffsetSettler;
+    HoldingContract holdingImplementation;
+    HoldingContractFactory factory;
 
     function run() external {
         //read env variables and choose EOA for transaction signing
@@ -19,22 +21,21 @@ contract Deploy is Script {
         address sunriseAdmin = address(0);
 
         vm.startBroadcast(deployerPrivateKey);
-        holdingContract = new HoldingContract(
-            tco2,
-            beneficiary,
-            beneficiaryName
+
+        holdingImplementation = new HoldingContract();
+        // deploy factory contract pointing to implementation contract
+        factory = new HoldingContractFactory(address(holdingImplementation));
+        carbonOffsetSettler = new CarbonOffsetSettler();
+
+        console.log(
+            "Retire contract deployed to: %s",
+            address(carbonOffsetSettler)
         );
-        retireContract = new CarbonOffsetSettler(address(holdingContract));
-
-        holdingContract.setRetireContract(address(retireContract));
-        holdingContract.setBeneficiary(address(holdingContract), "Solana");
-        // retireContract.initialize(address(holdingContract), sunriseAdmin);
-
-        console.log("Retire contract deployed to: %s", address(retireContract));
         console.log(
             "Holding contract deployed to: %s",
-            address(holdingContract)
+            address(holdingImplementation)
         );
+        console.log("Factory contract deployed to: %s", address(factory));
 
         vm.stopBroadcast();
 
