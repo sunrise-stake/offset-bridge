@@ -94,6 +94,46 @@ contract HoldingContractTest is Test {
         assertEq(HoldingContract(proxy).beneficiary(), user);
     }
 
+    function test_proxy_multiple() public {
+        // user calls createContract
+        vm.startPrank(address(146));
+        proxy = factory.createContract(
+            keccak256(abi.encode(address(146))),
+            tco2,
+            beneficiaryName,
+            SolanaAccountAddress,
+            address(carbonOffsetSettler)
+        );
+        HoldingContract(proxy).setBeneficiary(address(146), "Solana");
+        assertEq(HoldingContract(proxy).beneficiary(), address(146));
+        deal(usdc, proxy, 100 * 1e6);
+
+        HoldingContract(proxy).offset("entity", "msg");
+        assertEq(IERC20(usdc).balanceOf(proxy), 0);
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+
+        assertEq(cert.balanceOf(proxy), 1);
+        vm.stopPrank();
+
+        // user calls createContract
+        vm.startPrank(address(6143));
+        proxy = factory.createContract(
+            keccak256(abi.encode(address(6143))),
+            tco2,
+            beneficiaryName,
+            SolanaAccountAddress,
+            address(carbonOffsetSettler)
+        );
+        HoldingContract(proxy).setBeneficiary(address(6143), "Solana");
+        assertEq(HoldingContract(proxy).beneficiary(), address(6143));
+        deal(usdc, proxy, 100 * 1e6);
+
+        HoldingContract(proxy).offset("entity", "msg");
+        assertEq(IERC20(usdc).balanceOf(proxy), 0);
+        assertEq(cert.balanceOf(proxy), 1);
+        vm.stopPrank();
+    }
+
     function test_revert_ProxyOwnerAuthorizatioN() public {
         vm.expectRevert("Ownable: caller is not the owner");
         HoldingContract(proxy).setBeneficiary(address(0), "Sunrise");
