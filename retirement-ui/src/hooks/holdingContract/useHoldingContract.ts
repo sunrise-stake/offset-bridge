@@ -1,6 +1,6 @@
 import {useContractReads} from 'wagmi'
 import { HOLDING_CONTRACT_ABI } from "@/lib/constants";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect} from "react";
 import {Address} from "abitype/src/abi";
 import {useOffset} from "./useOffset";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
@@ -8,8 +8,8 @@ import {useHoldingContractBalance} from "@/hooks/holdingContract/useHoldingContr
 import {useAppStore} from "@/app/providers";
 import {useToucan} from "@/hooks/useToucan";
 import {tokenIDsToRetirementNFTs} from "@/lib/util";
-import {useWallet} from "@solana/wallet-adapter-react";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
+import {prepareWriteContract, writeContract} from "@wagmi/core";
 
 export const useHoldingContract = () => {
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
@@ -61,10 +61,24 @@ export const useHoldingContract = () => {
         }
     }, [factory?.contractAddress])
 
+    const updateTCO2 = useCallback(async (tco2: Address) => {
+        if (!holdingContractTarget) return;
+        const config = await prepareWriteContract({
+            address: holdingContractTarget,
+            abi: HOLDING_CONTRACT_ABI,
+            functionName: 'setTCO2',
+            args: [ tco2 ],
+        })
+        return writeContract(config.request)
+    }, [holdingContractTarget]);
+
+    console.log("data", reads.data);
+
     return {
         reads,
         usdcBalance,
         offset,
+        updateTCO2,
         contractAddress: holdingContractTarget,
         beneficiary: reads.data? reads.data[0].result : undefined,
         beneficiaryName: reads.data? reads.data[1].result : undefined,

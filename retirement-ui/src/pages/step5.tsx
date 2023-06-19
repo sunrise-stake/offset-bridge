@@ -147,7 +147,6 @@ export default function Step5() {
             >
                 Redeem
             </button>
-            <ConnectButton/>
         </div>
         <BridgeSubsteps substeps={substeps}/>
         <div className="flex items-center space-x-2 mt-2">

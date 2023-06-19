@@ -47,7 +47,6 @@ export default function Step4() {
     return (<div>
         <h1 className="text-2xl mb-4">Step 4 - Retire</h1>
         <div className="mb-2">Ready to retire:  <USDCarbonAmount usdAmount={usdcBalance.balance}/></div>
-        <ConnectButton/>
         <div className="flex items-center space-x-2 mt-2">
             <button
                 className="btn btn-primary w-32"

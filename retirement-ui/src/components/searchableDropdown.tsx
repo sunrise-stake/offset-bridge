@@ -1,7 +1,7 @@
 import {RefObject, useRef, useState, FocusEvent} from "react";
 import {FaTimesCircle} from "react-icons/fa";
 
-type Option<T> = { name: string; id: string } & T;
+type Option<T> = { name: string; address: string } & T;
 type SearchableDropdownProps<T> = { options: Option<T>[], loading: boolean, select: (option: Option<T>) => void };
 
 export function SearchableDropdown<T>({ options, loading, select }: SearchableDropdownProps<T>) {
@@ -49,7 +49,7 @@ export function SearchableDropdown<T>({ options, loading, select }: SearchableDr
                 <ul className="absolute z-10 mt-2 w-full h-64 bg-white border rounded shadow-md overflow-auto">
                     {filteredOptions.map(option => (
                         <li
-                            key={option.name}
+                            key={option.address}
                             className="p-2 hover:bg-gray-200 cursor-pointer"
                             onMouseDown={() => {
                                 setSearch(option.name);
