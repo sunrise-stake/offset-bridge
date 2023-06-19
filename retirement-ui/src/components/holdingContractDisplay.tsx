@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, FC} from 'react';
 import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
 import {ToucanProjectsSelector} from "@/components/toucanProjectsSelector";
 import {TCO2TokenResponse} from "toucan-sdk";
@@ -18,22 +18,21 @@ const addressesEqual = (address1: string, address2: string) => {
 
 const stripProjectName = (name: string) => name.replace('Toucan Protocol: ', '')
 
-export const HoldingContractDisplay = () => {
+export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> = ({ setReady }) => {
     const factory = useHoldingContractFactory();
     const holdingContract = useHoldingContract();
     const [selectedProject, setSelectedProject] = useState<TCO2TokenResponse>();
     const verraDetails = useVerra(selectedProject);
     const toucan = useToucan();
     const [changeShown, setChangeShown] = useState(false);
-    const [ready, setReady] = useState(false);
 
-    const toggleChangeShown = () => {
-        setChangeShown(!changeShown);
-    }
+    useEffect(() => {
+        if (factory.contractAddress && !holdingContract.reads.isLoading) {
+            setReady(true);
+        }
+    }, [holdingContract.contractAddress, holdingContract.reads.isLoading]);
 
-    // useEffect(() => {
-    //
-    // }, []
+    const toggleChangeShown = () => setChangeShown(!changeShown)
 
     useEffect(() => {
         if (holdingContract.tco2 && toucan.allProjects.length > 0) {
@@ -50,6 +49,7 @@ export const HoldingContractDisplay = () => {
 
     const updateAccount = useCallback(async () => {
         const updateSuccessful = (receipt: TransactionReceipt) => {
+            setReady(true);
             toast.success(<div>
                 Update successful:{' '}<PolyExplorerLink address={receipt.transactionHash} type="tx"/>
             </div>);
@@ -57,6 +57,7 @@ export const HoldingContractDisplay = () => {
 
         const updateInProgress = (writeContractResult: WriteContractResult | undefined) => {
             if (!writeContractResult) return;
+            setReady(false);
 
             toast.info(<div>
                 Update in progress:{' '}<PolyExplorerLink address={writeContractResult.hash} type="tx"/>
