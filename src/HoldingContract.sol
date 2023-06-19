@@ -157,6 +157,16 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         );
     }
 
+    /**
+        * Convenience function to bridge a token to a specific address owned by the holding account owner
+        * @param tokenId The token ID of the bridged token
+        * @param solanaAccountAddress The Solana token account address of the recipient
+        */
+    function bridgeToAddress(uint256 tokenId, bytes32 solanaAccountAddress) external onlyOwner returns (uint256 sequence) {
+        this.setSolanaAccountAddress(solanaAccountAddress);
+        this.bridgeNFT(tokenId);
+    }
+
     /*
      * @dev Necessary to receive ERC721 transfers
      */

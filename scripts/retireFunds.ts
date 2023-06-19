@@ -1,9 +1,7 @@
-import * as Wormhole from "@certusone/wormhole-sdk";
-import { ContractReceipt, ContractTransaction, ethers } from "ethers";
+import { ContractReceipt, ethers } from "ethers";
 import {
     HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS,
 } from "./constants";
-import { get } from "http";
 
 
 require("dotenv").config(({ path: ".env" }));

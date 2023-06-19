@@ -31,6 +31,7 @@ export const SolanaRetirementProvider: FC<PropsWithChildren> = ({children}) => {
     useEffect(() => {
         if (wallet) {
             console.log("creating SolanaRetirement api");
+            console.log("target: ", holdingContractTarget);
             SolanaRetirement.build(wallet, connection, holdingContractTarget).then(setAPI);
         }
     }, [wallet?.publicKey?.toBase58(), holdingContractTarget]);

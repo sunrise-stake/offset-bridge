@@ -5,17 +5,24 @@ import {ToucanProjectsSelector} from "@/components/toucanProjectsSelector";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
 import {useVerra} from "@/hooks/useVerra";
 import {useToucan} from "@/hooks/useToucan";
+import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 export default function Step1() {
     const [selectedProject, setSelectedProject] = useState<TCO2TokenResponse>();
+    const { allProjects, loading, error } = useToucan();
     const factory = useHoldingContractFactory();
+    const holdingContract = useHoldingContract();
     const verraDetails = useVerra(selectedProject);
 
-    // TODO move out of here
-    const { fetchRetirementNFTs } = useToucan();
     useEffect(() => {
-        fetchRetirementNFTs("0x669dd15b1a25f34e87e6ecae2a855ae5a336d9e3").then(console.log)
-    }, []);
+        if (holdingContract.tco2) {
+            console.log("Looking for current project", holdingContract.tco2)
+            const currentProject = allProjects.find((project) => project.address === holdingContract.tco2);
+            console.log("Found current project", currentProject)
+            setSelectedProject(currentProject);
+        }
+    }, [holdingContract.tco2, allProjects]);
 
     const createAccount = useCallback(async () => {
         factory?.create()
@@ -24,9 +31,8 @@ export default function Step1() {
     return (<div>
         <h1 className="text-2xl mb-4">Step 1 - Create Account</h1>
 
+        <ConnectButton/>
         <ToucanProjectsSelector selectProject={setSelectedProject} />
-        {factory?.isLoading && <div className="text-gray-500 mb-2">Loading...</div>}
-        {factory?.error && <div className="text-red-500 mb-2">Error: {factory.error.message}</div>}
         {selectedProject && verraDetails && <div>Selected Project: <a href={verraDetails?.link} target="_blank" className="underline">{selectedProject?.name}</a></div>}
 
         <div className="flex items-center space-x-2 mb-2">

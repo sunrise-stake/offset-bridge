@@ -1,17 +1,34 @@
-import {HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS} from "@/lib/constants";
+import {DUMMY_PUBLIC_KEY, HOLDING_CONTRACT_ABI} from "@/lib/constants";
 import {useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
+import {useAppStore} from "@/app/providers";
+import {deriveSolanaAddress, solanaAddressToHex} from "@/lib/util";
+
 
 export const useBridgeRetirementCert = () => {
-    const { config, error, isError } = usePrepareContractWrite({
-        address: HOLDING_CONTRACT_ADDRESS,
-        abi: HOLDING_CONTRACT_ABI,
-        functionName: 'bridgeNFT',
-        args: [1n, "0x1"] // TODO
+    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    const activeBridgeTransaction = useAppStore(state => state.activeRetirementCertificateBridgeTransaction);
+    const retirementNFTs = useAppStore(state => state.retirementNFTs);
+
+    const contract = {
+        address: holdingContractTarget,
+        abi: HOLDING_CONTRACT_ABI
+    } as const;
+
+    const nftToRetire = retirementNFTs.length > 0 ? retirementNFTs[0] : { tokenId: 0, solanaTokenAddress: DUMMY_PUBLIC_KEY };
+    const bridgePrepare = usePrepareContractWrite({
+        ...contract,
+        functionName: 'bridgeToAddress',
+        enabled: !!holdingContractTarget && retirementNFTs.length > 0,
+        args: [BigInt(nftToRetire.tokenId), solanaAddressToHex(nftToRetire.solanaTokenAddress)]
     })
-    const redeem = useContractWrite(config)
-    const wait = useWaitForTransaction({hash:redeem.data?.hash})
+    const bridge = useContractWrite(bridgePrepare.config)
 
-    if (!redeem.writeAsync) return undefined;
+    const bridgeTransactionHash = bridge.data?.hash || activeBridgeTransaction?.polygonTxHash as `0x${string}`;
+    if (!bridgeTransactionHash) return undefined;
 
-    return { ...redeem, error, isError, wait }
+    const wait = useWaitForTransaction({hash: bridgeTransactionHash})
+
+    if (!bridge.writeAsync) return undefined;
+
+    return { ...bridge, wait, hash: bridgeTransactionHash }
 }

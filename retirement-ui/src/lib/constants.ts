@@ -1,4 +1,6 @@
-import { Cluster, PublicKey, Keypair } from "@solana/web3.js";
+import { Cluster, PublicKey } from "@solana/web3.js";
+import {padHex} from "viem";
+import {solanaAddressToHex} from "@/lib/util";
 
 // Endpoints, connection
 export const ENV: Cluster = (process.env.CLUSTER as Cluster) || "mainnet-beta";
@@ -21,6 +23,8 @@ export const POLYGON_BRIDGE_ADDRESS = "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d
 export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = new PublicKey("DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe");
 export const SOL_TEST_BRIDGE_ADDRESS = new PublicKey("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5");
 export const SOL_TOKEN_BRIDGE_ADDRESS = new PublicKey("wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb");
+export const POLYGON_NFT_BRIDGE_ADDRESS = "0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf"
+export const SOLANA_NFT_BRIDGE_ADDRESS = "WnFt12ZrnzZrFZkt2xsNsaNWoQribnuQ5B5FrDbwDhD";
 export const SOL_BRIDGE_ADDRESS = new PublicKey("worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth");
 export const CHAIN_ID_POLYGON = 5;
 export const CHAIN_ID_SOLANA = 1;
@@ -52,19 +56,14 @@ export type HoldingContract = {
     address: string;
 }
 // Holding contract deployed on Polygon mainnet
-export const HOLDING_CONTRACT_ADDRESS = "0x669Dd15b1A25f34E87e6eCAe2A855ae5a336d9e3";
+export const HOLDING_CONTRACT_FACTORY_ADDRESS = "0xD2736BA23ce2A7Dd15a50fc44A414eAa1D9475Db" as const;
 
-export const HOLDING_CONTRACT_FACTORY_ADDRESS = "0x35270865296Fd8bC422fE21b4121FEe86a92fc70" as const;
-
-export const HOLDING_CONTRACTS: HoldingContract[]= [{
-    name: "Default",
-    description: "Using Toucan's default retirement strategy",
-    address: HOLDING_CONTRACT_ADDRESS,
-}]
-
-export const RETIREMENT_CONTRACT = "0x96059f36D58f38168860cE0978C20E586BB996b5";
+export const RETIREMENT_CONTRACT = "0x70acbb1b1D75c6a210F2439901B4A153C49c712f";
+export const RETIREMENT_ERC721 = "0x5e377f16E4ec6001652befD737341a28889Af002" as const;
 export const DEFAULT_RETIREMENT_PROJECT = "0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7" as const;
 export const DEFAULT_BENEFICIARY = "Solana";
+
+export const DUMMY_PUBLIC_KEY = new PublicKey("11111111111111111111111111111111")
 
 // export const WORMHOLE_RPC_HOSTS = ["http://guardian:7071"];
 export const WORMHOLE_RPC_HOSTS_TESTNET = ["https://wormhole-v2-testnet-api.certus.one"];
@@ -92,27 +91,6 @@ export interface JupiterToken {
 // ABIs
 export const HOLDING_CONTRACT_ABI = [
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "newTco2",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "newBeneficiary",
-                "type": "address"
-            },
-            {
-                "internalType": "string",
-                "name": "newBeneficiaryName",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
         "inputs": [],
         "name": "InsufficientFunds",
         "type": "error"
@@ -121,6 +99,19 @@ export const HOLDING_CONTRACT_ABI = [
         "inputs": [],
         "name": "InvalidRetireContract",
         "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "version",
+                "type": "uint8"
+            }
+        ],
+        "name": "Initialized",
+        "type": "event"
     },
     {
         "anonymous": false,
@@ -203,9 +194,9 @@ export const HOLDING_CONTRACT_ABI = [
         "name": "SolanaAccountAddress",
         "outputs": [
             {
-                "internalType": "string",
+                "internalType": "bytes32",
                 "name": "",
-                "type": "string"
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -256,11 +247,6 @@ export const HOLDING_CONTRACT_ABI = [
                 "internalType": "uint256",
                 "name": "tokenId",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "recipient",
-                "type": "bytes32"
             }
         ],
         "name": "bridgeNFT",
@@ -271,6 +257,68 @@ export const HOLDING_CONTRACT_ABI = [
                 "type": "uint256"
             }
         ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "solanaAccountAddress",
+                "type": "bytes32"
+            }
+        ],
+        "name": "bridgeToAddress",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "sequence",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newTco2",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "newBeneficiary",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "newBeneficiaryName",
+                "type": "string"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newSolanaAccountAddress",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "newRetireContract",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
@@ -289,6 +337,40 @@ export const HOLDING_CONTRACT_ABI = [
         ],
         "name": "offset",
         "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "operator",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            }
+        ],
+        "name": "onERC721Received",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
         "stateMutability": "nonpayable",
         "type": "function"
     },
@@ -359,9 +441,9 @@ export const HOLDING_CONTRACT_ABI = [
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "bytes32",
                 "name": "newSolanaAccountAddress",
-                "type": "string"
+                "type": "bytes32"
             }
         ],
         "name": "setSolanaAccountAddress",
@@ -380,25 +462,6 @@ export const HOLDING_CONTRACT_ABI = [
         "name": "setTCO2",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "str",
-                "type": "string"
-            }
-        ],
-        "name": "stringToBytes32",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "result",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -616,7 +679,9 @@ export const HOLDING_CONTRACT_FACTORY_ABI= [
     }
 ] as const;
 
-export const HOLDING_CONTRACT_FACTORY_SALT = `0x${Buffer.from("sunrise-holding-contract-v0.0.1").toString("hex")}` as const;
+export const ERC721_ABI = [{"constant":false,"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"mint","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"_data","type":"bytes"}],"name":"safeTransferFrom","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"transferFrom","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"}] as const;
+
+export const HOLDING_CONTRACT_FACTORY_SALT = padHex(`0x${Buffer.from("sunrise-v0.0.1").toString("hex")}`);
 
 export const WORMHOLE_BRIDGE_ABI = [{
     inputs: [

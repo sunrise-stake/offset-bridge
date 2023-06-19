@@ -1,4 +1,4 @@
-import {HOLDING_CONTRACT_ABI, HOLDING_CONTRACT_ADDRESS} from "@/lib/constants";
+import {HOLDING_CONTRACT_ABI} from "@/lib/constants";
 import {useContractWrite, usePrepareContractWrite} from "wagmi";
 import {Address} from "abitype/src/abi";
 

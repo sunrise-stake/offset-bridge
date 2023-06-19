@@ -5,12 +5,21 @@ import {Address} from "abitype/src/abi";
 import {useOffset} from "./useOffset";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
 import {useHoldingContractBalance} from "@/hooks/holdingContract/useHoldingContractBalance";
+import {useAppStore} from "@/app/providers";
+import {useToucan} from "@/hooks/useToucan";
+import {tokenIDsToRetirementNFTs} from "@/lib/util";
+import {useWallet} from "@solana/wallet-adapter-react";
+import {useWalletSafe} from "@/hooks/useWalletSafe";
 
 export const useHoldingContract = () => {
-    const [contractAddress, setContractAddress] = useState<Address>();
+    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
+
+    const setRetirementNFTs = useAppStore(state => state.setRetirementNFTs);
 
     const contract = {
-        address: contractAddress,
+        address: holdingContractTarget,
+        enabled: !!holdingContractTarget,
         abi: HOLDING_CONTRACT_ABI
     } as const;
 
@@ -31,15 +40,24 @@ export const useHoldingContract = () => {
             ...contract,
             functionName: 'tco2'
         }],
-        enabled: !!contractAddress
+        enabled: !!holdingContractTarget
     });
-    const usdcBalance = useHoldingContractBalance(contractAddress);
-    const offset = useOffset(contractAddress)
-    const factory = useHoldingContractFactory()
+    const usdcBalance = useHoldingContractBalance(holdingContractTarget);
+    const offset = useOffset(holdingContractTarget)
+    const factory = useHoldingContractFactory();
+    const solRecipient = useWalletSafe();
+    const { fetchRetirementNFTs } = useToucan();
+
+    useEffect(() => {
+        if (!holdingContractTarget) return;
+        fetchRetirementNFTs(holdingContractTarget)
+            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey))
+            .then(setRetirementNFTs)
+    }, [holdingContractTarget, offset?.isSuccess]);
 
     useEffect(() => {
         if (factory?.contractAddress) {
-            setContractAddress(factory.contractAddress)
+            setHoldingContractTarget(factory.contractAddress)
         }
     }, [factory?.contractAddress])
 
@@ -47,7 +65,7 @@ export const useHoldingContract = () => {
         reads,
         usdcBalance,
         offset,
-        contractAddress,
+        contractAddress: holdingContractTarget,
         beneficiary: reads.data? reads.data[0].result : undefined,
         beneficiaryName: reads.data? reads.data[1].result : undefined,
         solanaAccountAddress: reads.data? reads.data[2].result : undefined,
