@@ -10,17 +10,13 @@ import {NextButton} from "@/components/nextButton";
 import {TokenBalance} from "@/components/tokenBalance";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
-    BRIDGE_INPUT_MINT_DECIMALS,
-    BRIDGE_INPUT_TOKEN_SYMBOL,
 } from "@/lib/constants";
 import {useAppStore} from "@/app/providers";
-import {HoldingContractSelector} from "@/components/holdingContractSelector";
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
 import {carbonToUsdcCents} from "@/lib/prices";
 import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
 import {useToucan} from "@/hooks/useToucan";
 import {TCO2TokenResponse} from "toucan-sdk";
-import {ToucanProjectsSelector} from "@/components/toucanProjectsSelector";
 
 const swapInputToken = tokenMint;
 const swapInputTokenDecimals = tokenDecimals;
@@ -35,12 +31,6 @@ export default function Step2() {
     const [amount, setAmount] = useState('');
     const [swapEnabled, setSwapEnabled] = useState(false);
     const [amountInputAsUSDC, setAmountInputAsUSDC] = useState(true);
-    const { tco2, solanaAccountAddress, owner, reads: {error, isLoading} } = useHoldingContract();
-    const { getProjectById, allProjects, loading: toucanLoading, error : toucanError } = useToucan();
-    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
-    const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
-
-    const [retirementDetails, setRetirementDetails] = useState<TCO2TokenResponse>();
 
     const getInputAmountAsUSD = useCallback((): bigint => {
         if (amountInputAsUSDC && !!amount) return tokenAmountFromString(amount, tokenDecimals);

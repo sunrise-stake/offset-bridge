@@ -20,13 +20,13 @@ import {PhantomWalletAdapter} from "@solana/wallet-adapter-phantom";
 import {GlowWalletAdapter} from "@solana/wallet-adapter-glow";
 import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
 import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
-import {clusterApiUrl} from "@solana/web3.js";
+import {clusterApiUrl, PublicKey} from "@solana/web3.js";
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
-import {HOLDING_CONTRACTS} from "@/lib/constants";
 import {VAAResult} from "@/lib/types";
+import {Address} from "abitype/src/abi";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
@@ -76,19 +76,26 @@ type BridgeTransaction = Omit<BridgeTransactionStored, 'vaaResult'> & {
     vaaResult?: VAAResult;
 }
 
+export type RetirementNFT = {
+    tokenId: number;
+    solanaTokenAddress: PublicKey;
+}
+
 export interface AppState {
     step: number;
-    holdingContractTarget: string;
+    holdingContractTarget?: Address;
     activeUSDCBridgeTransaction?: BridgeTransactionStored;
     activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
+    retirementNFTs: RetirementNFT[];
 }
 
 export interface Actions {
     setStep: (newStep: number) => void;
-    setHoldingContractTarget: (newTarget: string) => void;
+    setHoldingContractTarget: (newTarget: Address) => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
     clearActiveUSDCBridgeTransaction: () => void;
     updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
+    setRetirementNFTs: (newNFTs: RetirementNFT[]) => void;
 }
 
 const convertBridgeTransaction = (newTx: Partial<BridgeTransaction>): Partial<BridgeTransactionStored> => {
@@ -106,8 +113,8 @@ export const useAppStore = create<AppState & Actions>()(
                     step: 1,
                     setStep: (newStep: number) => set((state) => ({step: state.step + newStep})),
 
-                    holdingContractTarget: HOLDING_CONTRACTS[0].address,
-                    setHoldingContractTarget: (newTarget: string) => set((state) => ({holdingContractTarget: newTarget})),
+                    holdingContractTarget: undefined,
+                    setHoldingContractTarget: (newTarget: Address) => set(() => ({holdingContractTarget: newTarget})),
 
                     activeUSDCBridgeTransaction: undefined,
                     updateActiveUSDCBridgeTransaction:
@@ -115,13 +122,16 @@ export const useAppStore = create<AppState & Actions>()(
                             set((state) =>
                                 ({activeUSDCBridgeTransaction: {...(state.activeUSDCBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}}));
                         },
-                    clearActiveUSDCBridgeTransaction: () => set((state) => ({activeUSDCBridgeTransaction: undefined})),
+                    clearActiveUSDCBridgeTransaction: () => set(() => ({activeUSDCBridgeTransaction: undefined})),
 
                     activeRetirementCertificateBridgeTransaction: undefined,
                     updateActiveRetirementCertificateBridgeTransaction:
                         (newTx: Partial<BridgeTransaction>) =>
                             set((state) =>
                                 ({activeRetirementCertificateBridgeTransaction: {...(state.activeRetirementCertificateBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}})),
+
+                    retirementNFTs: [],
+                    setRetirementNFTs: (newNFTs: RetirementNFT[]) => set(() => ({retirementNFTs: newNFTs})),
                 });
             },
             {

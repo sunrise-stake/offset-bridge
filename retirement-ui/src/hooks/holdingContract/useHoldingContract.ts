@@ -1,16 +1,25 @@
 import {useContractReads} from 'wagmi'
 import { HOLDING_CONTRACT_ABI } from "@/lib/constants";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect} from "react";
 import {Address} from "abitype/src/abi";
 import {useOffset} from "./useOffset";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
 import {useHoldingContractBalance} from "@/hooks/holdingContract/useHoldingContractBalance";
+import {useAppStore} from "@/app/providers";
+import {useToucan} from "@/hooks/useToucan";
+import {tokenIDsToRetirementNFTs} from "@/lib/util";
+import {useWalletSafe} from "@/hooks/useWalletSafe";
+import {prepareWriteContract, writeContract} from "@wagmi/core";
 
 export const useHoldingContract = () => {
-    const [contractAddress, setContractAddress] = useState<Address>();
+    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
+
+    const setRetirementNFTs = useAppStore(state => state.setRetirementNFTs);
 
     const contract = {
-        address: contractAddress,
+        address: holdingContractTarget,
+        enabled: !!holdingContractTarget,
         abi: HOLDING_CONTRACT_ABI
     } as const;
 
@@ -31,23 +40,46 @@ export const useHoldingContract = () => {
             ...contract,
             functionName: 'tco2'
         }],
-        enabled: !!contractAddress
+        enabled: !!holdingContractTarget
     });
-    const usdcBalance = useHoldingContractBalance(contractAddress);
-    const offset = useOffset(contractAddress)
-    const factory = useHoldingContractFactory()
+    const usdcBalance = useHoldingContractBalance(holdingContractTarget);
+    const offset = useOffset(holdingContractTarget)
+    const factory = useHoldingContractFactory();
+    const solRecipient = useWalletSafe();
+    const { fetchRetirementNFTs } = useToucan();
+
+    useEffect(() => {
+        if (!holdingContractTarget) return;
+        fetchRetirementNFTs(holdingContractTarget)
+            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey))
+            .then(setRetirementNFTs)
+    }, [holdingContractTarget, offset?.isSuccess]);
 
     useEffect(() => {
         if (factory?.contractAddress) {
-            setContractAddress(factory.contractAddress)
+            setHoldingContractTarget(factory.contractAddress)
         }
     }, [factory?.contractAddress])
+
+    const updateTCO2 = useCallback(async (tco2: Address) => {
+        if (!holdingContractTarget) return;
+        const config = await prepareWriteContract({
+            address: holdingContractTarget,
+            abi: HOLDING_CONTRACT_ABI,
+            functionName: 'setTCO2',
+            args: [ tco2 ],
+        })
+        return writeContract(config.request)
+    }, [holdingContractTarget]);
+
+    console.log("data", reads.data);
 
     return {
         reads,
         usdcBalance,
         offset,
-        contractAddress,
+        updateTCO2,
+        contractAddress: holdingContractTarget,
         beneficiary: reads.data? reads.data[0].result : undefined,
         beneficiaryName: reads.data? reads.data[1].result : undefined,
         solanaAccountAddress: reads.data? reads.data[2].result : undefined,

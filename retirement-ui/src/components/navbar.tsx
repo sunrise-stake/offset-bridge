@@ -24,6 +24,7 @@ export const Navbar: FC = () => (
 
         <div className="flex gap-2">
             <WalletMultiButton/>
+            <ConnectButton showBalance={false}/>
         </div>
     </div>
 )
