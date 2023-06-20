@@ -2,7 +2,6 @@ import {useAccount, useContractRead, useContractWrite, usePrepareContractWrite, 
 import {
     DEFAULT_BENEFICIARY,
     DEFAULT_RETIREMENT_PROJECT,
-    HOLDING_CONTRACT_FACTORY_ABI,
     HOLDING_CONTRACT_FACTORY_ADDRESS,
     HOLDING_CONTRACT_FACTORY_SALT, RETIREMENT_CONTRACT
 } from "@/lib/constants";
@@ -10,6 +9,7 @@ import {solanaAddressToHex} from "@/lib/util";
 import {PublicKey} from "@solana/web3.js";
 import {useEffect, useState} from "react";
 import {Address} from "abitype/src/abi";
+import {HOLDING_CONTRACT_FACTORY_ABI} from "@/lib/abi/holdingContractFactory";
 
 const dummySolanaAddress = solanaAddressToHex(
     new PublicKey("11111111111111111111111111111111")

@@ -1,6 +1,6 @@
-import {HOLDING_CONTRACT_ABI} from "@/lib/constants";
 import {useContractWrite, usePrepareContractWrite} from "wagmi";
 import {Address} from "abitype/src/abi";
+import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
 
 export const useOffset = (contractAddress: Address | undefined) => {
     const { config, error, isError } = usePrepareContractWrite({

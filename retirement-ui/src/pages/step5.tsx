@@ -132,6 +132,7 @@ export default function Step5() {
 
     return (<div>
         <h1 className="text-2xl mb-4">Step 5 - Redeem Retirement Certificate</h1>
+        <div className="mb-4">NFTs to bridge: {retirementNFTs.length}</div>
         <div className="flex items-center space-x-2 mb-2">
             <button
                 className="btn btn-primary"

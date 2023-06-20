@@ -1,5 +1,6 @@
-import {WORMHOLE_BRIDGE_ABI, POLYGON_TOKEN_BRIDGE_ADDRESS} from "@/lib/constants";
+import {POLYGON_TOKEN_BRIDGE_ADDRESS} from "@/lib/constants";
 import {useContractWrite, usePrepareContractWrite} from "wagmi";
+import {WORMHOLE_BRIDGE_ABI} from "@/lib/abi/wormholeBridge";
 
 export const useRedeemVAA = (vaaBytes: string | undefined ) => {
     const { config, error, isError } = usePrepareContractWrite({

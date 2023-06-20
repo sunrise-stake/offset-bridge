@@ -1,8 +1,8 @@
-import {useToucan} from "@/hooks/useToucan";
+import {PooledTCO2Token, useToucan} from "@/hooks/useToucan";
 import {FC} from "react";
 import {SearchableDropdown} from "@/components/searchableDropdown";
-import {TCO2TokenResponse} from "toucan-sdk";
-export const ToucanProjectsSelector: FC<{ selectProject: (project: TCO2TokenResponse) => void }> = ({ selectProject }) => {
+
+export const ToucanProjectsSelector: FC<{ selectProject: (project: PooledTCO2Token) => void }> = ({ selectProject }) => {
     const { allProjects, loading, error } = useToucan();
     return (
         <div className="flex flex-col">

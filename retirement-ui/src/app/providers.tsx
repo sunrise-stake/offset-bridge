@@ -78,7 +78,7 @@ type BridgeTransaction = Omit<BridgeTransactionStored, 'vaaResult'> & {
 
 export type RetirementNFT = {
     tokenId: number;
-    solanaTokenAddress: PublicKey;
+    solanaTokenAddress: string;
 }
 
 export interface AppState {

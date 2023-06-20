@@ -1,7 +1,6 @@
 import { ContractReceipt, ethers } from "ethers";
-import {
-    HOLDING_CONTRACT_ABI,
-} from "../retirement-ui/src/lib/constants";
+
+import {HOLDING_CONTRACT_ABI} from "../retirement-ui/src/lib/abi/holdingContract";
 
 
 require("dotenv").config(({ path: ".env" }));

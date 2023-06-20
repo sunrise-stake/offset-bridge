@@ -1,5 +1,4 @@
 import {useContractReads} from 'wagmi'
-import { HOLDING_CONTRACT_ABI } from "@/lib/constants";
 import {useCallback, useEffect} from "react";
 import {Address} from "abitype/src/abi";
 import {useOffset} from "./useOffset";
@@ -10,6 +9,7 @@ import {useToucan} from "@/hooks/useToucan";
 import {tokenIDsToRetirementNFTs} from "@/lib/util";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {prepareWriteContract, writeContract} from "@wagmi/core";
+import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
 
 export const useHoldingContract = () => {
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);

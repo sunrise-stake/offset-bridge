@@ -4,7 +4,7 @@ import {ToucanProjectsSelector} from "@/components/toucanProjectsSelector";
 import {TCO2TokenResponse} from "toucan-sdk";
 import {useHoldingContractFactory} from "@/hooks/holdingContract/useHoldingContractFactory";
 import {useVerra} from "@/hooks/useVerra";
-import {useToucan} from "@/hooks/useToucan";
+import {PooledTCO2Token, useToucan} from "@/hooks/useToucan";
 import {Address} from "abitype/src/abi";
 import {FaWallet} from "react-icons/fa";
 import {toast} from "react-toastify";
@@ -21,7 +21,7 @@ const stripProjectName = (name: string) => name.replace('Toucan Protocol: ', '')
 export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> = ({ setReady }) => {
     const factory = useHoldingContractFactory();
     const holdingContract = useHoldingContract();
-    const [selectedProject, setSelectedProject] = useState<TCO2TokenResponse>();
+    const [selectedProject, setSelectedProject] = useState<PooledTCO2Token>();
     const verraDetails = useVerra(selectedProject);
     const toucan = useToucan();
     const [changeShown, setChangeShown] = useState(false);
@@ -93,7 +93,7 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
                         </a></div>}
                         <button
                             className="btn btn-primary w-32"
-                            disabled={!selectedProject || !factory || factory?.isLoading}
+                            disabled={!factory || factory?.isLoading}
                             onClick={toggleChangeShown}
                         >
                             Change

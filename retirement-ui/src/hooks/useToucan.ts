@@ -2,26 +2,63 @@ import ToucanClient, {TCO2TokenResponse} from "toucan-sdk";
 import {useEffect, useMemo, useState} from "react";
 import {gql} from "@urql/core";
 import {readContracts} from "wagmi";
-import {ERC721_ABI, RETIREMENT_ERC721} from "@/lib/constants";
+import {NCT_TOKEN_ADDRESS, RETIREMENT_ERC721} from "@/lib/constants";
+import {Address} from "abitype/src/abi";
+import {ERC721_ABI} from "@/lib/abi/erc721";
 
 const retirementERC721Contract = {
     address: RETIREMENT_ERC721,
     abi: ERC721_ABI,
 }
 
+export type PooledTCO2Token = {
+    address: Address,
+    name: string
+}
+
+type PooledTokenLookup = {
+    pooledTCO2Tokens: [{
+        token: PooledTCO2Token
+    }]
+}
+
 export const useToucan = () => {
     const toucan = useMemo(() => new ToucanClient("polygon"), []);
-    const [allProjects, setAllProjects] = useState<TCO2TokenResponse[]>([]);
+    const [allProjects, setAllProjects] = useState<PooledTCO2Token[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        const fetchAllTCO2Tokens = async () => {
-            const result = await toucan.fetchAllTCO2Tokens();
-            setAllProjects(result);
-        }
         setLoading(true);
-        fetchAllTCO2Tokens().catch(setError).finally(() => setLoading(false));
+
+        const fetchAllNCTTokens = async () => {
+            const query = gql`
+                query ($poolAddress: String) {
+                    pooledTCO2Tokens(where: {poolAddress: $poolAddress}) {
+                        token {
+                            address
+                            name
+                        }
+                    }
+                }
+            `;
+
+            console.log("Querying for all NCT tokens")
+
+            const result = await toucan.fetchCustomQuery<PooledTokenLookup>(query, { poolAddress: NCT_TOKEN_ADDRESS });
+
+            console.log({result})
+
+            if (!result) return [];
+
+            return result.pooledTCO2Tokens.map((pooledToken) => pooledToken.token);
+        }
+
+        setLoading(true);
+        fetchAllNCTTokens()
+            .then(setAllProjects)
+            .catch(setError)
+            .finally(() => setLoading(false));
     }, []);
 
     const fetchRetirementNFTs = async (holdingContract: string): Promise<number[]> => {
