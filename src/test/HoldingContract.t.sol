@@ -95,7 +95,9 @@ contract HoldingContractTest is Test {
     }
 
     function test_proxy_multiple() public {
-        // user calls createContract
+        // test with multiple proxies
+
+        // new user proxy
         vm.startPrank(address(146));
         proxy = factory.createContract(
             keccak256(abi.encode(address(146))),
@@ -106,13 +108,17 @@ contract HoldingContractTest is Test {
         );
         HoldingContract(proxy).setBeneficiary(address(146), "Solana");
         assertEq(HoldingContract(proxy).beneficiary(), address(146));
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+
         deal(usdc, proxy, 100 * 1e6);
 
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
-        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
-
         assertEq(cert.balanceOf(proxy), 1);
+        // deal(usdc, proxy, 100 * 1e6);
+        // HoldingContract(proxy).offset("2nd entity", "msg");
+        // assertEq(cert.balanceOf(proxy), 2);
+
         vm.stopPrank();
 
         // user calls createContract
@@ -218,5 +224,24 @@ contract HoldingContractTest is Test {
             "Sunrise",
             "Climate-Positive Staking on Solana"
         );
+    }
+
+    function test_setSolana() public {
+        bytes32 newSolanaAccountAddress = "943b9";
+        vm.startPrank(user);
+        HoldingContract(proxy).setSolanaAccountAddress(newSolanaAccountAddress); // this one passes
+        // HoldingContract(proxy).bridgeToAddress(4010, newSolanaAccountAddress); // this one calls setSolanaAddress from the contract address
+        vm.stopPrank();
+    }
+
+    function test_bridge() public {
+        uint amount = 100 * 1e6;
+        deal(usdc, proxy, amount);
+        vm.startPrank(user);
+        HoldingContract(proxy).offset("entity", "msg");
+        HoldingContract(proxy).bridgeToAddress(4054, SolanaAccountAddress);
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+
+        assertEq(cert.balanceOf(proxy), 0);
     }
 }
