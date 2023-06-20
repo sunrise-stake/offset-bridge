@@ -24,7 +24,6 @@ export const useBridgeRetirementCert = () => {
     const bridge = useContractWrite(bridgePrepare.config)
 
     const bridgeTransactionHash = bridge.data?.hash || activeBridgeTransaction?.polygonTxHash as `0x${string}`;
-    if (!bridgeTransactionHash) return undefined;
 
     const wait = useWaitForTransaction({hash: bridgeTransactionHash})
 
