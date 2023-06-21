@@ -26,10 +26,10 @@ export const Page: FC<PropsWithChildren> = ({children}) => {
     const image = `/pageBackgrounds/step${currentStep}.png`;
 
     return (
-        <section className="flex-grow p-4 rounded-lg shadow-lg relative">
+        <section className="flex-grow p-4 rounded-lg shadow-lg">
             {/* Background Image */}
             <div
-                className="absolute bottom-0 right-0 bg-contain bg-no-repeat bg-right-bottom opacity-25"
+                className="absolute -z-[99] bottom-0 right-0 bg-contain bg-no-repeat bg-right-bottom opacity-25"
                 style={{
                     backgroundImage: `url(${image})`,
                     width: `${stepSize(currentStep)}%`,

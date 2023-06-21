@@ -3,7 +3,7 @@ import {
     BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON,
     MAX_NUM_PRECISION, POLYGON_NFT_BRIDGE_ADDRESS,
     PROGRAM_ID, RETIREMENT_ERC721,
-    SOL_TOKEN_BRIDGE_ADDRESS, SOLANA_NFT_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
     STATE_ADDRESS
 } from "./constants";
 import {getAssociatedTokenAddressSync} from "spl-token-latest";
@@ -50,7 +50,7 @@ export const solanaAddressToHex = (address: PublicKey) => `0x${address.toBuffer(
 export const deriveSolanaAddress = async (tokenId: number, recipient: PublicKey): Promise<string> => {
     const originAsset = Wormhole.tryNativeToUint8Array(RETIREMENT_ERC721, CHAIN_ID_POLYGON);
     const solanaAsset = (await getForeignAssetSolana(
-        SOLANA_NFT_BRIDGE_ADDRESS,
+        SOL_NFT_BRIDGE_ADDRESS,
         CHAIN_ID_POLYGON,
         originAsset,
         BigInt(tokenId)

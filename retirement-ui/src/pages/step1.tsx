@@ -10,7 +10,7 @@ export default function Step1() {
 
         <HoldingContractDisplay setReady={setReady}/>
         <div className="flex items-center space-x-2 mt-2">
-            <NextButton disabled={ ready }/>
+            <NextButton disabled={ !ready }/>
         </div>
     </div>)
 }

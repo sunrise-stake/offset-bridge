@@ -23,7 +23,7 @@ export const SOL_TEST_TOKEN_BRIDGE_ADDRESS = new PublicKey("DZnkkTmCiFWfYTfT41X3
 export const SOL_TEST_BRIDGE_ADDRESS = new PublicKey("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5");
 export const SOL_TOKEN_BRIDGE_ADDRESS = new PublicKey("wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb");
 export const POLYGON_NFT_BRIDGE_ADDRESS = "0x90BBd86a6Fe93D3bc3ed6335935447E75fAb7fCf"
-export const SOLANA_NFT_BRIDGE_ADDRESS = "WnFt12ZrnzZrFZkt2xsNsaNWoQribnuQ5B5FrDbwDhD";
+export const SOL_NFT_BRIDGE_ADDRESS = "WnFt12ZrnzZrFZkt2xsNsaNWoQribnuQ5B5FrDbwDhD";
 export const SOL_BRIDGE_ADDRESS = new PublicKey("worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth");
 export const CHAIN_ID_POLYGON = 5;
 export const CHAIN_ID_SOLANA = 1;
@@ -88,5 +88,5 @@ export interface JupiterToken {
     tags: string[]; // [ 'utility-token', 'capital-token' ]
 }
 
-export const HOLDING_CONTRACT_FACTORY_SALT = padHex(`0x${Buffer.from("sunrise-v0.0.1").toString("hex")}`);
+export const HOLDING_CONTRACT_FACTORY_SALT = padHex(`0x${Buffer.from("sunrise-v0.0.2").toString("hex")}`);
 

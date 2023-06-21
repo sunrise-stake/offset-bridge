@@ -6,6 +6,7 @@ import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {useAppStore} from "@/app/providers";
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
 import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
+import {waitForTransaction} from "@wagmi/core";
 
 export default function Step4() {
     const [retireEnabled, setRetireEnabled] = useState(true);
@@ -24,13 +25,15 @@ export default function Step4() {
 
     // handle retire success
     useEffect(() => {
-        if (offset?.isSuccess) {
-            clearBridgeTransaction();
-            toast.info(<div>
-                Retirement successful:{' '}<PolyExplorerLink address={offset.data?.hash || ''} type="tx"/>
-            </div>);
+        if (offset?.isSuccess && offset?.data?.hash) {
+            waitForTransaction({ hash: offset.data.hash }).then(() => {
+                clearBridgeTransaction();
+                toast.info(<div>
+                    Retirement successful:{' '}<PolyExplorerLink address={offset.data?.hash || ''} type="tx"/>
+                </div>);
+            });
         }
-    }, [offset?.isSuccess]);
+    }, [offset?.isSuccess, offset?.data?.hash]);
 
     const retireFailed = (error: Error) => {
         toast.error(<div>

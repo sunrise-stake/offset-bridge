@@ -27,10 +27,11 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
     const [changeShown, setChangeShown] = useState(false);
 
     useEffect(() => {
-        if (factory.contractAddress && !holdingContract.reads.isLoading) {
+        console.log("factory contract address", factory.contractAddress)
+        if (factory.contractAddress) {
             setReady(true);
         }
-    }, [holdingContract.contractAddress, holdingContract.reads.isLoading]);
+    }, [factory.contractAddress]);
 
     const toggleChangeShown = () => setChangeShown(!changeShown)
 

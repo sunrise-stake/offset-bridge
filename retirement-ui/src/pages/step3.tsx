@@ -31,7 +31,7 @@ const substepInfos: SubstepInfo[] = [
     },
     {
         name: 'Retrieve receipt from bridge',
-        description: 'Retrieve VAA (Verified Action Approval) from Wormhole. This can take up to five minutes.',
+        description: 'Retrieve VAA (Verified Action Approval) from Wormhole. This can take between 15 minutes and several hours. You can return later.',
     },
     {
         name: 'Redeem on Polygon',

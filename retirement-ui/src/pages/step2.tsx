@@ -11,12 +11,8 @@ import {TokenBalance} from "@/components/tokenBalance";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
 } from "@/lib/constants";
-import {useAppStore} from "@/app/providers";
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
 import {carbonToUsdcCents} from "@/lib/prices";
-import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
-import {useToucan} from "@/hooks/useToucan";
-import {TCO2TokenResponse} from "toucan-sdk";
 
 const swapInputToken = tokenMint;
 const swapInputTokenDecimals = tokenDecimals;

@@ -33,7 +33,7 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
 
     const { config, error, isError } = usePrepareContractWrite({
         ...contract,
-        enabled: read.isFetched && read.data === undefined,
+        enabled: contractAddress === undefined,
         functionName: 'createContract',
         args:[ HOLDING_CONTRACT_FACTORY_SALT, retirementProject, beneficiary, dummySolanaAddress, RETIREMENT_CONTRACT ],
     })
@@ -47,9 +47,10 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
                 setContractAddress(address);
             });
         }
-        , [read.data]);
+        , [read.data, deploy.data]);
 
     const create = () => {
+        console.log('create', {deploy, read});
         if (!deploy.writeAsync) return Promise.resolve();
         return deploy.writeAsync();
     }

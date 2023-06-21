@@ -7,7 +7,6 @@ import {toast} from "react-toastify";
 import {BRIDGE_INPUT_MINT_ADDRESS} from "@/lib/constants";
 import {useAppStore} from "@/app/providers";
 import {PolyExplorerLink} from "@/components/polyExplorerLink";
-import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {WormholeLink} from "@/components/wormholeLink";
 import {BridgeSubsteps, Substep, SubstepInfo} from "@/components/bridgeSubsteps";
 import {useBridgeRetirementCert} from "@/hooks/useBridgeRetirementCert";
@@ -15,6 +14,9 @@ import {SolExplorerLink} from "@/components/solExplorerLink";
 import * as polygonAPI from "@/api/polygonRetirement";
 import {VAAResult} from "@/lib/types";
 import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
+import {waitForTransaction} from "@wagmi/core";
+import {useWalletSafe} from "@/hooks/useWalletSafe";
+import {useConnection} from "@solana/wallet-adapter-react";
 
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 
@@ -25,7 +27,7 @@ const substepInfos: SubstepInfo[] = [
     },
     {
         name: 'Retrieve receipt from bridge',
-        description: 'Retrieve VAA (Verified Action Approval) from Wormhole. This can take up to five minutes.',
+        description: 'Retrieve VAA (Verified Action Approval) from Wormhole. This can take between 15 minutes and several hours. You can return later.',
     },
     {
         name: 'Redeem on Solana',
@@ -34,6 +36,8 @@ const substepInfos: SubstepInfo[] = [
 ]
 
 export default function Step5() {
+    const wallet = useWalletSafe();
+    const { connection } = useConnection();
     const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
     useHoldingContract();
 
@@ -46,10 +50,14 @@ export default function Step5() {
     const retirementNFTs = useAppStore(state => state.retirementNFTs)
 
     const [bridgeEnabled, setBridgeEnabled] = useState(false);
-    const [redeemEnabled, setRedeemEnabled] = useState(
-        activeBridgeTransaction?.vaaResult !== undefined &&
-        activeBridgeTransaction?.solanaTxSignature === undefined
-    );
+    const [redeemEnabled, setRedeemEnabled] = useState(false);
+
+    useEffect(() => {
+        setRedeemEnabled(
+            activeBridgeTransaction?.vaaResult !== undefined &&
+            activeBridgeTransaction?.solanaTxSignature === undefined
+        );
+    }, [activeBridgeTransaction?.vaaResult, activeBridgeTransaction?.solanaTxSignature]);
 
     const setBridgePolygonTransaction = (txHash: string) => {
         updateBridgeTransaction({ polygonTxHash: txHash });
@@ -64,7 +72,7 @@ export default function Step5() {
             && solanaAPI !== undefined
             && !activeBridgeTransaction
         );
-    }, [bridgeInputBalance, solanaAPI]);
+    }, [retirementNFTs?.length, solanaAPI, activeBridgeTransaction]);
 
     const bridgePolygonTxInProgress = (txHash: string) => {
         setBridgePolygonTransaction(txHash);
@@ -74,17 +82,12 @@ export default function Step5() {
     }
 
     useEffect(() => {
-        if (activeBridgeTransaction && activeBridgeTransaction.polygonTxHash && !activeBridgeTransaction.vaaResult && bridgeRetirementCert?.wait?.data) {
-            polygonAPI.getVAAFromPolygonTransactionSignature(bridgeRetirementCert.wait.data).then(setVAAResult).catch(getVAAFailed);
+        if (activeBridgeTransaction && activeBridgeTransaction.polygonTxHash && !activeBridgeTransaction.vaaResult) {
+            waitForTransaction({ hash: activeBridgeTransaction.polygonTxHash as `0x${string}`}).then((receipt) => {
+                polygonAPI.getVAAFromPolygonTransactionSignature(receipt).then(setVAAResult).catch(getVAAFailed);
+            });
         }
-    }, [bridgeRetirementCert?.isSuccess, bridgeRetirementCert?.wait?.data]);
-
-    // handle polygon bridge success
-    useEffect(() => {
-        if (bridgeRetirementCert?.isSuccess && bridgeRetirementCert?.wait?.data) {
-            polygonAPI.getVAAFromPolygonTransactionSignature(bridgeRetirementCert.wait.data).then(setVAAResult).catch(getVAAFailed);
-        }
-    }, [bridgeRetirementCert?.isSuccess, bridgeRetirementCert?.wait?.data]);
+    }, [activeBridgeTransaction?.polygonTxHash]);
 
     const bridgePolygonTxFailed = (error: Error) => {
         toast.error(<div>
@@ -93,6 +96,7 @@ export default function Step5() {
     }
 
     const getVAAFailed = (error: Error) => {
+        console.log(error);
         toast.error(<div>
             Failed to retrieve information from bridge: {error.message}
         </div>);
@@ -104,7 +108,23 @@ export default function Step5() {
             .catch(bridgePolygonTxFailed);
     };
 
+    const redeemSuccessful = (txSig: string) => {
+        toast.success(<div>
+            Redemption successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
+        </div>);
+    }
+
+    const redeemFailed = (error: Error) => {
+        toast.error(<div>
+            Redemption failed: {error.message}
+        </div>);
+    }
+
     const handleRedeem = async () => {
+        if (!activeBridgeTransaction?.vaaResult || activeBridgeTransaction.solanaTxSignature || !solanaAPI) return;
+
+        const redeemTx = await solanaAPI.redeemVAA(Buffer.from(activeBridgeTransaction.vaaResult.vaaBytes, 'hex'));
+        return wallet.sendTransaction(redeemTx, connection).then(redeemSuccessful).catch(redeemFailed);
     };
 
     const substeps: Substep[] = [{
@@ -133,6 +153,7 @@ export default function Step5() {
     return (<div>
         <h1 className="text-2xl mb-4">Step 5 - Redeem Retirement Certificate</h1>
         <div className="mb-4">NFTs to bridge: {retirementNFTs.length}</div>
+        {bridgeRetirementCert?.error && <div className="text-red-500 mb-4">Error: {JSON.stringify(bridgeRetirementCert.error, null, 2)}</div>}
         <div className="flex items-center space-x-2 mb-2">
             <button
                 className="btn btn-primary"

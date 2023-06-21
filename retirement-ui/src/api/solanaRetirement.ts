@@ -18,7 +18,7 @@ import {
     JupiterToken,
     PROGRAM_ID,
     SOL_BRIDGE_ADDRESS,
-    SOL_TOKEN_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
     STATE_ADDRESS,
     WORMHOLE_RPC_HOSTS_MAINNET,
 } from "@/lib/constants";
@@ -34,7 +34,7 @@ import {
 } from "spl-token-latest";
 import {bridgeAuthority, bridgeInputTokenAccount, tokenAuthority} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
-import {createWrappedOnSolana, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
+import {nft_bridge, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
 import {createWormholeWrappedTransfer} from "@/lib/bridge";
 import {VAAResult} from "@/lib/types";
@@ -308,14 +308,13 @@ export class SolanaRetirement {
             Buffer.from(vaaBytes)
         );
 
-        // create the wrapped token
-        return createWrappedOnSolana(
+        return nft_bridge.redeemOnSolana(
             this.solConnection,
             SOL_BRIDGE_ADDRESS,
-            SOL_TOKEN_BRIDGE_ADDRESS,
+            SOL_NFT_BRIDGE_ADDRESS,
             this.solWallet.publicKey,
-            vaaBytes
-        );
+            Buffer.from(vaaBytes)
+        )
     }
 
     static async build(
