@@ -1,7 +1,7 @@
 import {DUMMY_PUBLIC_KEY} from "@/lib/constants";
-import {useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
+import {useContractWrite, usePrepareContractWrite} from "wagmi";
 import {useAppStore} from "@/app/providers";
-import {deriveSolanaAddress, solanaAddressToHex} from "@/lib/util";
+import {solanaAddressToHex} from "@/lib/util";
 import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
 import {PublicKey} from "@solana/web3.js";
 

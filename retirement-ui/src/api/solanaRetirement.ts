@@ -299,7 +299,7 @@ export class SolanaRetirement {
         return {vaaBytes, sequence, emitterAddress, emitterChain: CHAIN_ID_SOLANA};
     }
 
-    async redeemVAA(vaaBytes: Uint8Array) {
+    async redeemVAA(vaaBytes: Uint8Array): Promise<Transaction[]> {
         await postVaaSolanaWithRetry(
             this.solConnection,
             this.solWallet.signTransaction.bind(this.solWallet),
@@ -308,13 +308,42 @@ export class SolanaRetirement {
             Buffer.from(vaaBytes)
         );
 
-        return nft_bridge.redeemOnSolana(
+        const redeemTx = await nft_bridge.redeemOnSolana(
             this.solConnection,
             SOL_BRIDGE_ADDRESS,
             SOL_NFT_BRIDGE_ADDRESS,
             this.solWallet.publicKey,
             Buffer.from(vaaBytes)
         )
+
+        const meta = await nft_bridge.createMetaOnSolana(
+            this.solConnection,
+            SOL_BRIDGE_ADDRESS,
+            SOL_NFT_BRIDGE_ADDRESS,
+            this.solWallet.publicKey,
+            Buffer.from(vaaBytes)
+        );
+
+        return [redeemTx, meta]
+    }
+
+    async getMintAddressFromTransaction(txSig: string): Promise<PublicKey> {
+        const response = await this.solConnection.getTransaction(txSig);
+        if (!response) {
+            throw new Error(
+                "An error occurred while fetching the transaction info"
+            );
+        }
+
+        const accounts = response?.transaction.message.accountKeys;
+
+        // judging by transaction logs, the mint is always the 3rd account
+        if (accounts?.length < 2) {
+            throw new Error(
+                "Transaction does not have enough accounts"
+            );
+        }
+        return accounts[2]
     }
 
     static async build(

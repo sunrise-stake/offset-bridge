@@ -11,6 +11,7 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.18",
     "@jup-ag/core": "^4.0.0-beta.18",
+    "@metaplex-foundation/js": "^0.19.4",
     "@rainbow-me/rainbowkit": "^1.0.1",
     "@solana/spl-token": "^0.3.8",
     "@solana/wallet-adapter-base": "^0.9.22",

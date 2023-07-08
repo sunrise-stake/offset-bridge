@@ -28,7 +28,7 @@ export default function Step4() {
         if (offset?.isSuccess && offset?.data?.hash) {
             waitForTransaction({ hash: offset.data.hash }).then(() => {
                 clearBridgeTransaction();
-                toast.info(<div>
+                toast.success(<div>
                     Retirement successful:{' '}<PolyExplorerLink address={offset.data?.hash || ''} type="tx"/>
                 </div>);
             });

@@ -27,7 +27,7 @@ const Step:FC<{step: number, text: string}> = ({step, text}) => {
     );
 }
 
-export const steps = [ "Create", "Deposit", "Bridge", "Retire", "Redeem"];
+export const steps = [ "Create", "Deposit", "Bridge", "Retire", "Redeem", "View"];
 
 export const StepBar:FC = () => {
     return (

@@ -95,6 +95,7 @@ export interface Actions {
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
     clearActiveUSDCBridgeTransaction: () => void;
     updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
+    clearActiveRetirementCertificateBridgeTransaction: () => void;
     setRetirementNFTs: (newNFTs: RetirementNFT[]) => void;
 }
 
@@ -129,6 +130,7 @@ export const useAppStore = create<AppState & Actions>()(
                         (newTx: Partial<BridgeTransaction>) =>
                             set((state) =>
                                 ({activeRetirementCertificateBridgeTransaction: {...(state.activeRetirementCertificateBridgeTransaction || {}), ...convertBridgeTransaction(newTx)}})),
+                    clearActiveRetirementCertificateBridgeTransaction: () => set(() => ({activeRetirementCertificateBridgeTransaction: undefined})),
 
                     retirementNFTs: [],
                     setRetirementNFTs: (newNFTs: RetirementNFT[]) => set(() => ({retirementNFTs: newNFTs})),

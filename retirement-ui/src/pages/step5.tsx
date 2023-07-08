@@ -46,6 +46,7 @@ export default function Step5() {
 
     const activeBridgeTransaction = useAppStore(state => state.activeRetirementCertificateBridgeTransaction)
     const updateBridgeTransaction = useAppStore(state => state.updateActiveRetirementCertificateBridgeTransaction)
+    const clearBridgeTransaction = useAppStore(state => state.clearActiveRetirementCertificateBridgeTransaction)
 
     const retirementNFTs = useAppStore(state => state.retirementNFTs)
 
@@ -70,7 +71,9 @@ export default function Step5() {
     useEffect(() => {
         setBridgeEnabled(retirementNFTs.length > 0
             && solanaAPI !== undefined
-            && !activeBridgeTransaction
+            && (
+                !activeBridgeTransaction || (activeBridgeTransaction.solanaTxSignature !== undefined)
+            )
         );
     }, [retirementNFTs?.length, solanaAPI, activeBridgeTransaction]);
 
@@ -103,6 +106,7 @@ export default function Step5() {
     }
 
     const handleBridge = async () => {
+        clearBridgeTransaction();
         if (!bridgeRetirementCert || !bridgeRetirementCert.writeAsync) return;
         bridgeRetirementCert.writeAsync().then(result => bridgePolygonTxInProgress(result.hash))
             .catch(bridgePolygonTxFailed);
@@ -123,8 +127,17 @@ export default function Step5() {
     const handleRedeem = async () => {
         if (!activeBridgeTransaction?.vaaResult || activeBridgeTransaction.solanaTxSignature || !solanaAPI) return;
 
-        const redeemTx = await solanaAPI.redeemVAA(Buffer.from(activeBridgeTransaction.vaaResult.vaaBytes, 'hex'));
-        return wallet.sendTransaction(redeemTx, connection).then(redeemSuccessful).catch(redeemFailed);
+        const [redeemTx, metaTx] = await solanaAPI.redeemVAA(Buffer.from(activeBridgeTransaction.vaaResult.vaaBytes, 'hex'));
+
+        try {
+            const redeemTxSig = await wallet.sendTransaction(redeemTx, connection);
+            const metaTxSig = await wallet.sendTransaction(metaTx, connection);
+            updateBridgeTransaction({ solanaTxSignature: redeemTxSig });
+            redeemSuccessful(redeemTxSig);
+        } catch (error) {
+            redeemFailed(error as Error);
+        }
+
     };
 
     const substeps: Substep[] = [{
@@ -172,7 +185,7 @@ export default function Step5() {
         </div>
         <BridgeSubsteps substeps={substeps}/>
         <div className="flex items-center space-x-2 mt-2">
-            <NextButton disabled={ false }/>
+            <NextButton disabled={ !activeBridgeTransaction?.solanaTxSignature }/>
         </div>
     </div>)
 }
