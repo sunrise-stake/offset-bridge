@@ -7,10 +7,7 @@ import {useVerra} from "@/hooks/useVerra";
 import {PooledTCO2Token, useToucan} from "@/hooks/useToucan";
 import {Address} from "abitype/src/abi";
 import {FaWallet} from "react-icons/fa";
-import {toast} from "react-toastify";
-import {PolyExplorerLink} from "@/components/polyExplorerLink";
-import {WriteContractResult, waitForTransaction} from "@wagmi/core";
-import {TransactionReceipt} from "viem";
+import {usePolygonWriteTransaction} from "@/hooks/usePolygonWriteTransaction";
 
 const addressesEqual = (address1: string, address2: string) => {
     return address1.toLowerCase() === address2.toLowerCase();
@@ -44,39 +41,20 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
         }
     }, [holdingContract.tco2, toucan.allProjects.length, toucan.loading ]);
 
-    const createAccount = useCallback(async () => {
-        factory?.create()
-    }, [factory?.writeAsync, selectedProject]);
-
-    const updateAccount = useCallback(async () => {
-        const updateSuccessful = (receipt: TransactionReceipt) => {
-            setReady(true);
-            toast.success(<div>
-                Update successful:{' '}<PolyExplorerLink address={receipt.transactionHash} type="tx"/>
-            </div>);
-        }
-
-        const updateInProgress = (writeContractResult: WriteContractResult | undefined) => {
-            if (!writeContractResult) return;
-            setReady(false);
-
-            toast.info(<div>
-                Update in progress:{' '}<PolyExplorerLink address={writeContractResult.hash} type="tx"/>
-            </div>);
-
-            waitForTransaction({ hash :writeContractResult.hash }).then(updateSuccessful);
-        }
-
-        const updateFailed = (error: Error) => {
-            toast.error(<div>
-                Update failed: {error.message}
-            </div>);
-        }
-
-        if (selectedProject?.address) {
-            holdingContract.updateTCO2(selectedProject.address as Address).then(updateInProgress).catch(updateFailed);
-        }
-    }, [selectedProject]);
+    const createAccount = usePolygonWriteTransaction(
+        () => factory?.create(),
+        'Create',
+        [factory?.writeAsync, selectedProject],
+        setReady
+    );
+    const updateAccount = usePolygonWriteTransaction(
+        async () => {
+            if (selectedProject?.address) return holdingContract.updateTCO2(selectedProject.address as Address)
+        },
+        'Update',
+        [selectedProject],
+        setReady
+    );
 
     return (
         <div className="p-4 space-y-4">
