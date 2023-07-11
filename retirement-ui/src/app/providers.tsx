@@ -92,6 +92,7 @@ export interface AppState {
 export interface Actions {
     setStep: (newStep: number) => void;
     setHoldingContractTarget: (newTarget: Address) => void;
+    clearHoldingContractTarget: () => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
     clearActiveUSDCBridgeTransaction: () => void;
     updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
@@ -116,6 +117,7 @@ export const useAppStore = create<AppState & Actions>()(
 
                     holdingContractTarget: undefined,
                     setHoldingContractTarget: (newTarget: Address) => set(() => ({holdingContractTarget: newTarget})),
+                    clearHoldingContractTarget: () => set(() => ({holdingContractTarget: undefined})),
 
                     activeUSDCBridgeTransaction: undefined,
                     updateActiveUSDCBridgeTransaction:

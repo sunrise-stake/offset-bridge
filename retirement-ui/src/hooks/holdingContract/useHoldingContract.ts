@@ -14,6 +14,7 @@ import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
 export const useHoldingContract = () => {
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
     const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
+    const clearHoldingContractTarget = useAppStore(state => state.clearHoldingContractTarget);
 
     const setRetirementNFTs = useAppStore(state => state.setRetirementNFTs);
 
@@ -58,6 +59,8 @@ export const useHoldingContract = () => {
     useEffect(() => {
         if (factory?.contractAddress) {
             setHoldingContractTarget(factory.contractAddress)
+        } else if (!factory.contractAddress && !factory.isError) {
+            clearHoldingContractTarget()
         }
     }, [factory?.contractAddress])
 
