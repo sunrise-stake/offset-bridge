@@ -1,5 +1,5 @@
 import {Cluster, PublicKey} from "@solana/web3.js";
-import {padHex} from "viem";
+import {keccak256, Hex} from "viem";
 
 // Endpoints, connection
 export const ENV: Cluster = (process.env.CLUSTER as Cluster) || "mainnet-beta";
@@ -88,5 +88,8 @@ export interface JupiterToken {
     tags: string[]; // [ 'utility-token', 'capital-token' ]
 }
 
-export const HOLDING_CONTRACT_FACTORY_SALT = padHex(`0x${Buffer.from("sunrise-v0.0.2").toString("hex")}`);
+export const holdingContractFactorySalt = (address:string): Hex => {
+    const unhashedSalt = `sunrise-v0.0.2${address}`
+    return keccak256(Buffer.from(unhashedSalt), 'hex');
+}
 

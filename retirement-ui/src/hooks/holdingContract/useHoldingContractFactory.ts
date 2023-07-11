@@ -3,7 +3,7 @@ import {
     DEFAULT_BENEFICIARY,
     DEFAULT_RETIREMENT_PROJECT,
     HOLDING_CONTRACT_FACTORY_ADDRESS,
-    HOLDING_CONTRACT_FACTORY_SALT, RETIREMENT_CONTRACT
+    holdingContractFactorySalt, RETIREMENT_CONTRACT
 } from "@/lib/constants";
 import {solanaAddressToHex} from "@/lib/util";
 import {PublicKey} from "@solana/web3.js";
@@ -24,33 +24,39 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
     const { address } = useAccount();
     const publicClient = usePublicClient();
     const [contractAddress, setContractAddress] = useState<Address>();
+
+    const salt = holdingContractFactorySalt(address || '0x');
     const read = useContractRead({
         ...contract,
         functionName: 'getContractAddress',
         enabled: !!address,
-        args: [ HOLDING_CONTRACT_FACTORY_SALT, HOLDING_CONTRACT_FACTORY_ADDRESS],
+        args: [ salt, HOLDING_CONTRACT_FACTORY_ADDRESS],
     });
 
     const { config, error, isError } = usePrepareContractWrite({
         ...contract,
         enabled: contractAddress === undefined,
         functionName: 'createContract',
-        args:[ HOLDING_CONTRACT_FACTORY_SALT, retirementProject, beneficiary, dummySolanaAddress, RETIREMENT_CONTRACT ],
+        args:[ salt, retirementProject, beneficiary, dummySolanaAddress, RETIREMENT_CONTRACT ],
     })
     const deploy = useContractWrite(config)
 
     useEffect(() => {
-            const address = read.data ? read.data : undefined;
-            if (!address) return;
-            publicClient.getBytecode({address}).then((bytecode) => {
-                if (!bytecode || bytecode === '0x') return;
-                setContractAddress(address);
+            const holdingContractAddress = read.data ? read.data : undefined;
+            console.log('holdingContractAddress', holdingContractAddress)
+            if (!holdingContractAddress) return;
+            publicClient.getBytecode({address: holdingContractAddress}).then((bytecode) => {
+                if (!bytecode || bytecode === '0x') {
+                    setContractAddress(undefined)
+                } else {
+                    setContractAddress(holdingContractAddress);
+                }
             });
         }
         , [read.data, deploy.data]);
 
     const create = () => {
-        console.log('create', {deploy, read});
+        console.log('create', {deploy, read, config});
         if (!deploy.writeAsync) return Promise.resolve();
         return deploy.writeAsync();
     }
