@@ -31,6 +31,8 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
         functionName: 'getContractAddress',
         enabled: !!address,
         args: [ salt, HOLDING_CONTRACT_FACTORY_ADDRESS],
+        // ensure we notice when a new contract is created
+        watch: true,
     });
 
     const { config, error, isError } = usePrepareContractWrite({
@@ -53,11 +55,12 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
                 }
             });
         }
-        , [read.data, deploy.data]);
+        // retrigger whenver the data is refetched from the chain
+        , [read.data, deploy.data, read.isRefetching]);
 
-    const create = () => {
+    const create = async () => {
         console.log('create', {deploy, read, config});
-        if (!deploy.writeAsync) return Promise.resolve();
+        if (!deploy.writeAsync) return;
         return deploy.writeAsync();
     }
 
