@@ -4,29 +4,35 @@ import {useEffect, useState} from "react";
 import {PublicKey} from "@solana/web3.js";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useSolanaNFT} from "@/hooks/useSolanaNFT";
+import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
 
 export default function Step6() {
-    const activeBridgeTransaction = useAppStore(state => state.activeRetirementCertificateBridgeTransaction)
+    const [activeBridgeTransaction, clearBridgeTransaction] = useAppStore(state => [
+        state.activeRetirementCertificateBridgeTransaction,
+        state.clearActiveRetirementCertificateBridgeTransaction
+    ])
     const {api : solanaAPI} = useSolanaRetirement();
+    // if the holding contract is not set up in the state, this hook will attempt to populate it
+    useHoldingContract();
 
-    const [mintAddress, setMintAddress] = useState<PublicKey>();
-    const asset = useSolanaNFT(mintAddress);
-
+    // clear the bridge transaction details, so we can start again (only if the bridging is complete)
     useEffect(() => {
-        if (!!solanaAPI && !!activeBridgeTransaction?.solanaTxSignature) {
-            const txSig = activeBridgeTransaction.solanaTxSignature;
-            solanaAPI.getMintAddressFromTransaction(txSig).then(setMintAddress)
+        if (activeBridgeTransaction?.solanaTxSignature) {
+            clearBridgeTransaction();
         }
-    }, [solanaAPI, activeBridgeTransaction?.solanaTxSignature]);
+    }, [activeBridgeTransaction?.solanaTxSignature]);
+
+    const assets = useSolanaNFT();
 
     return (<div>
         <h1 className="text-2xl mb-4">Step 6 - Retirement Certificate</h1>
-        { mintAddress?.toBase58() }
-        {asset && <div className="flex flex-col space-y-2">
-            <a href={asset.uri} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer">
-                {asset.name}
-            </a>
-        </div>}
+        { assets.map(asset =>
+            <div className="flex flex-col space-y-2" key={asset.address.toBase58()}>
+                <a href={asset.uri} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer">
+                    {asset.name}
+                </a>
+            </div>
+        )}
         <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ false }/>
         </div>

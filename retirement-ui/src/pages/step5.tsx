@@ -18,8 +18,6 @@ import {waitForTransaction} from "@wagmi/core";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
 
-const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
-
 const substepInfos: SubstepInfo[] = [
     {
         name: 'Polygon bridge transaction',
@@ -38,7 +36,6 @@ const substepInfos: SubstepInfo[] = [
 export default function Step5() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
-    const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
     useHoldingContract();
 
     const {api : solanaAPI} = useSolanaRetirement();

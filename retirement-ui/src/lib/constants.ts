@@ -38,11 +38,28 @@ export const USDC_TOKEN_POLYGON = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 
 export const USDC_TOKEN_DECIMALS = 6;
 
-
 export const WRAPPED_SOL_TOKEN_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+export const WRAPPED_SOL_TOKEN_DECIMALS = 9;
 export const BRIDGE_INPUT_MINT_ADDRESS = new PublicKey("E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M") // USDCpo on Solana
 export const BRIDGE_INPUT_MINT_DECIMALS = 6;
 export const BRIDGE_INPUT_TOKEN_SYMBOL = "USDCpo";
+
+export const RETIREMENT_CERT_MINT_AUTHORITY_SOLANA = new PublicKey("3iBi3CaSBMR72MB5RGqwAu2CsgQVEFUrmTEHBvym8f9i");
+
+export const supportedInputTokens: SolanaToken[] = [
+    {
+        mint: USDC_TOKEN_SOLANA,
+        decimals: USDC_TOKEN_DECIMALS,
+        symbol: "USDC",
+        swapsTo: BRIDGE_INPUT_MINT_ADDRESS
+    },{
+        mint: WRAPPED_SOL_TOKEN_MINT,
+        decimals: WRAPPED_SOL_TOKEN_DECIMALS,
+        symbol: "SOL",
+        swapsTo: USDC_TOKEN_SOLANA
+    }
+];
+
 
 
 export const BRIDGE_OUTPUT_TOKEN_CONTRACT = USDC_TOKEN_POLYGON; // USDC on polygon
@@ -76,8 +93,13 @@ export const WORMHOLE_RPC_HOSTS_MAINNET = ["https://wormhole-v2-mainnet-api.cert
 
 // const WORMHOLE_RPC_HOST = ["https://wormhole-v2-testnet-api.certus.one"];
 
+export interface SolanaToken {
+    mint: PublicKey,
+    decimals: number,
+    symbol: string,
+    swapsTo: PublicKey // TODO do we need this?
+}
 
-// Interface
 export interface JupiterToken {
     chainId: number; // 101,
     address: string; // '8f9s1sUmzUbVZMoMh6bufMueYH1u4BJSM57RCEvuVmFp',

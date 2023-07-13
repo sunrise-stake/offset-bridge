@@ -13,7 +13,7 @@ export const usePolygonWriteTransaction = (
     const operationSuccessful = (receipt: TransactionReceipt) => {
         setReady(true);
         toast.success(<div>
-            ${operationName} successful:{' '}<PolyExplorerLink address={receipt.transactionHash} type="tx"/>
+            {operationName} successful:{' '}<PolyExplorerLink address={receipt.transactionHash} type="tx"/>
         </div>);
     }
 
@@ -22,7 +22,7 @@ export const usePolygonWriteTransaction = (
         setReady(false);
 
         toast.info(<div>
-            ${operationName} in progress:{' '}<PolyExplorerLink address={writeContractResult.hash} type="tx"/>
+            {operationName} in progress:{' '}<PolyExplorerLink address={writeContractResult.hash} type="tx"/>
         </div>);
 
         waitForTransaction({ hash :writeContractResult.hash })
@@ -32,7 +32,7 @@ export const usePolygonWriteTransaction = (
 
     const operationFailed = (error: Error) => {
         toast.error(<div>
-            ${operationName} failed: {error.message}
+            {operationName} failed: {error.message}
         </div>);
     }
 
