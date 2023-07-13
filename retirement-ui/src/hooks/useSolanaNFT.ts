@@ -1,10 +1,10 @@
 import {useEffect, useMemo, useState} from "react";
 import {useConnection, useWallet} from "@solana/wallet-adapter-react";
-import {PublicKey} from "@solana/web3.js";
-import {Metaplex, walletAdapterIdentity, Nft, NftWithToken, Sft, SftWithToken} from "@metaplex-foundation/js";
+import {Metaplex, walletAdapterIdentity, Nft, NftWithToken, Sft, SftWithToken, Metadata} from "@metaplex-foundation/js";
+import {RETIREMENT_CERT_MINT_AUTHORITY_SOLANA} from "@/lib/constants";
 
-type Asset = Nft | Sft | NftWithToken | SftWithToken
-export const useSolanaNFT = (mintAddress: PublicKey | undefined) => {
+type Asset = Metadata | Nft | Sft | NftWithToken | SftWithToken
+export const useSolanaNFT = () => {
     const { connection } = useConnection();
     const wallet = useWallet();
     const metaplex = useMemo(
@@ -12,16 +12,26 @@ export const useSolanaNFT = (mintAddress: PublicKey | undefined) => {
         [connection, wallet]
     );
 
-    const [asset, setAsset] = useState<Asset>();
+    const [assets, setAssets] = useState<Asset[]>([]);
 
     useEffect(() => {
-        if (mintAddress) {
-            metaplex.nfts().findByMint({
-                mintAddress,
-                loadJsonMetadata: false, // use this because the toucan.earth metadata is returning 404 at present
-            }).then(setAsset);
+        if (wallet.publicKey) {
+            metaplex.nfts().findAllByOwner({
+                owner: wallet.publicKey,
+            }).then(found =>
+                found.filter(asset => asset.updateAuthorityAddress.equals(RETIREMENT_CERT_MINT_AUTHORITY_SOLANA))
+            // ).then(found => {
+            //     const loaded = found.map(metadata => metaplex.nfts().findByMint({
+            //         mintAddress: metadata.
+            //     }
+            //     // const loaded = found.map(metadata => metaplex.nfts().load({
+            //     //     metadata: metadata.
+            //     //     loadJsonMetadata: false,    // TODO temp
+            //     // }));
+            //     return Promise.all(loaded)
+            ).then(setAssets);
         }
-    }, [metaplex, mintAddress]);
+    }, [metaplex, wallet.publicKey?.toBase58()]);
 
-    return asset
+    return assets
 }
