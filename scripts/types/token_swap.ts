@@ -34,6 +34,35 @@ export type TokenSwap = {
       ]
     },
     {
+      "name": "wrap",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The account containing tokens that will be transferred through the bridge"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "swap",
       "accounts": [
         {
@@ -162,6 +191,35 @@ export const IDL: TokenSwap = {
           "type": "publicKey"
         }
       ]
+    },
+    {
+      "name": "wrap",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The account containing tokens that will be transferred through the bridge"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "swap",

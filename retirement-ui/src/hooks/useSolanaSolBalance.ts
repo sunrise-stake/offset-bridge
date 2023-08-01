@@ -2,18 +2,22 @@ import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useEffect, useState} from "react";
 import {PublicKey} from "@solana/web3.js";
 
-export const useSolanaTokenBalance = (mint: PublicKey, owner: PublicKey): bigint | undefined => {
-    const { api} = useSolanaRetirement();
+const RENT_EXEMPT_MINIMUM = 2039280n;
+
+export const useSolanaSolBalance = (owner: PublicKey): bigint | undefined => {
+    const { api } = useSolanaRetirement();
     const [balance, setBalance] = useState<bigint>();
 
     useEffect(() => {
         if (!api) return;
 
-        const unsubscribe = api.listenToTokenBalance(mint, owner, setBalance);
+        const unsubscribe = api.listenToSolBalance(owner, (balance: bigint) => {
+            setBalance(balance - RENT_EXEMPT_MINIMUM)
+        });
         return () => {
             unsubscribe();
         }
-    }, [api, mint.toBase58(), owner.toBase58()]);
+    }, [api, owner.toBase58()]);
 
     return balance;
 }

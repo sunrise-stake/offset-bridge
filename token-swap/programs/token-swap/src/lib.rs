@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::util::bridge::Wormhole;
 use crate::util::swap::Jupiter;
+use crate::util::token::wrapped_sol::ID as WRAPPED_SOL;
 
 declare_id!("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 
@@ -12,13 +13,23 @@ pub mod token_swap {
     use anchor_lang::solana_program::instruction::Instruction;
     use anchor_lang::solana_program::program;
     use crate::util::bridge::call_bridge;
-    use crate::util::token::{approve_delegate};
+    use crate::util::token::{approve_delegate, wrap_sol};
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, output_mint: Pubkey) -> Result<()> {
         ctx.accounts.state.output_mint = output_mint;
 
         Ok(())
+    }
+
+    pub fn wrap(ctx: Context<Wrap>) -> Result<()> {
+        let state_address = ctx.accounts.state.key();
+        let authority_seeds= [State::SEED, state_address.as_ref(), &[*ctx.bumps.get("token_account_authority").unwrap()]];
+        wrap_sol(
+            &ctx.accounts.token_account.to_account_info(),
+            &ctx.accounts.token_program,
+            &authority_seeds[..],
+        )
     }
 
     pub fn swap(ctx: Context<Swap>, route_info: Vec<u8>) -> Result<()> {
@@ -100,6 +111,21 @@ pub struct Initialize<'info> {
 pub struct Swap<'info> {
     pub state: Account<'info, State>,
     pub jupiter_program: Program<'info, Jupiter>,
+}
+
+#[derive(Accounts)]
+pub struct Wrap<'info> {
+    pub state: Account<'info, State>,
+    #[account(
+    seeds = [State::SEED, state.key().as_ref()],
+    bump
+    )]
+    /// CHECK: Derived from the state account
+    pub token_account_authority: UncheckedAccount<'info>,
+    /// The account containing tokens that will be transferred through the bridge
+    #[account(token::authority = token_account_authority.key(), token::mint = WRAPPED_SOL)]
+    pub token_account: Account<'info, TokenAccount>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]

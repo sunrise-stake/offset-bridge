@@ -1,8 +1,8 @@
 import {RefObject, useRef, useState, FocusEvent} from "react";
 import {FaTimesCircle} from "react-icons/fa";
 
-type Option<T> = { name: string; address: string } & T;
-type SearchableDropdownProps<T> = { options: Option<T>[], loading: boolean, select: (option: Option<T>) => void };
+type SelectOption<T> = { name: string; address: string } & T;
+type SearchableDropdownProps<T> = { options: SelectOption<T>[], loading: boolean, select: (option: SelectOption<T>) => void };
 
 export function SearchableDropdown<T>({ options, loading, select }: SearchableDropdownProps<T>) {
     const [search, setSearch] = useState('');
