@@ -73,7 +73,7 @@ export default function Step2() {
     useEffect(() => {
         try {
             const inputAmountBigInt = getInputAmountAsSelectedToken();
-            const unwrappedSolDeposited = isSolSelected && depositBalances.tokenAuthorityUnwrappedSolBalance > 0;
+            const unwrappedSolDeposited = isSolSelected && depositBalances.tokenAuthorityUnwrappedSolBalance && depositBalances.tokenAuthorityUnwrappedSolBalance > 0;
             const inputAmountValid = inputAmountBigInt > 0 && userBalance !== undefined && inputAmountBigInt <= userBalance;
             setSwapEnabled(api !== undefined && (unwrappedSolDeposited || inputAmountValid));
         } catch (e) {

@@ -20,7 +20,7 @@ export function SimpleDropdown<T>({ options, initial, select }: SimpleDropdownPr
             <select className="select select-bordered w-full max-w-xs" onChange={handleChange}>
                 <option disabled selected={!selected}>Select your input token</option>
                 {options.map(option => (
-                    <option selected={option === selected}>{option.name}</option>
+                    <option selected={option === selected} key={option.name}>{option.name}</option>
                 ))}
             </select>
         </div>
