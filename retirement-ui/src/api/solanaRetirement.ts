@@ -1,10 +1,11 @@
 import {AnchorWallet} from "@solana/wallet-adapter-react";
 import {
+    AccountInfo,
     AccountMeta,
     Connection,
     Keypair,
     MessageV0,
-    PublicKey,
+    PublicKey, SystemProgram,
     Transaction,
     TransactionInstruction,
     TransactionMessage,
@@ -18,16 +19,18 @@ import {
     JupiterToken,
     PROGRAM_ID,
     SOL_BRIDGE_ADDRESS,
-    SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
+    SOL_NFT_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS,
     STATE_ADDRESS,
     WORMHOLE_RPC_HOSTS_MAINNET,
+    WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
 import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from "@jup-ag/core";
 import {IDL, TokenSwap} from "./types/token_swap";
 import JSBI from "jsbi";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {
-    ASSOCIATED_TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID, createSyncNativeInstruction,
     createTransferInstruction,
     getAssociatedTokenAddressSync,
     TOKEN_PROGRAM_ID
@@ -53,17 +56,29 @@ export class SolanaRetirement {
     ) {
     }
 
-    listenToBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
+    listenToTokenBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
         const notify = () => {
             this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
-            });
+            }).catch(console.error);
         }
 
         notify();
         const subscriptionId = this.solConnection.onAccountChange(tokenAccount, notify);
+
+        return () => {
+            this.solConnection.removeAccountChangeListener(subscriptionId);
+        }
+    }
+
+    listenToSolBalance(owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
+        this.solConnection.getBalance(owner).then(balance => callback(BigInt(balance)));
+        const notify = (accountInfo: AccountInfo<Buffer>) => {
+            callback(BigInt(accountInfo.lamports));
+        }
+        const subscriptionId = this.solConnection.onAccountChange(owner, notify);
 
         return () => {
             this.solConnection.removeAccountChangeListener(subscriptionId);
@@ -82,21 +97,51 @@ export class SolanaRetirement {
         this.ready = true;
     }
 
-    async swap(inputMint: PublicKey, amount: bigint, depositIx?: TransactionInstruction):Promise<VersionedTransaction> {
+    makeDepositAndWrapSolIxes(lamports: bigint): TransactionInstruction[] {
+        if (!this.ready) throw new Error("Not initialized");
+
+        const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+
+        return [
+            SystemProgram.transfer({
+                fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
+            }),
+            createSyncNativeInstruction(wrappedSolATA)
+        ];
+    }
+
+    makeWrapSolIx(): TransactionInstruction[] {
+        if (!this.ready) throw new Error("Not initialized");
+
+        const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+
+        return [
+            createSyncNativeInstruction(wrappedSolATA)
+        ];
+    }
+
+    async swap(inputMint: PublicKey, amount: bigint, preInstructions?: TransactionInstruction[]):Promise<VersionedTransaction> {
         if (!this.ready || !this.jupiter) throw new Error("Not initialized");
 
         const routes = await this.jupiter.computeRoutes({
             inputMint,
             outputMint: BRIDGE_INPUT_MINT_ADDRESS,
             amount: JSBI.BigInt(amount.toString(10)), // 100k lamports
-            slippageBps: 10,  // 1 bps = 0.01%.
+            slippageBps: 20,  // 1 bps = 0.01%.
         });
 
-        // Routes are sorted based on outputAmount, so ideally the first route is the best.
-        const bestRoute = routes.routesInfos[0]
-        routes.routesInfos.forEach((r, i) => {
+        console.log("Routes: " + JSON.stringify(routes));
+
+        // Since CPIs do not support ALTs, we can only use routes with two hops or fewer before we run out of space
+        // in the transaction
+        const filteredRoutes = routes.routesInfos.filter((r, i) => {
             console.log(i + ": Route length: " + r.marketInfos.length);
+            return r.marketInfos.length < 3;
         })
+        // Routes are sorted based on outputAmount, so ideally the first route is the best.
+        const bestRoute = filteredRoutes[0]
+        console.log("Best route: " + JSON.stringify(bestRoute, null, 2));
+        if (!bestRoute) throw new Error("No route found");
         const { execute, swapTransaction , addressLookupTableAccounts } = await this.jupiter.exchange({
             routeInfo: bestRoute
         });
@@ -196,9 +241,9 @@ export class SolanaRetirement {
             })
         }).filter((ix): ix is TransactionInstruction => ix !== null);
 
-        if (depositIx) {
+        if (preInstructions) {
             // add the deposit instruction to the start
-            ixes.unshift(depositIx);
+            ixes.unshift(...preInstructions);
         }
 
         // generate a versioned transaction from the new instructions, using the same ALTs as before)
@@ -241,7 +286,14 @@ export class SolanaRetirement {
     }
 
     async depositAndSwap(inputMint: PublicKey, amount: bigint) : Promise<VersionedTransaction> {
-        return this.swap(inputMint, amount, this.makeDepositIx(inputMint, amount));
+        console.log("Swapping: ", amount, "of", inputMint.toBase58());
+        return this.swap(inputMint, amount, [this.makeDepositIx(inputMint, amount)]);
+    }
+
+    async wrapAndSwap(amountToDeposit: bigint, amountToWrap: bigint = 0n) : Promise<VersionedTransaction> {
+        const preInstructions = amountToDeposit > 0n ? this.makeDepositAndWrapSolIxes(amountToDeposit) : this.makeWrapSolIx();
+        console.log("Swapping: ", amountToDeposit + amountToWrap, " lamports");
+        return this.swap(WRAPPED_SOL_TOKEN_MINT, amountToDeposit + amountToWrap, preInstructions);
     }
 
     async bridge(amount: bigint): Promise<{ tx: Transaction, messageKey: Keypair }> {
@@ -335,15 +387,16 @@ export class SolanaRetirement {
             );
         }
 
-        const accounts = response?.transaction.message.accountKeys;
+        // the last instruction in the tx is wormhole bridge tx
+        // the mint account is the one with index #1 in that instruction
+        const mintToIx = response.transaction.message.instructions[response.transaction.message.instructions.length - 1];
+        const mintAccountIndex = mintToIx.accounts[1];
 
-        // judging by transaction logs, the mint is always the 3rd account
-        if (accounts?.length < 2) {
-            throw new Error(
-                "Transaction does not have enough accounts"
-            );
-        }
-        return accounts[2]
+        console.log("Mint account index:", mintAccountIndex);
+        console.log("Total accounts for ix:", mintToIx.accounts.length);
+        console.log("Ix program ID:", response.transaction.message.accountKeys[mintToIx.programIdIndex].toBase58());
+
+        return response.transaction.message.accountKeys[mintAccountIndex];
     }
 
     static async build(
