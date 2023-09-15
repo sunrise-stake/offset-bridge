@@ -3,6 +3,8 @@
 A set of smart contracts and scripts that bridge funds from Solana to Polygon
 and uses them to buy and retire carbon credits via Toucan.
 
+![overview.png](docs/overview.png)
+
 The resultant Retirement Certificate is then bridged back to Solana.
 
 ## Instructions
