@@ -1,0 +1,41 @@
+{
+    "inputMint": "So11111111111111111111111111111111111111112",
+    "inAmount": "1000000",
+    "outputMint": "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M",
+    "outAmount": "152593",
+    "otherAmountThreshold": "151831",
+    "swapMode": "ExactIn",
+    "slippageBps": 50,
+    "platformFee": null,
+    "priceImpactPct": "0",
+    "routePlan": [
+        {
+            "swapInfo": {
+                "ammKey": "4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg",
+                "label": "Phoenix",
+                "inputMint": "So11111111111111111111111111111111111111112",
+                "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                "inAmount": "1000000",
+                "outAmount": "152621",
+                "feeAmount": "31",
+                "feeMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            },
+            "percent": 100
+        },
+        {
+            "swapInfo": {
+                "ammKey": "MATgk4zXLXtYkwBH678J1xZbRDZ45LicNzkRBHkxTuY",
+                "label": "Saber",
+                "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                "outputMint": "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M",
+                "inAmount": "152621",
+                "outAmount": "152593",
+                "feeAmount": "61",
+                "feeMint": "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M"
+            },
+            "percent": 100
+        }
+    ],
+    "contextSlot": 253891526,
+    "timeTaken": 0.016524854
+}

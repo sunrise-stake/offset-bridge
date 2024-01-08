@@ -1,0 +1,84 @@
+[[test.validator.account]]
+address = "HsLPzBjqK3SUKQZwHdd2QHVc9cioPrsHNw9GcUDs7WL7" 
+filename = "tests/fixtures/HsLPzBjqK3SUKQZwHdd2QHVc9cioPrsHNw9GcUDs7WL7.json"
+[[test.validator.account]]
+address = "9q6LoddjvezHwuSBJhfEYJfiMqT8nsJXTWBMsAdo1UqA" 
+filename = "tests/fixtures/9q6LoddjvezHwuSBJhfEYJfiMqT8nsJXTWBMsAdo1UqA.json"
+[[test.validator.account]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" 
+filename = "tests/fixtures/TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA.json"
+[[test.validator.account]]
+address = "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71" 
+filename = "tests/fixtures/4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71.json"
+[[test.validator.account]]
+address = "6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD" 
+filename = "tests/fixtures/6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD.json"
+[[test.validator.account]]
+address = "32tyEwES6BWLu4tcABkbmQSw5oNivgUky4vtsxfQmdxZ" 
+filename = "tests/fixtures/32tyEwES6BWLu4tcABkbmQSw5oNivgUky4vtsxfQmdxZ.json"
+[[test.validator.account]]
+address = "So11111111111111111111111111111111111111112" 
+filename = "tests/fixtures/So11111111111111111111111111111111111111112.json"
+[[test.validator.account]]
+address = "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M" 
+filename = "tests/fixtures/E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M.json"
+[[test.validator.account]]
+address = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" 
+filename = "tests/fixtures/JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4.json"
+[[test.validator.account]]
+address = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" 
+filename = "tests/fixtures/JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4.json"
+[[test.validator.account]]
+address = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" 
+filename = "tests/fixtures/JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4.json"
+[[test.validator.account]]
+address = "PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY" 
+filename = "tests/fixtures/PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY.json"
+[[test.validator.account]]
+address = "4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg" 
+filename = "tests/fixtures/4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg.json"
+[[test.validator.account]]
+address = "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71" 
+filename = "tests/fixtures/4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71.json"
+[[test.validator.account]]
+address = "6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD" 
+filename = "tests/fixtures/6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD.json"
+[[test.validator.account]]
+address = "m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars" 
+filename = "tests/fixtures/m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars.json"
+[[test.validator.account]]
+address = "8g4Z9d6PqGkgH31tMW6FwxGhwYJrXpxZHQrkikpLJKrG" 
+filename = "tests/fixtures/8g4Z9d6PqGkgH31tMW6FwxGhwYJrXpxZHQrkikpLJKrG.json"
+[[test.validator.account]]
+address = "3HSYXeGc3LjEPCuzoNDjQN37F1ebsSiR4CqXVqQCdekZ" 
+filename = "tests/fixtures/3HSYXeGc3LjEPCuzoNDjQN37F1ebsSiR4CqXVqQCdekZ.json"
+[[test.validator.account]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" 
+filename = "tests/fixtures/TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA.json"
+[[test.validator.account]]
+address = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ" 
+filename = "tests/fixtures/SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ.json"
+[[test.validator.account]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" 
+filename = "tests/fixtures/TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA.json"
+[[test.validator.account]]
+address = "MATgk4zXLXtYkwBH678J1xZbRDZ45LicNzkRBHkxTuY" 
+filename = "tests/fixtures/MATgk4zXLXtYkwBH678J1xZbRDZ45LicNzkRBHkxTuY.json"
+[[test.validator.account]]
+address = "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71" 
+filename = "tests/fixtures/4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71.json"
+[[test.validator.account]]
+address = "m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars" 
+filename = "tests/fixtures/m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars.json"
+[[test.validator.account]]
+address = "GN7Yuet3UyiWS5YVkEHv6oQKi4HGBJc3XDPt9zQhAqZz" 
+filename = "tests/fixtures/GN7Yuet3UyiWS5YVkEHv6oQKi4HGBJc3XDPt9zQhAqZz.json"
+[[test.validator.account]]
+address = "32tyEwES6BWLu4tcABkbmQSw5oNivgUky4vtsxfQmdxZ" 
+filename = "tests/fixtures/32tyEwES6BWLu4tcABkbmQSw5oNivgUky4vtsxfQmdxZ.json"
+[[test.validator.account]]
+address = "y8dALFo1bJrSzPYjMX14HJX448pXqYmrfXHD1K8MXih" 
+filename = "tests/fixtures/y8dALFo1bJrSzPYjMX14HJX448pXqYmrfXHD1K8MXih.json"
+[[test.validator.account]]
+address = "AtwPjP6NAzS74FzrnYY6vvDmrsQeEvXQ6dGR8gRL1b7w" 
+filename = "tests/fixtures/AtwPjP6NAzS74FzrnYY6vvDmrsQeEvXQ6dGR8gRL1b7w.json"

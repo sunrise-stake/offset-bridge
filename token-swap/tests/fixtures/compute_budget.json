@@ -1,0 +1,14 @@
+{
+  "pubkey": "ComputeBudget111111111111111111111111111111",
+  "account": {
+    "lamports": 1,
+    "data": [
+      "Y29tcHV0ZV9idWRnZXRfcHJvZ3JhbQ==",
+      "base64"
+    ],
+    "owner": "NativeLoader1111111111111111111111111111111",
+    "executable": true,
+    "rentEpoch": 18446744073709551615,
+    "space": 22
+  }
+}
