@@ -13,7 +13,7 @@ const getQuote = async (
     amount: number
   ) => {
     return fetch(
-      `${API_ENDPOINT}/quote?outputMint=${toMint.toBase58()}&inputMint=${fromMint.toBase58()}&amount=${amount}&slippage=0.01&onlyDirectRoutes=false`
+      `${API_ENDPOINT}/quote?outputMint=${toMint.toBase58()}&inputMint=${fromMint.toBase58()}&amount=${amount}&maxAccounts=30&slippage=0.01&onlyDirectRoutes=false`
     ).then((response) => response.json());
   };
 
@@ -28,7 +28,7 @@ const executeSwap = async (
     return fetch(`${API_ENDPOINT}/swap`, {
       method: "POST",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
@@ -58,7 +58,7 @@ const executeSwap = async (
         console.log(swapResult.error);
     } else {
         console.log(`https://explorer.solana.com/tx/${swapResult.txid}`);
-        console.log(`inputAddress=${swapResult.inputAddress.toString()} outputAddress=${swapResult.outputAddress.toString()}`);
+        console.log(`inputAddress=${swapResult.inputAddress} outputAddress=${swapResult.outputAddress}`);
         console.log(`inputAmount=${swapResult.inputAmount} outputAmount=${swapResult.outputAmount}`);
     }
 })().catch((error) => {

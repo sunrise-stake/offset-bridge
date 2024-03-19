@@ -20,7 +20,8 @@ export const USER_KEYPAIR =
 
 export const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
 export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkcJ1d4MHS5");
-
+export const TEST_STATE_KEYPAIR =
+    process.env.SOLANA_PRIVATE_KEY ? Keypair.fromSecretKey(bs58.decode(process.env.SOLANA_PRIVATE_KEY)) : Keypair.fromSecretKey(Buffer.from(require('../token-swap/tests/fixtures/test_state_account.json')));
 // Wormhole 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
 export const POLYGON_TEST_BRIDGE_ADDRESS = "0x0CBE91CF822c73C2315FB05100C2F714765d5c20";
