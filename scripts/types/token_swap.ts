@@ -11,6 +11,11 @@ export type TokenSwap = {
           "isSigner": true
         },
         {
+          "name": "tokenAccountAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -28,8 +33,70 @@ export type TokenSwap = {
       ],
       "args": [
         {
+          "name": "inputMint",
+          "type": "publicKey"
+        },
+        {
           "name": "outputMint",
           "type": "publicKey"
+        },
+        {
+          "name": "swapRateTolerance",
+          "type": "u64"
+        },
+        {
+          "name": "pythPriceFeedKey",
+          "type": "publicKey"
+        },
+        {
+          "name": "priceFeedStalenessThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "updateAuthority",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "inputMint",
+          "type": "publicKey"
+        },
+        {
+          "name": "outputMint",
+          "type": "publicKey"
+        },
+        {
+          "name": "swapRateTolerance",
+          "type": "u64"
+        },
+        {
+          "name": "pythPriceFeedKey",
+          "type": "publicKey"
+        },
+        {
+          "name": "priceFeedStalenessThreshold",
+          "type": "u64"
         }
       ]
     },
@@ -71,7 +138,37 @@ export type TokenSwap = {
           "isSigner": false
         },
         {
+          "name": "tokenAccountAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAtaAddressIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "outputMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAtaAddressOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "jupiterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pythPriceFeedAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -148,11 +245,48 @@ export type TokenSwap = {
         "kind": "struct",
         "fields": [
           {
+            "name": "inputMint",
+            "type": "publicKey"
+          },
+          {
             "name": "outputMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "tolerance",
+            "type": "u64"
+          },
+          {
+            "name": "pythPriceFeedKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "priceFeedStalenessThreshold",
+            "type": "u64"
+          },
+          {
+            "name": "updateAuthority",
             "type": "publicKey"
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UndesirableSwapRate",
+      "msg": "Swap rate below accepted tolerance"
+    },
+    {
+      "code": 6001,
+      "name": "IncorrectTokenAuthority",
+      "msg": "Incorrect token authority"
+    },
+    {
+      "code": 6002,
+      "name": "IncorrectPriceFeedOracleAccount",
+      "msg": "Incorrect pyth price feed oracle account"
     }
   ]
 };
@@ -170,6 +304,11 @@ export const IDL: TokenSwap = {
           "isSigner": true
         },
         {
+          "name": "tokenAccountAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -187,8 +326,70 @@ export const IDL: TokenSwap = {
       ],
       "args": [
         {
+          "name": "inputMint",
+          "type": "publicKey"
+        },
+        {
           "name": "outputMint",
           "type": "publicKey"
+        },
+        {
+          "name": "swapRateTolerance",
+          "type": "u64"
+        },
+        {
+          "name": "pythPriceFeedKey",
+          "type": "publicKey"
+        },
+        {
+          "name": "priceFeedStalenessThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "updateAuthority",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "inputMint",
+          "type": "publicKey"
+        },
+        {
+          "name": "outputMint",
+          "type": "publicKey"
+        },
+        {
+          "name": "swapRateTolerance",
+          "type": "u64"
+        },
+        {
+          "name": "pythPriceFeedKey",
+          "type": "publicKey"
+        },
+        {
+          "name": "priceFeedStalenessThreshold",
+          "type": "u64"
         }
       ]
     },
@@ -230,7 +431,37 @@ export const IDL: TokenSwap = {
           "isSigner": false
         },
         {
+          "name": "tokenAccountAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAtaAddressIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "outputMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAtaAddressOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "jupiterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pythPriceFeedAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -307,11 +538,48 @@ export const IDL: TokenSwap = {
         "kind": "struct",
         "fields": [
           {
+            "name": "inputMint",
+            "type": "publicKey"
+          },
+          {
             "name": "outputMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "tolerance",
+            "type": "u64"
+          },
+          {
+            "name": "pythPriceFeedKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "priceFeedStalenessThreshold",
+            "type": "u64"
+          },
+          {
+            "name": "updateAuthority",
             "type": "publicKey"
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UndesirableSwapRate",
+      "msg": "Swap rate below accepted tolerance"
+    },
+    {
+      "code": 6001,
+      "name": "IncorrectTokenAuthority",
+      "msg": "Incorrect token authority"
+    },
+    {
+      "code": 6002,
+      "name": "IncorrectPriceFeedOracleAccount",
+      "msg": "Incorrect pyth price feed oracle account"
     }
   ]
 };
