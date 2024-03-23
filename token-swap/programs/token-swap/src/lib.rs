@@ -52,7 +52,7 @@ pub mod token_swap {
         // TODO: Oracle check to ensure the price is correct
 
         let swap_ix = Instruction {
-            program_id: jupiter_cpi::ID,
+            program_id: *ctx.accounts.jupiter_program.key,
             accounts: router_accounts,
             data: route_info.clone(),
         };
