@@ -18,7 +18,7 @@ export const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT ||
 export const USER_KEYPAIR =
     process.env.SOLANA_PRIVATE_KEY ? Keypair.fromSecretKey(bs58.decode(process.env.SOLANA_PRIVATE_KEY)) : Keypair.fromSecretKey(Buffer.from(require(os.homedir() + '/.config/solana/id.json')));
 
-export const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
+export const PROGRAM_ID = new PublicKey("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkcJ1d4MHS5");
 
 // Wormhole 

@@ -5,7 +5,7 @@ types = "../scripts/types"
 seeds = false
 skip-lint = false
 [programs.localnet]
-token_swap = "sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN"
+token_swap = "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T"
 
 [registry]
 url = "https://api.apr.dev"
