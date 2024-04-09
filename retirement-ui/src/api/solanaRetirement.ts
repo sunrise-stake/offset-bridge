@@ -5,7 +5,7 @@ import {
     Connection,
     Keypair,
     MessageV0,
-    PublicKey, SystemProgram,
+    PublicKey, SimulateTransactionConfig, SystemProgram,
     Transaction,
     TransactionInstruction,
     TransactionMessage,
@@ -56,6 +56,10 @@ export class SolanaRetirement {
         readonly solConnection: Connection,
         public holdingContractTarget: string,
     ) {
+    }
+
+    async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
+        await this.solConnection.simulateTransaction(tx, config).then(console.log).catch(console.error);
     }
 
     listenToTokenBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {

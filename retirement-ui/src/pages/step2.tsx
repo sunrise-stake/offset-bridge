@@ -107,6 +107,7 @@ export default function Step2() {
         } else {
             tx = await api.depositAndSwap(selectedInputToken.mint, amountBigInt);
         }
+        await api.simulate(tx);
         return wallet.sendTransaction(tx, connection).then(swapSuccessful).catch(swapFailed);
     };
 
