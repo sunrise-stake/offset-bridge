@@ -81,6 +81,17 @@ export default function Step2() {
         }
     }, [amountToDeposit, api, depositBalances]);
 
+    const swapConfirmed = async (txSig: string) => {
+        console.log("Transaction signature: {}", txSig);
+        const blockhash = await connection.getLatestBlockhash();
+        await connection.confirmTransaction({
+            blockhash: blockhash.blockhash,
+            lastValidBlockHeight: blockhash.lastValidBlockHeight,
+            signature: txSig,
+        })
+        return txSig
+    }
+
     const swapSuccessful = (txSig: string) => {
         toast.success(<div>
             Swap successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
@@ -108,7 +119,9 @@ export default function Step2() {
             tx = await api.depositAndSwap(selectedInputToken.mint, amountBigInt);
         }
         await api.simulate(tx);
-        return wallet.sendTransaction(tx, connection).then(swapSuccessful).catch(swapFailed);
+        return wallet.sendTransaction(tx, connection, {
+            skipPreflight: true
+        }).then(swapConfirmed).then(swapSuccessful).catch(swapFailed);
     };
 
     const inputTokens = supportedInputTokens.map((token) => ({

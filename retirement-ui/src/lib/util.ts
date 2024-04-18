@@ -160,7 +160,7 @@ export const instructionDataToTransactionInstruction = (
 
 export const swapToBridgeInputTx = (
     swapIx: TransactionInstruction,
-    ataCreationIxs: TransactionInstruction[],
+    preIxs: TransactionInstruction[],
     recentBlockhash: Blockhash,
     payerKey: PublicKey,
     computeBudgetPayloads: { programId: PublicKeyInitData; accounts: AccountMeta[]; data: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }; }[],
@@ -175,7 +175,7 @@ export const swapToBridgeInputTx = (
 
     const instructions = [];
     instructions.push(...computeBudgetPayloads.map(instructionDataToTransactionInstruction));
-    ataCreationIxs.forEach((ix) => {
+    preIxs.forEach((ix) => {
         instructions.push(ix);
     })
     instructions.push(swapIx);

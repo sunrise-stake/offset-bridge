@@ -25,7 +25,9 @@ import {
     WORMHOLE_RPC_HOSTS_MAINNET,
     WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
-import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from "@jup-ag/core";
+// import {TOKEN_LIST_URL} from "@jup-ag/core";
+const JUPITER_PROGRAM_ID = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
+
 import {IDL, TokenSwap} from "./types/token_swap";
 import JSBI from "jsbi";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
@@ -49,7 +51,7 @@ type UnsubscribeCallback = () => void;
 export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
-    jupiter: Jupiter | undefined;
+    // jupiter: Jupiter | undefined;
 
     constructor(
         readonly solWallet: AnchorWallet,
@@ -92,7 +94,7 @@ export class SolanaRetirement {
     }
 
     async init(): Promise<void> {
-        this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
+        // this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
 
         this.ready = true;
     }
@@ -101,8 +103,15 @@ export class SolanaRetirement {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+        const ataCreateTx = createAssociatedTokenAccountInstruction(
+            this.solWallet.publicKey,
+            wrappedSolATA,
+            tokenAuthority,
+            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+        )
 
         return [
+            ataCreateTx, 
             SystemProgram.transfer({
                 fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
             }),
@@ -114,8 +123,14 @@ export class SolanaRetirement {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
-
+        const ataCreateTx = createAssociatedTokenAccountInstruction(
+            this.solWallet.publicKey,
+            wrappedSolATA,
+            tokenAuthority,
+            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+        )
         return [
+            ataCreateTx,
             createSyncNativeInstruction(wrappedSolATA)
         ];
     }
@@ -175,10 +190,20 @@ export class SolanaRetirement {
             BRIDGE_INPUT_MINT_ADDRESS
             )
         );
+        let preIxs: TransactionInstruction[];
+        if (preInstructions?.length == 0) {
+            preIxs = ataCreationTx.instructions;
+        } else {
+            preIxs = [];
+            preInstructions?.forEach(ix => {
+                preIxs.push(ix);
+              });
+            preIxs = preIxs.concat(ataCreationTx.instructions);
+        }
 
         const swapTx = swapToBridgeInputTx(
           swapIx,
-          ataCreationTx.instructions,
+          preIxs,
           blockhash,
           this.solWallet.publicKey,
           computeBudgetInstructions,
