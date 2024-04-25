@@ -137,7 +137,7 @@ export class SolanaRetirement {
 
     async swap(inputMint: PublicKey, amount: bigint, preInstructions?: TransactionInstruction[]):Promise<VersionedTransaction> {
 
-        const quote = await getQuote(inputMint, BRIDGE_INPUT_MINT_ADDRESS, 100000, 20);
+        const quote = await getQuote(inputMint, BRIDGE_INPUT_MINT_ADDRESS, Number(amount), 20);
 
         console.log("Routes: " + JSON.stringify(quote.route));
 
@@ -156,6 +156,13 @@ export class SolanaRetirement {
         const accountMetas = jupiterSwapIx.keys;
 
         console.log({ accountMetas });
+
+        // mark the token authority as a non-signer, because it is a PDA owned by the Offset Bridge program
+        accountMetas.filter((meta) => meta.pubkey.equals(tokenAuthority)).forEach(
+            (meta) => {
+                meta.isSigner = false;
+            }
+        );
 
         // create the swap instruction
         const swapIx = await program.methods.swap(jupiterSwapIx.data).accounts({

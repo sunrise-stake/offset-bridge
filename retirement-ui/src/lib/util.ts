@@ -1,18 +1,14 @@
-import {AccountInfo, AccountMeta, AddressLookupTableAccount, AddressLookupTableAccountArgs, Blockhash, PublicKey, PublicKeyInitData, TransactionInstruction, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {AccountMeta, AddressLookupTableAccount, Blockhash, PublicKey, PublicKeyInitData, TransactionInstruction, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import {
     BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON,
-    MAX_NUM_PRECISION, POLYGON_NFT_BRIDGE_ADDRESS,
-    PROGRAM_ID, RETIREMENT_ERC721,
+    MAX_NUM_PRECISION, PROGRAM_ID, RETIREMENT_ERC721,
     SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
     STATE_ADDRESS
 } from "./constants";
-import {Account, getAssociatedTokenAddressSync} from "spl-token-latest";
+import {getAssociatedTokenAddressSync} from "spl-token-latest";
 import {getForeignAssetSolana} from "@certusone/wormhole-sdk/lib/cjs/nft_bridge";
 import * as Wormhole from "@certusone/wormhole-sdk";
-import {tryNativeToUint8Array} from "@certusone/wormhole-sdk/lib/cjs/utils/array";
 import {RetirementNFT} from "@/app/providers";
-import { Address } from "@coral-xyz/anchor";
-import { Index } from "viem/dist/types/types/rpc";
 
 export const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("input_account"), STATE_ADDRESS.toBuffer()], PROGRAM_ID)[0];
 export const bridgeAuthority = PublicKey.findProgramAddressSync([Buffer.from("authority_signer")], new PublicKey(SOL_TOKEN_BRIDGE_ADDRESS))[0];
