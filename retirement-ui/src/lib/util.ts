@@ -1,15 +1,13 @@
-import {PublicKey} from "@solana/web3.js";
+import {AccountMeta, AddressLookupTableAccount, Blockhash, PublicKey, PublicKeyInitData, TransactionInstruction, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import {
     BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON,
-    MAX_NUM_PRECISION, POLYGON_NFT_BRIDGE_ADDRESS,
-    PROGRAM_ID, RETIREMENT_ERC721,
+    MAX_NUM_PRECISION, PROGRAM_ID, RETIREMENT_ERC721,
     SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
     STATE_ADDRESS
 } from "./constants";
 import {getAssociatedTokenAddressSync} from "spl-token-latest";
 import {getForeignAssetSolana} from "@certusone/wormhole-sdk/lib/cjs/nft_bridge";
 import * as Wormhole from "@certusone/wormhole-sdk";
-import {tryNativeToUint8Array} from "@certusone/wormhole-sdk/lib/cjs/utils/array";
 import {RetirementNFT} from "@/app/providers";
 
 export const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("input_account"), STATE_ADDRESS.toBuffer()], PROGRAM_ID)[0];
@@ -69,3 +67,122 @@ export const tokenIDsToRetirementNFTs = (recipient: PublicKey) => (tokenIDs: num
         const solanaTokenAddress = await deriveSolanaAddress(tokenId, recipient);
         return {tokenId, solanaTokenAddress};
     }))
+
+const API_ENDPOINT = "https://quote-api.jup.ag/v6";
+
+export const getQuote = async (
+    fromMint: PublicKey,
+    toMint: PublicKey,
+    amount: number,
+    maxAccounts: number,
+) => {
+    return fetch(
+        `${API_ENDPOINT}/quote?outputMint=${toMint.toBase58()}&inputMint=${fromMint.toBase58()}&amount=${amount}&maxAccounts=${maxAccounts}&slippage=0.01&onlyDirectRoutes=false`
+    ).then((response) => response.json());
+};
+
+export const getSwapIx = async (
+    user: PublicKey,
+    quote: any
+) => {
+    const data = {
+        quoteResponse: quote,
+        userPublicKey: user.toBase58(),
+    };
+    return fetch(`${API_ENDPOINT}/swap-instructions`, {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    }).then((response) => response.json());
+};
+
+export const getJupiterSwapIx = (
+    instruction: any
+) => {
+    /* if (instruction === null) {
+        return null;
+    } */
+
+    return new TransactionInstruction({
+        programId: new PublicKey(instruction.programId),
+        keys: instruction.accounts.map((key: AccountMeta) => ({
+            pubkey: new PublicKey(key.pubkey),
+            isSigner: key.isSigner,
+            isWritable: key.isWritable,
+        })),
+        data: Buffer.from(instruction.data, "base64"),
+    });
+};
+
+export const getAdressLookupTableAccounts = (
+    keys: string[],
+    addressLookupTableAccountInfos: any,
+): AddressLookupTableAccount[] => {
+
+    return addressLookupTableAccountInfos.reduce((acc: AddressLookupTableAccount[], accountInfo: { data: Uint8Array; }, index: number) => {
+        const addressLookupTableAddress = keys[index];
+        if (accountInfo) {
+            const addressLookupTableAccount = new AddressLookupTableAccount({
+                key: new PublicKey(addressLookupTableAddress),
+                state: AddressLookupTableAccount.deserialize(accountInfo.data),
+            });
+            acc.push(addressLookupTableAccount);
+        }
+
+        return acc;
+    }, new Array<AddressLookupTableAccount>());
+};
+
+export const instructionDataToTransactionInstruction = (
+    instructionPayload: { programId: PublicKeyInitData; accounts: AccountMeta[]; data: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }; }
+) => {
+    /* if (instructionPayload === null) {
+        return null;
+    }*/
+
+    return new TransactionInstruction({
+        programId: new PublicKey(instructionPayload.programId),
+        keys: instructionPayload.accounts.map((key: AccountMeta) => ({
+            pubkey: new PublicKey(key.pubkey),
+            isSigner: key.isSigner,
+            isWritable: key.isWritable,
+        })),
+        data: Buffer.from(instructionPayload.data, "base64"),
+    });
+};
+
+export const swapToBridgeInputTx = (
+    swapIx: TransactionInstruction,
+    preIxs: TransactionInstruction[],
+    recentBlockhash: Blockhash,
+    payerKey: PublicKey,
+    computeBudgetPayloads: { programId: PublicKeyInitData; accounts: AccountMeta[]; data: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }; }[],
+    addressLookupTableAddresses: string[],
+    addressLookupTableAccountInfos: any
+) => {
+
+    // If you want, you can add more lookup table accounts here
+    const addressLookupTableAccounts = getAdressLookupTableAccounts(
+        addressLookupTableAddresses, addressLookupTableAccountInfos
+    );
+
+    const instructions = [];
+    instructions.push(...computeBudgetPayloads.map(instructionDataToTransactionInstruction));
+    preIxs.forEach((ix) => {
+        instructions.push(ix);
+    })
+    instructions.push(swapIx);
+
+    const messageV0 = new TransactionMessage({
+        payerKey: payerKey,
+        recentBlockhash: recentBlockhash,
+        instructions,
+    }).compileToV0Message(addressLookupTableAccounts);
+
+    const transaction = new VersionedTransaction(messageV0);
+
+    return transaction
+};

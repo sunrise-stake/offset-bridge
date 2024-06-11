@@ -15,12 +15,11 @@ import { configureChains, createConfig, WagmiConfig } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum, goerli } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import {useEffect, useMemo} from "react";
-import {BackpackWalletAdapter, SolflareWalletAdapter, TorusWalletAdapter} from "@solana/wallet-adapter-wallets";
+import {SolflareWalletAdapter, TorusWalletAdapter} from "@solana/wallet-adapter-wallets";
 import {PhantomWalletAdapter} from "@solana/wallet-adapter-phantom";
-import {GlowWalletAdapter} from "@solana/wallet-adapter-glow";
 import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
 import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
-import {clusterApiUrl, PublicKey} from "@solana/web3.js";
+import {clusterApiUrl} from "@solana/web3.js";
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import {useRouter} from "next/navigation";
@@ -152,10 +151,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const solanaEndpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_HOST || clusterApiUrl("mainnet-beta");
     const solanaWallets = useMemo(
         () => [
-            new BackpackWalletAdapter(),
             new PhantomWalletAdapter(),
             new SolflareWalletAdapter(),
-            new GlowWalletAdapter(),
             new TorusWalletAdapter(),
         ],
         []
@@ -167,7 +164,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         router.push('/step' + currentStep);
     }, [currentStep]);
-
 
     return (
         <ConnectionProvider endpoint={solanaEndpoint}>

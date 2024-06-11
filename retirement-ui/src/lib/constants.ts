@@ -12,8 +12,8 @@ export const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT ||
         : "https://neat-hidden-sanctuary.solana-mainnet.discover.quiknode.pro/2af5315d336f9ae920028bbb90a73b724dc1bbed");
 // !IMPORTANT:  This example is using a quiknode free plan that is shared and has limits so should not be used for productions.
 // Wallets
-export const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
-export const STATE_ADDRESS = new PublicKey("FhVZksvDo2dFUCoqEwqv8idS9i4FtQ97amkcJ1d4MHS5");
+export const PROGRAM_ID = new PublicKey("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
+export const STATE_ADDRESS = new PublicKey("HwSjfH6zmRTkp4rYoEsEcZ2J3GARMNEtGcXf3Lq8aPxy");
 
 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";

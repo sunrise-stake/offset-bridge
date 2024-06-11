@@ -6,7 +6,7 @@ use crate::util::bridge::Wormhole;
 use crate::util::swap::Jupiter;
 use crate::util::token::wrapped_sol::ID as WRAPPED_SOL;
 
-declare_id!("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
+declare_id!("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 
 #[program]
 pub mod token_swap {
@@ -24,7 +24,7 @@ pub mod token_swap {
 
     pub fn wrap(ctx: Context<Wrap>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[*ctx.bumps.get("token_account_authority").unwrap()]];
+        let authority_seeds= [State::SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
         wrap_sol(
             &ctx.accounts.token_account.to_account_info(),
             &ctx.accounts.token_program,
@@ -52,7 +52,7 @@ pub mod token_swap {
         // TODO: Oracle check to ensure the price is correct
 
         let swap_ix = Instruction {
-            program_id: jupiter_cpi::ID,
+            program_id: *ctx.accounts.jupiter_program.key,
             accounts: router_accounts,
             data: route_info.clone(),
         };
@@ -70,7 +70,7 @@ pub mod token_swap {
 
     pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[*ctx.bumps.get("token_account_authority").unwrap()]];
+        let authority_seeds= [State::SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
 
         approve_delegate(
             amount,

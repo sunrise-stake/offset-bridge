@@ -8,7 +8,7 @@ import {Program, AnchorProvider } from "@coral-xyz/anchor";
 import {IDL, TokenSwap} from "./types/token_swap";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
-const PROGRAM_ID = new PublicKey("sutsaKhPL3nMSPtvRY3e9MbpmqQbEJip6vYqT9AQcgN");
+const PROGRAM_ID = new PublicKey("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 
 (async () => {
     // Setup Solana RPC connection

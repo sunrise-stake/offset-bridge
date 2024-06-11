@@ -25,7 +25,6 @@ import {
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
 import {carbonToLamports, carbonToUsdcCents, lamportsToCarbon, solToCarbon, usdcToCarbon} from "@/lib/prices";
 import {SimpleDropdown} from "@/components/simpleDropdown";
-import {useSolanaSolBalance} from "@/hooks/useSolanaSolBalance";
 import {useDepositBalances} from "@/hooks/useDepositBalances";
 
 const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
@@ -81,6 +80,20 @@ export default function Step2() {
         }
     }, [amountToDeposit, api, depositBalances]);
 
+    const swapConfirmed = async (txSig: string) => {
+        console.log("Transaction signature: {} Waiting for confirmation...", txSig);
+        toast.info(<div>
+            Waiting for confirmation:{' '}<SolExplorerLink address={txSig} type="tx"/>
+        </div>);
+        const blockhash = await connection.getLatestBlockhash();
+        await connection.confirmTransaction({
+            blockhash: blockhash.blockhash,
+            lastValidBlockHeight: blockhash.lastValidBlockHeight,
+            signature: txSig,
+        })
+        return txSig
+    }
+
     const swapSuccessful = (txSig: string) => {
         toast.success(<div>
             Swap successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
@@ -107,7 +120,10 @@ export default function Step2() {
         } else {
             tx = await api.depositAndSwap(selectedInputToken.mint, amountBigInt);
         }
-        return wallet.sendTransaction(tx, connection).then(swapSuccessful).catch(swapFailed);
+
+        return wallet.sendTransaction(tx, connection, {
+        //     // skipPreflight: true
+        }).then(swapConfirmed).then(swapSuccessful).catch(swapFailed);
     };
 
     const inputTokens = supportedInputTokens.map((token) => ({

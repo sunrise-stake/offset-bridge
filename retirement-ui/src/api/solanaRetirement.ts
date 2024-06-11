@@ -5,7 +5,7 @@ import {
     Connection,
     Keypair,
     MessageV0,
-    PublicKey, SystemProgram,
+    PublicKey, SimulateTransactionConfig, SystemProgram,
     Transaction,
     TransactionInstruction,
     TransactionMessage,
@@ -25,17 +25,21 @@ import {
     WORMHOLE_RPC_HOSTS_MAINNET,
     WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
-import {Jupiter, JUPITER_PROGRAM_ID, TOKEN_LIST_URL} from "@jup-ag/core";
+// import {TOKEN_LIST_URL} from "@jup-ag/core";
+const JUPITER_PROGRAM_ID = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
+
 import {IDL, TokenSwap} from "./types/token_swap";
 import JSBI from "jsbi";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {
-    ASSOCIATED_TOKEN_PROGRAM_ID, createSyncNativeInstruction,
+    ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createSyncNativeInstruction,
     createTransferInstruction,
+    getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
+    getOrCreateAssociatedTokenAccount,
     TOKEN_PROGRAM_ID
 } from "spl-token-latest";
-import {bridgeAuthority, bridgeInputTokenAccount, tokenAuthority} from "@/lib/util";
+import {bridgeAuthority, bridgeInputTokenAccount, tokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import {nft_bridge, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
@@ -47,13 +51,17 @@ type UnsubscribeCallback = () => void;
 export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
-    jupiter: Jupiter | undefined;
+    // jupiter: Jupiter | undefined;
 
     constructor(
         readonly solWallet: AnchorWallet,
         readonly solConnection: Connection,
         public holdingContractTarget: string,
     ) {
+    }
+
+    async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
+        await this.solConnection.simulateTransaction(tx, config).then(console.log).catch(console.error);
     }
 
     listenToTokenBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
@@ -86,13 +94,7 @@ export class SolanaRetirement {
     }
 
     async init(): Promise<void> {
-        this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
-        this.jupiter = await Jupiter.load({
-            connection: this.solConnection,
-            cluster: ENV,
-            user: tokenAuthority, // PDA owned by the swap program
-            wrapUnwrapSOL: false // wrapping and unwrapping will try to sign with the inputAcount which is a PDA
-        });
+        // this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
 
         this.ready = true;
     }
@@ -101,8 +103,15 @@ export class SolanaRetirement {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+        const ataCreateTx = createAssociatedTokenAccountInstruction(
+            this.solWallet.publicKey,
+            wrappedSolATA,
+            tokenAuthority,
+            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+        )
 
         return [
+            ataCreateTx, 
             SystemProgram.transfer({
                 fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
             }),
@@ -114,159 +123,101 @@ export class SolanaRetirement {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
-
+        const ataCreateTx = createAssociatedTokenAccountInstruction(
+            this.solWallet.publicKey,
+            wrappedSolATA,
+            tokenAuthority,
+            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+        )
         return [
+            ataCreateTx,
             createSyncNativeInstruction(wrappedSolATA)
         ];
     }
 
     async swap(inputMint: PublicKey, amount: bigint, preInstructions?: TransactionInstruction[]):Promise<VersionedTransaction> {
-        if (!this.ready || !this.jupiter) throw new Error("Not initialized");
 
-        const routes = await this.jupiter.computeRoutes({
-            inputMint,
-            outputMint: BRIDGE_INPUT_MINT_ADDRESS,
-            amount: JSBI.BigInt(amount.toString(10)), // 100k lamports
-            slippageBps: 20,  // 1 bps = 0.01%.
-        });
+        const quote = await getQuote(inputMint, BRIDGE_INPUT_MINT_ADDRESS, Number(amount), 20);
 
-        console.log("Routes: " + JSON.stringify(routes));
+        console.log("Routes: " + JSON.stringify(quote.route));
 
-        // Since CPIs do not support ALTs, we can only use routes with two hops or fewer before we run out of space
-        // in the transaction
-        const filteredRoutes = routes.routesInfos.filter((r, i) => {
-            console.log(i + ": Route length: " + r.marketInfos.length);
-            return r.marketInfos.length < 3;
-        })
-        // Routes are sorted based on outputAmount, so ideally the first route is the best.
-        const bestRoute = filteredRoutes[0]
-        console.log("Best route: " + JSON.stringify(bestRoute, null, 2));
-        if (!bestRoute) throw new Error("No route found");
-        const { execute, swapTransaction , addressLookupTableAccounts } = await this.jupiter.exchange({
-            routeInfo: bestRoute
-        });
-
-        const jupiterTx = swapTransaction as VersionedTransaction;
+        const jupiterIx = await getSwapIx(tokenAuthority,  quote); 
+        const {
+            computeBudgetInstructions, // The necessary instructions to setup the compute budget.
+            swapInstruction,
+            addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
+          } = jupiterIx;
+        const jupiterSwapIx = getJupiterSwapIx(swapInstruction);
 
         // create the swap instruction proxying the jupiter instruction
         const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
         const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
 
-        const message = jupiterTx.message as MessageV0;
-        message.compiledInstructions.forEach((ix) => {
-            console.log(message.staticAccountKeys[ix.programIdIndex].toString());
-        });
+        const accountMetas = jupiterSwapIx.keys;
 
-        const jupiterIxIndex = message.compiledInstructions.findIndex(
-            (ix) => message.staticAccountKeys[ix.programIdIndex].equals(JUPITER_PROGRAM_ID)
+        console.log({ accountMetas });
+
+        // mark the token authority as a non-signer, because it is a PDA owned by the Offset Bridge program
+        accountMetas.filter((meta) => meta.pubkey.equals(tokenAuthority)).forEach(
+            (meta) => {
+                meta.isSigner = false;
+            }
         );
-        const jupiterIx = message.compiledInstructions[jupiterIxIndex];
-        const messageAccountKeys = message.getAccountKeys({ addressLookupTableAccounts });
-
-        // construct the swap account metas from the jupiter instruction
-        const accountMetas = jupiterIx.accountKeyIndexes.map(jupiterIxAccountIndex => {
-            const pubkey = messageAccountKeys.get(jupiterIxAccountIndex);
-            if (!pubkey) throw new Error("Missing pubkey at index: " + jupiterIxAccountIndex + " in jupiter instruction");
-            return ({
-                pubkey,
-                isSigner: false,// message.isAccountSigner(i), - this tx is permissionless through the proxy
-                isWritable: message.isAccountWritable(jupiterIxAccountIndex)
-            });
-        });
-        // the data for the jupiter instruction is passed straight through to the swap proxy
-        const routeInfo = Buffer.from(jupiterIx.data);
 
         // create the swap instruction
-        const swapIx = await program.methods.swap(routeInfo).accounts({
+        const swapIx = await program.methods.swap(jupiterSwapIx.data).accounts({
             state: STATE_ADDRESS,
             jupiterProgram: JUPITER_PROGRAM_ID,
         }).remainingAccounts([
             ...accountMetas
         ]).instruction()
 
-        let seenJupiterIx = false;
-
-        // get the rest of the instructions from the original transaction, (token account creation & closure etc)
-        // preserving the order.
-        const ixes: TransactionInstruction[] = message.compiledInstructions.map((ix, ixIndex) => {
-            if (ix === jupiterIx) {
-                seenJupiterIx = true;
-                // replace with the swap program instruction
-                return swapIx;
-            }
-
-            // otherwise just copy over the instruction.
-            // the account indices have changed so recreate the account metas
-            const keys: AccountMeta[] = ix.accountKeyIndexes.map(index => {
-                const pubkey = messageAccountKeys.get(index);
-                if (!pubkey) throw new Error("Missing pubkey at index: " + index + " in instruction " + ixIndex);
-                return ({
-                    pubkey,
-                    isSigner: message.isAccountSigner(index),
-                    isWritable: message.isAccountWritable(index)
-                });
-            });
-
-            const programId = messageAccountKeys.get(ix.programIdIndex);
-
-            if (!programId) throw new Error("Missing programId at index: " + ix.programIdIndex + " in instruction " + ixIndex);
-
-            if (programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) {
-                // it is a "create associated token account" instruction,
-                // we change the rent payer of these instructions to the user keypair
-                // and make the owner not a signer
-
-                keys[0] = {
-                    pubkey: this.solWallet.publicKey,
-                    isSigner: true,
-                    isWritable: true
-                }
-                keys[2] = {
-                    pubkey: keys[2].pubkey,
-                    isSigner: false,
-                    isWritable: false
-                }
-            } else if (programId.equals(TOKEN_PROGRAM_ID)) {
-                // if we have seen the jupiter instruction, this is a close token account instruction
-                // for now, drop it
-                if (seenJupiterIx) {
-                    return null;
-                }
-            }
-
-            return new TransactionInstruction({
-                keys,
-                programId: programId,
-                data: Buffer.from(ix.data)
-            })
-        }).filter((ix): ix is TransactionInstruction => ix !== null);
-
-        if (preInstructions) {
-            // add the deposit instruction to the start
-            ixes.unshift(...preInstructions);
-        }
-
         // generate a versioned transaction from the new instructions, using the same ALTs as before)
         const blockhash = await this.solConnection
             .getLatestBlockhash()
             .then((res) => res.blockhash);
-        const messageV0 = new TransactionMessage({
-            payerKey: this.solWallet.publicKey,
-            recentBlockhash: blockhash,
-            instructions: ixes,
-        }).compileToV0Message(addressLookupTableAccounts);
-        const transaction = new VersionedTransaction(messageV0);
 
-        const newTxSigners = [];
-        let keys = (transaction.message as MessageV0).getAccountKeys({ addressLookupTableAccounts });
-        for (let i = 0; i < keys.length; i++) {
-            if ((transaction.message as MessageV0).isAccountSigner(i)) {
-                newTxSigners.push(keys.get(i));
-            }
+        const addressLookupTableAccountInfos = await this.solConnection.getMultipleAccountsInfo(
+          addressLookupTableAddresses.map((key: AccountMeta) => new PublicKey(key))
+        );
+
+        let ata = await getAssociatedTokenAddress(
+            BRIDGE_INPUT_MINT_ADDRESS,
+            tokenAuthority,
+            true
+        );
+        console.log(`ata: ${ata.toBase58()}`);
+        
+        let ataCreationTx = new Transaction();
+        ataCreationTx.add(
+            createAssociatedTokenAccountInstruction(
+            this.solWallet.publicKey,
+            ata,
+            tokenAuthority,
+            BRIDGE_INPUT_MINT_ADDRESS
+            )
+        );
+        let preIxs: TransactionInstruction[];
+        if (preInstructions?.length == 0) {
+            preIxs = ataCreationTx.instructions;
+        } else {
+            preIxs = [];
+            preInstructions?.forEach(ix => {
+                preIxs.push(ix);
+              });
+            preIxs = preIxs.concat(ataCreationTx.instructions);
         }
-        console.log("Signers: ", newTxSigners)
 
-        return transaction;
+        const swapTx = swapToBridgeInputTx(
+          swapIx,
+          preIxs,
+          blockhash,
+          this.solWallet.publicKey,
+          computeBudgetInstructions,
+          addressLookupTableAddresses,
+          addressLookupTableAccountInfos
+        );
+        return swapTx;
     }
 
     private makeDepositIx(inputMint: PublicKey, amount: bigint) : TransactionInstruction {
