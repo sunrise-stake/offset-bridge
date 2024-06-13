@@ -11,9 +11,12 @@ const ethSigner = new ethers.Wallet(POLYGON_PRIVATE_KEY, ethProvider);
 
 async function setSelectedTCO2() {
     const contract = new ethers.Contract(process.argv[2], HOLDING_CONTRACT_ABI, ethSigner);
-    const tx = await contract.setTCO2(process.argv[3], { gasLimit: 10000000, gasPrice: ethers.utils.parseUnits('200', 'gwei') });
+    const tx = await contract.setTCO2(process.argv[3], {
+        maxFeePerGas: ethers.utils.parseUnits('92', 'gwei'),
+        maxPriorityFeePerGas: ethers.utils.parseUnits('52', 'gwei')
+    }); //{ gasPrice: ethers.utils.parseUnits('200', 'gwei') }); //, { gasLimit: 10000000 }, 
     const result = await tx.wait();
-    return result.wait();
+    return result;
 }
 
 async function main() {
