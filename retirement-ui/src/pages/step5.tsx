@@ -127,8 +127,8 @@ export default function Step5() {
         const [redeemTx, metaTx] = await solanaAPI.redeemVAA(Buffer.from(activeBridgeTransaction.vaaResult.vaaBytes, 'hex'));
 
         try {
-            const redeemTxSig = await wallet.sendTransaction(redeemTx, connection);
-            const metaTxSig = await wallet.sendTransaction(metaTx, connection);
+            const redeemTxSig = await wallet.sendTransaction(redeemTx, connection, {skipPreflight: true});
+            const metaTxSig = await wallet.sendTransaction(metaTx, connection, {skipPreflight: true});
             updateBridgeTransaction({ solanaTxSignature: redeemTxSig });
             redeemSuccessful(redeemTxSig);
         } catch (error) {
