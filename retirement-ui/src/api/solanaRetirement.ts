@@ -99,40 +99,58 @@ export class SolanaRetirement {
         this.ready = true;
     }
 
-    makeDepositAndWrapSolIxes(lamports: bigint): TransactionInstruction[] {
+    async makeDepositAndWrapSolIxes(lamports: bigint): Promise<TransactionInstruction[]> {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
-        const ataCreateTx = createAssociatedTokenAccountInstruction(
-            this.solWallet.publicKey,
-            wrappedSolATA,
-            tokenAuthority,
-            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
-        )
+        const ataAccountInfo = await this.solConnection.getAccountInfo(wrappedSolATA)
+        if (ataAccountInfo == null) {
+            const ataCreateTx = createAssociatedTokenAccountInstruction(
+                this.solWallet.publicKey,
+                wrappedSolATA,
+                tokenAuthority,
+                new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+            )
+            return [
+                ataCreateTx, 
+                SystemProgram.transfer({
+                    fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
+                }),
+                createSyncNativeInstruction(wrappedSolATA)
+            ];
+        } else {
+            return [
+                SystemProgram.transfer({
+                    fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
+                }),
+                createSyncNativeInstruction(wrappedSolATA)
+            ];
+        }
 
-        return [
-            ataCreateTx, 
-            SystemProgram.transfer({
-                fromPubkey: this.solWallet.publicKey, lamports, toPubkey: wrappedSolATA
-            }),
-            createSyncNativeInstruction(wrappedSolATA)
-        ];
+
     }
 
-    makeWrapSolIx(): TransactionInstruction[] {
+    async makeWrapSolIx(): Promise<TransactionInstruction[]> {
         if (!this.ready) throw new Error("Not initialized");
 
         const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
-        const ataCreateTx = createAssociatedTokenAccountInstruction(
-            this.solWallet.publicKey,
-            wrappedSolATA,
-            tokenAuthority,
-            new PublicKey(WRAPPED_SOL_TOKEN_MINT)
-        )
-        return [
-            ataCreateTx,
-            createSyncNativeInstruction(wrappedSolATA)
-        ];
+        const ataAccountInfo = await this.solConnection.getAccountInfo(wrappedSolATA)
+        if (ataAccountInfo == null) {
+            const ataCreateTx = createAssociatedTokenAccountInstruction(
+                this.solWallet.publicKey,
+                wrappedSolATA,
+                tokenAuthority,
+                new PublicKey(WRAPPED_SOL_TOKEN_MINT)
+            )
+            return [
+                ataCreateTx,
+                createSyncNativeInstruction(wrappedSolATA)
+            ];
+        } else {
+            return [
+                createSyncNativeInstruction(wrappedSolATA)
+            ];
+        }
     }
 
     async swap(inputMint: PublicKey, amount: bigint, preInstructions?: TransactionInstruction[]):Promise<VersionedTransaction> {
@@ -187,25 +205,39 @@ export class SolanaRetirement {
             true
         );
         console.log(`ata: ${ata.toBase58()}`);
-        
-        let ataCreationTx = new Transaction();
-        ataCreationTx.add(
-            createAssociatedTokenAccountInstruction(
-            this.solWallet.publicKey,
-            ata,
-            tokenAuthority,
-            BRIDGE_INPUT_MINT_ADDRESS
-            )
-        );
+
+        const ataAccountInfo = await this.solConnection.getAccountInfo(ata)
         let preIxs: TransactionInstruction[];
-        if (preInstructions?.length == 0) {
-            preIxs = ataCreationTx.instructions;
+        if (ataAccountInfo == null) {
+        
+            let ataCreationTx = new Transaction();
+            ataCreationTx.add(
+                createAssociatedTokenAccountInstruction(
+                this.solWallet.publicKey,
+                ata,
+                tokenAuthority,
+                BRIDGE_INPUT_MINT_ADDRESS
+                )
+            );
+            if (preInstructions?.length == 0) {
+                preIxs = ataCreationTx.instructions;
+            } else {
+                preIxs = [];
+                preInstructions?.forEach(ix => {
+                    preIxs.push(ix);
+                });
+                preIxs = preIxs.concat(ataCreationTx.instructions);
+            }
         } else {
-            preIxs = [];
-            preInstructions?.forEach(ix => {
-                preIxs.push(ix);
-              });
-            preIxs = preIxs.concat(ataCreationTx.instructions);
+            if (preInstructions?.length == 0) {
+                preIxs = [];
+            } else {
+                preIxs = [];
+                preInstructions?.forEach(ix => {
+                    preIxs.push(ix);
+                });
+            }
+
         }
 
         const swapTx = swapToBridgeInputTx(
@@ -242,7 +274,7 @@ export class SolanaRetirement {
     }
 
     async wrapAndSwap(amountToDeposit: bigint, amountToWrap: bigint = 0n) : Promise<VersionedTransaction> {
-        const preInstructions = amountToDeposit > 0n ? this.makeDepositAndWrapSolIxes(amountToDeposit) : this.makeWrapSolIx();
+        const preInstructions = amountToDeposit > 0n ? await this.makeDepositAndWrapSolIxes(amountToDeposit) : await this.makeWrapSolIx();
         console.log("Swapping: ", amountToDeposit + amountToWrap, " lamports");
         return this.swap(WRAPPED_SOL_TOKEN_MINT, amountToDeposit + amountToWrap, preInstructions);
     }
