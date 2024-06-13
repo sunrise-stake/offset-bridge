@@ -207,9 +207,9 @@ export class SolanaRetirement {
         console.log(`ata: ${ata.toBase58()}`);
 
         const ataAccountInfo = await this.solConnection.getAccountInfo(ata)
-        let preIxs: TransactionInstruction[];
-        if (ataAccountInfo == null) {
-        
+        let preIxs: TransactionInstruction[] = [];
+        preIxs.push(...preInstructions ?? []);
+        if (ataAccountInfo == null) {    
             let ataCreationTx = new Transaction();
             ataCreationTx.add(
                 createAssociatedTokenAccountInstruction(
@@ -219,25 +219,7 @@ export class SolanaRetirement {
                 BRIDGE_INPUT_MINT_ADDRESS
                 )
             );
-            if (preInstructions?.length == 0) {
-                preIxs = ataCreationTx.instructions;
-            } else {
-                preIxs = [];
-                preInstructions?.forEach(ix => {
-                    preIxs.push(ix);
-                });
-                preIxs = preIxs.concat(ataCreationTx.instructions);
-            }
-        } else {
-            if (preInstructions?.length == 0) {
-                preIxs = [];
-            } else {
-                preIxs = [];
-                preInstructions?.forEach(ix => {
-                    preIxs.push(ix);
-                });
-            }
-
+            preIxs.push(...ataCreationTx.instructions);
         }
 
         const swapTx = swapToBridgeInputTx(
