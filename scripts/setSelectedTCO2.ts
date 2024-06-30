@@ -14,9 +14,9 @@ async function setSelectedTCO2() {
     const tx = await contract.setTCO2(process.argv[3], {
         maxFeePerGas: ethers.utils.parseUnits('92', 'gwei'),
         maxPriorityFeePerGas: ethers.utils.parseUnits('52', 'gwei')
-    }); //{ gasPrice: ethers.utils.parseUnits('200', 'gwei') }); //, { gasLimit: 10000000 }, 
+    }); //{ gasPrice: ethers.utils.parseUnits('200', 'gwei') }); //, { gasLimit: 10000000 },
     const result = await tx.wait();
-    return result;
+    return result.wait();
 }
 
 async function main() {
