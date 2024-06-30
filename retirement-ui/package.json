@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.18",
+    "@injectivelabs/sdk-ts": "^1.14.11",
+    "@injectivelabs/token-metadata": "1.10.42",
     "@jup-ag/core": "^4.0.0-beta.21",
     "@metaplex-foundation/js": "^0.20.1",
     "@rainbow-me/rainbowkit": "^1.0.1",
@@ -44,5 +46,9 @@
     "viem": "^0.3.50",
     "wagmi": "^1.1.1",
     "zustand": "^4.3.8"
+  },
+  "resolutions": {
+    "@injectivelabs/sdk-ts": "1.10.72",
+    "@injectivelabs/token-metadata": "1.10.42"
   }
 }

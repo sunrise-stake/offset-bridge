@@ -1,11 +1,10 @@
 import {
     CHAIN_ID_POLYGON,
     POLYGON_BRIDGE_ADDRESS, POLYGON_NFT_BRIDGE_ADDRESS,
-    POLYGON_TOKEN_BRIDGE_ADDRESS,
     WORMHOLE_RPC_HOSTS_MAINNET
 } from "@/lib/constants";
 import {VAAResult} from "@/lib/types";
-import {getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth,nft_bridge} from "@certusone/wormhole-sdk";
+import {getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth} from "@certusone/wormhole-sdk";
 import {TransactionReceipt} from "viem";
 import {ContractReceipt} from "ethers";
 

@@ -1,4 +1,14 @@
-import {AccountMeta, AddressLookupTableAccount, Blockhash, PublicKey, PublicKeyInitData, TransactionInstruction, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {
+    AccountMeta,
+    AddressLookupTableAccount,
+    Blockhash,
+    Connection,
+    PublicKey,
+    PublicKeyInitData,
+    TransactionInstruction,
+    TransactionMessage,
+    VersionedTransaction
+} from "@solana/web3.js";
 import {
     BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON,
     MAX_NUM_PRECISION, PROGRAM_ID, RETIREMENT_ERC721,
@@ -6,7 +16,7 @@ import {
     STATE_ADDRESS
 } from "./constants";
 import {getAssociatedTokenAddressSync} from "spl-token-latest";
-import {getForeignAssetSolana} from "@certusone/wormhole-sdk/lib/cjs/nft_bridge";
+import {nft_bridge} from "@certusone/wormhole-sdk";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import {RetirementNFT} from "@/app/providers";
 
@@ -47,7 +57,7 @@ export const solanaAddressToHex = (address: PublicKey) => `0x${address.toBuffer(
 
 export const deriveSolanaAddress = async (tokenId: number, recipient: PublicKey): Promise<string> => {
     const originAsset = Wormhole.tryNativeToUint8Array(RETIREMENT_ERC721, CHAIN_ID_POLYGON);
-    const solanaAsset = (await getForeignAssetSolana(
+    const solanaAsset = (await nft_bridge.getForeignAssetSolana(
         SOL_NFT_BRIDGE_ADDRESS,
         CHAIN_ID_POLYGON,
         originAsset,
