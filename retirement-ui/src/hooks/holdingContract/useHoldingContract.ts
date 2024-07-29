@@ -52,10 +52,13 @@ export const useHoldingContract = () => {
     useEffect(() => {
         if (!holdingContractTarget) return;
         fetchRetirementNFTs(holdingContractTarget)
-            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey))
+            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey)) // Q: address to send retirement NFT specified here
             .then(setRetirementNFTs)
     }, [holdingContractTarget, offset?.isSuccess]);
 
+    // Q: why is the holding contract target set to the contract address of the factory?
+    // NOTE: the contractAddress parameter seems to be set to be the address of holding contract
+    // in the factory lines 46-57 of useHoldingContractFactory.ts
     useEffect(() => {
         if (factory?.contractAddress) {
             setHoldingContractTarget(factory.contractAddress)

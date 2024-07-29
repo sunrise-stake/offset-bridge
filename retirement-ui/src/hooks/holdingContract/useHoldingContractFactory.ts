@@ -25,6 +25,7 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
     const publicClient = usePublicClient();
     const [contractAddress, setContractAddress] = useState<Address>();
 
+    // NOTE: holding contract addresss derived here based on the currently-logged-in account
     const salt = holdingContractFactorySalt(address || '0x');
     const read = useContractRead({
         ...contract,

@@ -265,6 +265,7 @@ export class SolanaRetirement {
         const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
         const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
 
+        // Q: holding contract target input to bridge program as instructions, what is this target?
         const { instruction, messageKey } = await createWormholeWrappedTransfer(
             this.solWallet.publicKey,
             bridgeInputTokenAccount,
