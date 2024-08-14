@@ -2,6 +2,7 @@ mod util;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use crate::util::errors::ErrorCode;
 use crate::util::bridge::Wormhole;
 use crate::util::swap::Jupiter;
 use crate::util::token::wrapped_sol::ID as WRAPPED_SOL;
@@ -14,13 +15,29 @@ pub mod token_swap {
     use anchor_lang::solana_program::program;
     use crate::util::bridge::call_bridge;
     use crate::util::token::{approve_delegate, wrap_sol};
+    use crate::util::errors::ErrorCode;
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, output_mint: Pubkey) -> Result<()> {
-        ctx.accounts.state.output_mint = output_mint;
+    pub fn initialize(ctx: Context<Initialize>, state_in: GenericStateInput) -> Result<()> {
+        ctx.accounts.state.output_mint = state_in.output_mint;
+        ctx.accounts.state.holding_contract = state_in.holding_contract;
+        ctx.accounts.state.token_chain_id = state_in.token_chain_id;
+        ctx.accounts.state.update_authority = state_in.update_authority;
 
         Ok(())
     }
+
+    pub fn update_state(ctx: Context<UpdateState>, state_in: GenericStateInput) -> Result<()> {
+        // update state account parameters
+        let state = &mut ctx.accounts.state;
+        state.update_authority = state_in.update_authority;
+        state.output_mint = state_in.output_mint;
+        state.holding_contract = state_in.holding_contract;
+        state.token_chain_id = state_in.token_chain_id;
+
+        Ok(())
+    }
+
 
     pub fn wrap(ctx: Context<Wrap>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
@@ -70,6 +87,12 @@ pub mod token_swap {
 
     pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
+
+        let deserialised_bridge_data = TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
+        if deserialised_bridge_data.recipient_address != ctx.accounts.state.holding_contract.as_ref() {
+            return Err(ErrorCode::IncorrectDestinationAccount.into()); 
+        }
+        
         let authority_seeds= [State::SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
 
         approve_delegate(
@@ -151,15 +174,28 @@ pub struct Bridge<'info> {
     pub wormhole_program: Program<'info, Wormhole>,
 }
 
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct GenericStateInput {
+    pub output_mint: Pubkey,
+    pub holding_contract: String,
+    pub token_chain_id: String,
+    pub update_authority: Pubkey,
+}
+
 #[account]
 pub struct State {
     output_mint: Pubkey,     // The target token mint
+    holding_contract: String,
+    token_chain_id: String,
+    update_authority: Pubkey,
 }
 
 impl State {
-    pub const SIZE: usize = 8 + 32 + 32 + 32; // include 8 bytes for the anchor discriminator
+    pub const SIZE: usize = 8 + 24 + 24 + 32 + 32; // include 8 bytes for the anchor discriminator
 
-    pub const SEED: &'static [u8] = b"input_account"; // TODO rename to token_authority
+    pub const SEED: &'static [u8] = b"token_authority"; // TODO rename to token_authority
+    pub const WORMHOLE_SEED: &'static [u8] = b"wrapped";
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
@@ -167,4 +203,28 @@ impl State {
             &id(),
         )
     }
+}
+
+#[derive(Accounts)]
+#[instruction(state_in: GenericStateInput)]
+pub struct UpdateState<'info> {
+    // to be used for updating parameters of state account
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+    mut,
+    constraint = state.update_authority == payer.key() @ ErrorCode::Unauthorized,
+    )]
+    pub state: Account<'info, State>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize)]
+/// Token Bridge instructions.
+pub struct TransferWrapped {
+    batch_id: u32,
+    amount: u64,
+    fee: u64,
+    recipient_address: [u8; 32],
+    recipient_chain: u16,
 }

@@ -28,8 +28,38 @@ export type TokenSwap = {
       ],
       "args": [
         {
-          "name": "outputMint",
-          "type": "publicKey"
+          "name": "stateIn",
+          "type": {
+            "defined": "GenericStateInput"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateState",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "stateIn",
+          "type": {
+            "defined": "GenericStateInput"
+          }
         }
       ]
     },
@@ -150,9 +180,95 @@ export type TokenSwap = {
           {
             "name": "outputMint",
             "type": "publicKey"
+          },
+          {
+            "name": "holdingContract",
+            "type": "string"
+          },
+          {
+            "name": "tokenChainId",
+            "type": "string"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
           }
         ]
       }
+    }
+  ],
+  "types": [
+    {
+      "name": "GenericStateInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "outputMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "holdingContract",
+            "type": "string"
+          },
+          {
+            "name": "tokenChainId",
+            "type": "string"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferWrapped",
+      "docs": [
+        "Token Bridge instructions."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "batchId",
+            "type": "u32"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "recipientAddress",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipientChain",
+            "type": "u16"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "IncorrectDestinationAccount",
+      "msg": "Wormhole target address does not match holding contract specified in state"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Incorrect update authority"
     }
   ]
 };
@@ -187,8 +303,38 @@ export const IDL: TokenSwap = {
       ],
       "args": [
         {
-          "name": "outputMint",
-          "type": "publicKey"
+          "name": "stateIn",
+          "type": {
+            "defined": "GenericStateInput"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateState",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "stateIn",
+          "type": {
+            "defined": "GenericStateInput"
+          }
         }
       ]
     },
@@ -309,9 +455,95 @@ export const IDL: TokenSwap = {
           {
             "name": "outputMint",
             "type": "publicKey"
+          },
+          {
+            "name": "holdingContract",
+            "type": "string"
+          },
+          {
+            "name": "tokenChainId",
+            "type": "string"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
           }
         ]
       }
+    }
+  ],
+  "types": [
+    {
+      "name": "GenericStateInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "outputMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "holdingContract",
+            "type": "string"
+          },
+          {
+            "name": "tokenChainId",
+            "type": "string"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferWrapped",
+      "docs": [
+        "Token Bridge instructions."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "batchId",
+            "type": "u32"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "recipientAddress",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipientChain",
+            "type": "u16"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "IncorrectDestinationAccount",
+      "msg": "Wormhole target address does not match holding contract specified in state"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Incorrect update authority"
     }
   ]
 };
