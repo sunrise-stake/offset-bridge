@@ -5,7 +5,7 @@ import {NextButton} from "@/components/nextButton";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
-import {tokenAuthority} from "@/lib/util";
+import {deriveTokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
 import {SolExplorerLink} from "@/components/solExplorerLink";
 import {
@@ -15,11 +15,11 @@ import {
 import {useAppStore} from "@/app/providers";
 import {useRedeemVAA} from "@/hooks/useRedeemVAA";
 import {useAccount} from "wagmi";
-import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {PolyExplorerLink} from "@/components/polyExplorerLink";
 import {WormholeLink} from "@/components/wormholeLink";
 import {BridgeSubsteps, Substep, SubstepInfo} from "@/components/bridgeSubsteps";
 import {VAAResult} from "@/lib/types";
+import {PublicKey} from "@solana/web3.js";
 
 const bridgeInputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 const bridgeInputTokenDecimals = BRIDGE_INPUT_MINT_DECIMALS;
@@ -43,6 +43,8 @@ export default function Step3() {
     const wallet = useWalletSafe();
     const { connection } = useConnection();
     const { address } = useAccount();
+    const stateAddress = useAppStore(state => state.solanaStateAddress)
+    const tokenAuthority = deriveTokenAuthority(new PublicKey(stateAddress));
     const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
     const {api : solanaAPI} = useSolanaRetirement();
     const activeBridgeTransaction = useAppStore(state => state.activeUSDCBridgeTransaction)

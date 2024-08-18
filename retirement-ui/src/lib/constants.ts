@@ -13,8 +13,9 @@ export const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT ||
 // !IMPORTANT:  This example is using a quiknode free plan that is shared and has limits so should not be used for productions.
 // Wallets
 export const PROGRAM_ID = new PublicKey("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
-export const STATE_ADDRESS = new PublicKey("HwSjfH6zmRTkp4rYoEsEcZ2J3GARMNEtGcXf3Lq8aPxy");
-
+export const StateAddress: Record<string, string> = {
+    "Default": "HwSjfH6zmRTkp4rYoEsEcZ2J3GARMNEtGcXf3Lq8aPxy" // TODO replace with new default state after v2 upgrade
+};
 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";
 export const POLYGON_TOKEN_BRIDGE_ADDRESS = "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE";

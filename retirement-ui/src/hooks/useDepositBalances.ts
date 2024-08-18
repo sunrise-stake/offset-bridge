@@ -2,8 +2,9 @@ import {PublicKey} from "@solana/web3.js";
 import {SolanaToken, WRAPPED_SOL_TOKEN_MINT} from "@/lib/constants";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
 import {useSolanaSolBalance} from "@/hooks/useSolanaSolBalance";
-import {tokenAuthority} from "@/lib/util";
+import {deriveTokenAuthority} from "@/lib/util";
 import {getAssociatedTokenAddressSync} from "spl-token-latest";
+import {useAppStore} from "@/app/providers";
 
 type DepositBalances = {
     userTokenBalance: bigint | undefined;
@@ -26,6 +27,8 @@ type DepositBalances = {
  * If 4 is non-zero, a wrap instruction should be executed to convert the SOL to wrapped SOL before the swap takes place.
  */
 export const useDepositBalances = (owner: PublicKey, inputTokenMint: PublicKey, outputTokenMint: PublicKey): DepositBalances => {
+    const stateAddress = useAppStore(state => state.solanaStateAddress)
+    const tokenAuthority = deriveTokenAuthority(new PublicKey(stateAddress));
     const tokenAuthorityWrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
 
     console.log("tokenAuthorityWrappedSolATA", tokenAuthorityWrappedSolATA.toBase58());

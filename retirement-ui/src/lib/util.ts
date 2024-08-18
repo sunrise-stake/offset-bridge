@@ -2,7 +2,6 @@ import {
     AccountMeta,
     AddressLookupTableAccount,
     Blockhash,
-    Connection,
     PublicKey,
     PublicKeyInitData,
     TransactionInstruction,
@@ -10,19 +9,23 @@ import {
     VersionedTransaction
 } from "@solana/web3.js";
 import {
-    BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON,
-    MAX_NUM_PRECISION, PROGRAM_ID, RETIREMENT_ERC721,
-    SOL_TOKEN_BRIDGE_ADDRESS, SOL_NFT_BRIDGE_ADDRESS,
-    STATE_ADDRESS
+    BRIDGE_INPUT_MINT_ADDRESS,
+    CHAIN_ID_POLYGON,
+    MAX_NUM_PRECISION,
+    PROGRAM_ID,
+    RETIREMENT_ERC721,
+    SOL_NFT_BRIDGE_ADDRESS,
+    SOL_TOKEN_BRIDGE_ADDRESS,
 } from "./constants";
 import {getAssociatedTokenAddressSync} from "spl-token-latest";
-import {nft_bridge} from "@certusone/wormhole-sdk";
 import * as Wormhole from "@certusone/wormhole-sdk";
+import {nft_bridge} from "@certusone/wormhole-sdk";
 import {RetirementNFT} from "@/app/providers";
 
-export const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("input_account"), STATE_ADDRESS.toBuffer()], PROGRAM_ID)[0];
+export const deriveTokenAuthority = (stateAddress: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("input_account"), stateAddress.toBuffer()], PROGRAM_ID)[0];
 export const bridgeAuthority = PublicKey.findProgramAddressSync([Buffer.from("authority_signer")], new PublicKey(SOL_TOKEN_BRIDGE_ADDRESS))[0];
-export const bridgeInputTokenAccount = getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), tokenAuthority, true);
+export const deriveBridgeInputTokenAccount = (stateAddress: PublicKey) =>
+    getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), deriveTokenAuthority(stateAddress), true);
 
 export const formatDecimal = (value: bigint, decimals: number, requiredDecimals: number = 2): string => {
     const valueStringWithLeadingZeros = value.toString().padStart(decimals + 1, "0");
@@ -192,7 +195,5 @@ export const swapToBridgeInputTx = (
         instructions,
     }).compileToV0Message(addressLookupTableAccounts);
 
-    const transaction = new VersionedTransaction(messageV0);
-
-    return transaction
+    return new VersionedTransaction(messageV0)
 };

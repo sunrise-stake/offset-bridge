@@ -7,7 +7,7 @@ import {
     formatDecimal,
     toFixedWithPrecision,
     tokenAmountFromString,
-    tokenAuthority,
+    deriveTokenAuthority,
     usdcTokenAmountFromCents
 } from "@/lib/util";
 import {toast} from "react-toastify";

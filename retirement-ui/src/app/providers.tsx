@@ -26,6 +26,7 @@ import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
 import {VAAResult} from "@/lib/types";
 import {Address} from "abitype/src/abi";
+import {StateAddress} from "@/lib/constants";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
@@ -82,6 +83,7 @@ export type RetirementNFT = {
 
 export interface AppState {
     step: number;
+    solanaStateAddress: string;
     holdingContractTarget?: Address;
     activeUSDCBridgeTransaction?: BridgeTransactionStored;
     activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
@@ -90,6 +92,7 @@ export interface AppState {
 
 export interface Actions {
     setStep: (newStep: number) => void;
+    setSolanaStateAddress: (address: string) => void;
     setHoldingContractTarget: (newTarget: Address) => void;
     clearHoldingContractTarget: () => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
@@ -113,6 +116,10 @@ export const useAppStore = create<AppState & Actions>()(
                 return ({
                     step: 1,
                     setStep: (newStep: number) => set((state) => ({step: state.step + newStep})),
+                    solanaStateAddress: StateAddress.Default,
+                    setSolanaStateAddress: (newSolanaStateAddress: string) => set(() => ({
+                        solanaStateAddress: newSolanaStateAddress
+                    })),
 
                     holdingContractTarget: undefined,
                     setHoldingContractTarget: (newTarget: Address) => set(() => ({holdingContractTarget: newTarget})),
