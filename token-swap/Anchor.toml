@@ -12,7 +12,12 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "/Users/daniel/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+rpc_port = 8890
+faucet_port = 9900
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 token-swap/tests/token-swap.ts"
