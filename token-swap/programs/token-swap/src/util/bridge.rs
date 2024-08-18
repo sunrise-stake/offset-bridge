@@ -16,13 +16,6 @@ impl Id for Wormhole {
     fn id() -> Pubkey { WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID }
 }
 
-pub fn authority_signer() -> Pubkey {
-    Pubkey::create_program_address(
-        & [b"authority_signer"],
-        & WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID
-    ).unwrap()
-}
-
 pub fn call_bridge<'a, 'b>(
     bridge_data: Vec<u8>,
     accounts: &'b [AccountInfo<'a>],
