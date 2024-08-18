@@ -38,6 +38,7 @@ if (!holdingContract || !ethers.utils.isAddress(holdingContract)) {
         }
     ).accounts({
         state: stateAddress.publicKey,
+        authority: provider.publicKey,
     }).signers([stateAddress]).rpc()
 
 
