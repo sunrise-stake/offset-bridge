@@ -19,5 +19,13 @@ url = "https://api.mainnet-beta.solana.com"
 rpc_port = 8890
 faucet_port = 9900
 
+[[test.validator.account]]
+address = "E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M" 
+filename = "tests/fixtures/E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufaAsf7M.json"
+
+[[test.genesis]]
+address = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb" 
+program = "tests/fixtures/wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb.so"
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 token-swap/tests/token-swap.ts"
