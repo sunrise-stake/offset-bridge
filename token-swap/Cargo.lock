@@ -2557,6 +2557,7 @@ dependencies = [
  "ahash 0.7.8",
  "anchor-lang",
  "anchor-spl",
+ "hex",
  "pyth-sdk-solana",
  "spl-associated-token-account",
 ]

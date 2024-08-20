@@ -66,8 +66,9 @@ export class SolanaRetirement {
     }
 
     async getState(): Promise<SolanaStateAccount> {
-        const stateAddress = await this.program.account.state.fetch(new PublicKey(this.stateAddress));
-        return this.program.account.state.fetch(new PublicKey(stateAddress));
+        const state = await this.program.account.state.fetch(new PublicKey(this.stateAddress));
+        console.log("State:", state);
+        return state;
     }
 
     async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
@@ -78,6 +79,7 @@ export class SolanaRetirement {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
         const notify = () => {
+            console.log("Getting balance for token account", tokenAccount.toBase58(), ", mint ", mint.toBase58(), " and owner ", owner.toBase58());
             this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
             }).catch(console.error);
