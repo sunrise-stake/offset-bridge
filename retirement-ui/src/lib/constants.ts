@@ -14,7 +14,7 @@ export const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT ||
 // Wallets
 export const PROGRAM_ID = new PublicKey("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 export const StateAddress: Record<string, string> = {
-    "Default": "HwSjfH6zmRTkp4rYoEsEcZ2J3GARMNEtGcXf3Lq8aPxy" // TODO replace with new default state after v2 upgrade
+    "Default": "4U6vxUjMGhiaM8GzmH8KKvs8q7L3zxjDV5eRJnyfAtgF"
 };
 
 export const POLYGON_TEST_TOKEN_BRIDGE_ADDRESS = "0x377D55a7928c046E18eEbb61977e714d2a76472a";

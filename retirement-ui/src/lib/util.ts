@@ -22,7 +22,7 @@ import * as Wormhole from "@certusone/wormhole-sdk";
 import {nft_bridge} from "@certusone/wormhole-sdk";
 import {RetirementNFT} from "@/app/providers";
 
-export const deriveTokenAuthority = (stateAddress: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("input_account"), stateAddress.toBuffer()], PROGRAM_ID)[0];
+export const deriveTokenAuthority = (stateAddress: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("token_authority"), stateAddress.toBuffer()], PROGRAM_ID)[0];
 export const bridgeAuthority = PublicKey.findProgramAddressSync([Buffer.from("authority_signer")], new PublicKey(SOL_TOKEN_BRIDGE_ADDRESS))[0];
 export const deriveBridgeInputTokenAccount = (stateAddress: PublicKey) =>
     getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), deriveTokenAuthority(stateAddress), true);

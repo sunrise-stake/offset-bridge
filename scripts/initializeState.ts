@@ -14,7 +14,7 @@ import {ethers} from "ethers";
 const holdingContract = process.argv[2];
 // ensure the holding contract is provided and is a valid ethereum address
 if (!holdingContract || !ethers.utils.isAddress(holdingContract)) {
-    console.error('Usage: bun run scripts/initialize.ts <holdingContract>');
+    console.error('Usage: bun run scripts/initializeState.ts <holdingContract>');
     process.exit(1);
 }
 
@@ -22,13 +22,16 @@ if (!holdingContract || !ethers.utils.isAddress(holdingContract)) {
     // Setup Solana RPC connection
     const connection = new Connection(SOLANA_RPC_ENDPOINT);
 
-    const provider = new AnchorProvider(connection, new NodeWallet(Keypair.generate()), {});
+    const provider = new AnchorProvider(connection, new NodeWallet(USER_KEYPAIR), {});
     const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
 
     const stateAddress = Keypair.generate();
-    console.log("stateAddress", stateAddress.publicKey.toBase58());
-
     const outputMint = new PublicKey(BRIDGE_INPUT_MINT_ADDRESS);
+
+    console.log("stateAddress", stateAddress.publicKey.toBase58());
+    console.log("user", USER_KEYPAIR.publicKey.toBase58());
+    console.log("outputMint", outputMint.toBase58());
+    console.log("holdingContract", holdingContract);
 
     const txid = await program.methods.initialize({
         outputMint,
