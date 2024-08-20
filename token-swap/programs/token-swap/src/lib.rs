@@ -87,9 +87,11 @@ pub mod token_swap {
 
     pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-
         let deserialised_bridge_data = TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
-        if deserialised_bridge_data.recipient_address != ctx.accounts.state.holding_contract.as_ref() {
+        msg!("Holding contract address specified in state: {:?}", &ctx.accounts.state.holding_contract[2..ctx.accounts.state.holding_contract.len()-2]);
+        msg!("Holding contract address specified in input bridge data: {:?}", &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..]);
+        // TODO: 26 0s are padded, this is hardcoded for polygon, need to make it more flexible
+        if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..] != ctx.accounts.state.holding_contract.to_uppercase()[2..ctx.accounts.state.holding_contract.len()-2] {
             return Err(ErrorCode::IncorrectDestinationAccount.into()); 
         }
         
@@ -117,11 +119,12 @@ pub mod token_swap {
 }
 
 #[derive(Accounts)]
+#[instruction(state_in: GenericStateInput)]
 pub struct Initialize<'info> {
     #[account(
         init,
         payer = authority,
-        space = State::SIZE,
+        space = State::space(state_in.holding_contract, state_in.token_chain_id),
     )]
     pub state: Account<'info, State>,
     #[account(mut)]
@@ -196,6 +199,18 @@ impl State {
 
     pub const SEED: &'static [u8] = b"token_authority"; // TODO rename to token_authority
     pub const WORMHOLE_SEED: &'static [u8] = b"wrapped";
+
+    pub fn space(holding_contract: String, token_chain_id: String) -> usize {
+        // find space needed for state account for current config
+            4
+            + (holding_contract.len() as usize)
+            + 4
+            + (token_chain_id.len() as usize)
+            + 4
+            + 32
+            + 32
+            + 8 /* Discriminator */
+    }
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
