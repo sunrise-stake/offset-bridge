@@ -26,7 +26,7 @@ export const useSolanaNFT = () => {
             //     }
             //     // const loaded = found.map(metadata => metaplex.nfts().load({
             //     //     metadata: metadata.
-            //     //     loadJsonMetadata: false,    // TODO temp
+            //     //     loadJsonMetadata: false,
             //     // }));
             //     return Promise.all(loaded)
             ).then(setAssets);

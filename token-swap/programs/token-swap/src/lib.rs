@@ -63,11 +63,6 @@ pub mod token_swap {
             });
         }
 
-        // TODO: Check that the jupiter output account (the account that receives the tokens)
-        // is the account in the state
-
-        // TODO: Oracle check to ensure the price is correct
-
         let swap_ix = Instruction {
             program_id: *ctx.accounts.jupiter_program.key,
             accounts: router_accounts,
@@ -90,7 +85,7 @@ pub mod token_swap {
         let deserialised_bridge_data = TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
         msg!("Holding contract address specified in state: {:?}", &ctx.accounts.state.holding_contract[2..ctx.accounts.state.holding_contract.len()-2]);
         msg!("Holding contract address specified in input bridge data: {:?}", &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..]);
-        // TODO: 26 0s are padded, this is hardcoded for polygon, need to make it more flexible
+        // 26 0s are padded for polygon address, this is hardcoded for polygon, will be made more flexible in the future when there are other usecases
         if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..] != ctx.accounts.state.holding_contract.to_uppercase()[2..ctx.accounts.state.holding_contract.len()-2] {
             return Err(ErrorCode::IncorrectDestinationAccount.into()); 
         }
@@ -197,7 +192,7 @@ pub struct State {
 impl State {
     pub const SIZE: usize = 8 + 24 + 24 + 32 + 32; // include 8 bytes for the anchor discriminator
 
-    pub const SEED: &'static [u8] = b"token_authority"; // TODO rename to token_authority
+    pub const SEED: &'static [u8] = b"token_authority";
     pub const WORMHOLE_SEED: &'static [u8] = b"wrapped";
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {

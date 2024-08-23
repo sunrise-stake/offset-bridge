@@ -51,22 +51,22 @@ export const useHoldingContract = () => {
     const solRecipient = useWalletSafe();
     const { fetchRetirementNFTs } = useToucan();
 
+    // Address to send retirement NFT specified here
     useEffect(() => {
         if (!holdingContractTarget) return;
         fetchRetirementNFTs(holdingContractTarget)
-            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey)) // Q: address to send retirement NFT specified here
+            .then(tokenIDsToRetirementNFTs(solRecipient.publicKey))
             .then(setRetirementNFTs)
     }, [holdingContractTarget, offset?.isSuccess]);
 
-    // Q: why is the holding contract target set to the contract address of the factory?
-    // NOTE: the contractAddress parameter seems to be set to be the address of holding contract
-    // in the factory lines 46-57 of useHoldingContractFactory.ts
+    // The contractAddress parameter set to be the address of holding contract in the factory lines 48-57 of useHoldingContractFactory.ts
     useEffect(() => {
         if (holdingContract) {
             setHoldingContractTarget(holdingContract)
         } else if (!holdingContract && !factory.isError) {
             clearHoldingContractTarget()
         }
+    // The "contractAddress" in this hook is basically the address of the user's holding contract
     }, [factory?.contractAddress])
 
     const updateTCO2 = useCallback(async (tco2: Address) => {

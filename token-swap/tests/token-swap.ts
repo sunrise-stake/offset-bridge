@@ -173,7 +173,7 @@ describe("token-swap", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
       }).remainingAccounts(instruction.keys)
-        .signers([message]) // appears to get erased when calling transaction()  - TODO remove?
+        .signers([message])
         .transaction();
 
         try {
@@ -223,7 +223,7 @@ describe("token-swap", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
         }).remainingAccounts(instruction.keys)
-          .signers([message]) // appears to get erased when calling transaction()  - TODO remove?
+          .signers([message])
           .transaction();
         
         try {

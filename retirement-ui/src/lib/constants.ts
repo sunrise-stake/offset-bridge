@@ -98,7 +98,7 @@ export interface SolanaToken {
     mint: PublicKey,
     decimals: number,
     symbol: string,
-    swapsTo: PublicKey // TODO do we need this?
+    swapsTo: PublicKey
 }
 
 export interface JupiterToken {

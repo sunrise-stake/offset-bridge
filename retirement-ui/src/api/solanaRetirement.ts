@@ -274,7 +274,7 @@ export class SolanaRetirement {
     }
 
     async bridge(amount: bigint): Promise<{ tx: Transaction, messageKey: Keypair }> {
-        // Q: holding contract target input to bridge program as instructions, what is this target?
+        // Holding contract target (address on polygon that receives wrapped USDC) passed in to the program bridge function as instructions
         const { instruction, messageKey } = await createWormholeWrappedTransfer(
             this.solWallet.publicKey,
             this.bridgeInputTokenAccount,
@@ -288,7 +288,7 @@ export class SolanaRetirement {
             bridgeAuthority,
             tokenAccount: this.bridgeInputTokenAccount,
         }).remainingAccounts(instruction.keys)
-            .signers([messageKey]) // appears to get erased when calling transaction()  - TODO remove?
+            .signers([messageKey]) // appears to get erased when calling transaction()
             .transaction();
 
         return { tx, messageKey };
