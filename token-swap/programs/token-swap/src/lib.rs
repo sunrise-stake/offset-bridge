@@ -83,10 +83,10 @@ pub mod token_swap {
     pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
         let deserialised_bridge_data = TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
-        msg!("Holding contract address specified in state: {:?}", &ctx.accounts.state.holding_contract[2..ctx.accounts.state.holding_contract.len()-2]);
-        msg!("Holding contract address specified in input bridge data: {:?}", &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..]);
-        // 26 0s are padded for polygon address, this is hardcoded for polygon, will be made more flexible in the future when there are other usecases
-        if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()[26..] != ctx.accounts.state.holding_contract.to_uppercase()[2..ctx.accounts.state.holding_contract.len()-2] {
+        msg!("Holding contract address specified in state: {:?}", &ctx.accounts.state.holding_contract[2..]);
+        msg!("Holding contract address specified in input bridge data: {:?}", &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase());
+
+       if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase() != ctx.accounts.state.holding_contract.to_uppercase()[2..] {
             return Err(ErrorCode::IncorrectDestinationAccount.into()); 
         }
         
@@ -235,6 +235,7 @@ pub struct TransferWrapped {
     batch_id: u32,
     amount: u64,
     fee: u64,
-    recipient_address: [u8; 32],
+    zeros_padding: [u8; 13],
+    recipient_address: [u8; 20],
     recipient_chain: u16,
 }
