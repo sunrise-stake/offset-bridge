@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract HoldingContractFactory is Ownable {
-    address public implementationAddress; // TODO immutable?
+    address public implementationAddress;
     address[] public proxies;
 
     event ContractCreated(address proxy);

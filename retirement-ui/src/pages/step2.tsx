@@ -7,7 +7,7 @@ import {
     formatDecimal,
     toFixedWithPrecision,
     tokenAmountFromString,
-    tokenAuthority,
+    deriveTokenAuthority,
     usdcTokenAmountFromCents
 } from "@/lib/util";
 import {toast} from "react-toastify";
@@ -57,7 +57,6 @@ export default function Step2() {
     const getInputAmountAsSelectedToken = useCallback((): bigint => {
         if (amountInputAsSelectedToken && !!amountToDeposit) return tokenAmountFromString(amountToDeposit, selectedInputToken.decimals);
 
-        // TODO generalise to other tokens as needed
         if (selectedInputToken.mint === USDC_TOKEN_SOLANA) {
             return usdcTokenAmountFromCents(carbonToUsdcCents(Number(amountToDeposit)));
         }

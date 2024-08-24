@@ -2,7 +2,7 @@ import {FC, useEffect, useState} from "react";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {NextButton} from "@/components/nextButton";
 import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
-import {tokenAuthority} from "@/lib/util";
+import {deriveTokenAuthority} from "@/lib/util";
 import {toast} from "react-toastify";
 import {BRIDGE_INPUT_MINT_ADDRESS} from "@/lib/constants";
 import {useAppStore} from "@/app/providers";

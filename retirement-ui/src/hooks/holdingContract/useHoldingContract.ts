@@ -10,8 +10,10 @@ import {tokenIDsToRetirementNFTs} from "@/lib/util";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {prepareWriteContract, writeContract} from "@wagmi/core";
 import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
+import {useCurrentHoldingContractAddress} from "@/hooks/holdingContract/useCurrentHoldingContractAddress";
 
 export const useHoldingContract = () => {
+    const holdingContract = useCurrentHoldingContractAddress();
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
     const setHoldingContractTarget = useAppStore(state => state.setHoldingContractTarget);
     const clearHoldingContractTarget = useAppStore(state => state.clearHoldingContractTarget);
@@ -44,11 +46,12 @@ export const useHoldingContract = () => {
         enabled: !!holdingContractTarget
     });
     const usdcBalance = useHoldingContractBalance(holdingContractTarget);
-    const offset = useOffset(holdingContractTarget)
+    const offset = useOffset()
     const factory = useHoldingContractFactory();
     const solRecipient = useWalletSafe();
     const { fetchRetirementNFTs } = useToucan();
 
+    // Address to send retirement NFT specified here
     useEffect(() => {
         if (!holdingContractTarget) return;
         fetchRetirementNFTs(holdingContractTarget)
@@ -56,12 +59,14 @@ export const useHoldingContract = () => {
             .then(setRetirementNFTs)
     }, [holdingContractTarget, offset?.isSuccess]);
 
+    // The contractAddress parameter set to be the address of holding contract in the factory lines 48-57 of useHoldingContractFactory.ts
     useEffect(() => {
-        if (factory?.contractAddress) {
-            setHoldingContractTarget(factory.contractAddress)
-        } else if (!factory.contractAddress && !factory.isError) {
+        if (holdingContract) {
+            setHoldingContractTarget(holdingContract)
+        } else if (!holdingContract && !factory.isError) {
             clearHoldingContractTarget()
         }
+    // The "contractAddress" in this hook is basically the address of the user's holding contract
     }, [factory?.contractAddress])
 
     const updateTCO2 = useCallback(async (tco2: Address) => {

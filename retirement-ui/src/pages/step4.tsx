@@ -42,7 +42,14 @@ export default function Step4() {
     }
 
     const handleRetire = async () => {
-        if (!offset || !offset.writeAsync || !retireEnabled) return;
+        if (offset?.error) console.log("OFFSET ERROR", offset.error);
+        if (!offset || !offset.writeAsync || !retireEnabled) {
+            console.log("offset not ready", {
+                offset,
+                retireEnabled
+            })
+            return;
+        }
         offset.writeAsync().then(result => retireInProgress(result.hash))
             .catch(retireFailed);
     };

@@ -17,6 +17,7 @@ const stripProjectName = (name: string) => name.replace('Toucan Protocol: ', '')
 
 export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> = ({ setReady }) => {
     const factory = useHoldingContractFactory();
+    // Holding contract created here with user wallet specified as retirement NFT's destination.
     const holdingContract = useHoldingContract();
     const [selectedProject, setSelectedProject] = useState<PooledTCO2Token>();
     const verraDetails = useVerra(selectedProject);
@@ -41,12 +42,14 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
         }
     }, [holdingContract.tco2, toucan.allProjects.length, toucan.loading ]);
 
+    // createAccount is a function that when called, will call the `create()` function on the factory, with the specified selectedProject
     const createAccount = usePolygonWriteTransaction(
         () => factory?.create(),
         'Create',
         [factory?.writeAsync, selectedProject],
         setReady
     );
+    // selected project is specified/updated in the holding contract here
     const updateAccount = usePolygonWriteTransaction(
         async () => {
             if (selectedProject?.address) return holdingContract.updateTCO2(selectedProject.address as Address)

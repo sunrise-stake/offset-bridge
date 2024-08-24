@@ -4,60 +4,67 @@ import {
     AccountMeta,
     Connection,
     Keypair,
-    MessageV0,
     PublicKey, SimulateTransactionConfig, SystemProgram,
     Transaction,
     TransactionInstruction,
-    TransactionMessage,
     VersionedTransaction
 } from "@solana/web3.js";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
     CHAIN_ID_POLYGON,
     CHAIN_ID_SOLANA,
-    ENV,
     JupiterToken,
-    PROGRAM_ID,
     SOL_BRIDGE_ADDRESS,
     SOL_NFT_BRIDGE_ADDRESS,
     SOL_TOKEN_BRIDGE_ADDRESS,
-    STATE_ADDRESS,
     WORMHOLE_RPC_HOSTS_MAINNET,
     WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
-// import {TOKEN_LIST_URL} from "@jup-ag/core";
-const JUPITER_PROGRAM_ID = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
-
-import {IDL, TokenSwap} from "./types/token_swap";
-import JSBI from "jsbi";
+import {TokenSwap} from "./types/token_swap";
+import IDL from "./idls/token_swap.json";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {
-    ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createSyncNativeInstruction,
+    createAssociatedTokenAccountInstruction, createSyncNativeInstruction,
     createTransferInstruction,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
-    getOrCreateAssociatedTokenAccount,
-    TOKEN_PROGRAM_ID
 } from "spl-token-latest";
-import {bridgeAuthority, bridgeInputTokenAccount, tokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx} from "@/lib/util";
+import {bridgeAuthority, deriveBridgeInputTokenAccount, deriveTokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import {nft_bridge, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
 import {createWormholeWrappedTransfer} from "@/lib/bridge";
-import {VAAResult} from "@/lib/types";
+import {SolanaStateAccount, VAAResult} from "@/lib/types";
 
 type UnsubscribeCallback = () => void;
 
 export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
-    // jupiter: Jupiter | undefined;
+    program: Program<TokenSwap>;
 
     constructor(
         readonly solWallet: AnchorWallet,
         readonly solConnection: Connection,
+        readonly stateAddress: PublicKey,
         public holdingContractTarget: string,
     ) {
+        const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
+        this.program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+    }
+
+    get tokenAuthority(): PublicKey {
+        return deriveTokenAuthority(this.stateAddress)
+    }
+
+    get bridgeInputTokenAccount(): PublicKey {
+        return deriveBridgeInputTokenAccount(this.stateAddress)
+    }
+
+    async getState(): Promise<SolanaStateAccount> {
+        const state = await this.program.account.state.fetch(new PublicKey(this.stateAddress));
+        console.log("State:", state);
+        return state;
     }
 
     async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
@@ -68,6 +75,7 @@ export class SolanaRetirement {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
         const notify = () => {
+            console.log("Getting balance for token account", tokenAccount.toBase58(), ", mint ", mint.toBase58(), " and owner ", owner.toBase58());
             this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
             }).catch(console.error);
@@ -102,13 +110,17 @@ export class SolanaRetirement {
     async makeDepositAndWrapSolIxes(lamports: bigint): Promise<TransactionInstruction[]> {
         if (!this.ready) throw new Error("Not initialized");
 
-        const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+        const wrappedSolATA = getAssociatedTokenAddressSync(
+            new PublicKey(WRAPPED_SOL_TOKEN_MINT),
+            this.tokenAuthority,
+            true
+        );
         const ataAccountInfo = await this.solConnection.getAccountInfo(wrappedSolATA)
         if (ataAccountInfo == null) {
             const ataCreateTx = createAssociatedTokenAccountInstruction(
                 this.solWallet.publicKey,
                 wrappedSolATA,
-                tokenAuthority,
+                this.tokenAuthority,
                 new PublicKey(WRAPPED_SOL_TOKEN_MINT)
             )
             return [
@@ -133,13 +145,13 @@ export class SolanaRetirement {
     async makeWrapSolIx(): Promise<TransactionInstruction[]> {
         if (!this.ready) throw new Error("Not initialized");
 
-        const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
+        const wrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), this.tokenAuthority, true);
         const ataAccountInfo = await this.solConnection.getAccountInfo(wrappedSolATA)
         if (ataAccountInfo == null) {
             const ataCreateTx = createAssociatedTokenAccountInstruction(
                 this.solWallet.publicKey,
                 wrappedSolATA,
-                tokenAuthority,
+                this.tokenAuthority,
                 new PublicKey(WRAPPED_SOL_TOKEN_MINT)
             )
             return [
@@ -159,7 +171,7 @@ export class SolanaRetirement {
 
         console.log("Routes: " + JSON.stringify(quote.route));
 
-        const jupiterIx = await getSwapIx(tokenAuthority,  quote); 
+        const jupiterIx = await getSwapIx(this.tokenAuthority,  quote);
         const {
             computeBudgetInstructions, // The necessary instructions to setup the compute budget.
             swapInstruction,
@@ -168,24 +180,20 @@ export class SolanaRetirement {
         const jupiterSwapIx = getJupiterSwapIx(swapInstruction);
 
         // create the swap instruction proxying the jupiter instruction
-        const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
-        const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
-
         const accountMetas = jupiterSwapIx.keys;
 
         console.log({ accountMetas });
 
         // mark the token authority as a non-signer, because it is a PDA owned by the Offset Bridge program
-        accountMetas.filter((meta) => meta.pubkey.equals(tokenAuthority)).forEach(
+        accountMetas.filter((meta) => meta.pubkey.equals(this.tokenAuthority)).forEach(
             (meta) => {
                 meta.isSigner = false;
             }
         );
 
         // create the swap instruction
-        const swapIx = await program.methods.swap(jupiterSwapIx.data).accounts({
-            state: STATE_ADDRESS,
-            jupiterProgram: JUPITER_PROGRAM_ID,
+        const swapIx = await this.program.methods.swap(jupiterSwapIx.data).accounts({
+            state: this.stateAddress,
         }).remainingAccounts([
             ...accountMetas
         ]).instruction()
@@ -201,7 +209,7 @@ export class SolanaRetirement {
 
         let ata = await getAssociatedTokenAddress(
             BRIDGE_INPUT_MINT_ADDRESS,
-            tokenAuthority,
+            this.tokenAuthority,
             true
         );
         console.log(`ata: ${ata.toBase58()}`);
@@ -215,7 +223,7 @@ export class SolanaRetirement {
                 createAssociatedTokenAccountInstruction(
                 this.solWallet.publicKey,
                 ata,
-                tokenAuthority,
+                this.tokenAuthority,
                 BRIDGE_INPUT_MINT_ADDRESS
                 )
             );
@@ -236,7 +244,7 @@ export class SolanaRetirement {
 
     private makeDepositIx(inputMint: PublicKey, amount: bigint) : TransactionInstruction {
         const from = getAssociatedTokenAddressSync(inputMint, this.solWallet.publicKey);
-        const to = getAssociatedTokenAddressSync(inputMint, tokenAuthority, true);
+        const to = getAssociatedTokenAddressSync(inputMint, this.tokenAuthority, true);
 
         return createTransferInstruction(
             from,
@@ -262,26 +270,21 @@ export class SolanaRetirement {
     }
 
     async bridge(amount: bigint): Promise<{ tx: Transaction, messageKey: Keypair }> {
-        const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
-        const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
-
+        // Holding contract target (address on polygon that receives wrapped USDC) passed in to the program bridge function as instructions
         const { instruction, messageKey } = await createWormholeWrappedTransfer(
             this.solWallet.publicKey,
-            bridgeInputTokenAccount,
-            tokenAuthority,
+            this.bridgeInputTokenAccount,
+            this.tokenAuthority,
             amount,
             Wormhole.tryNativeToUint8Array(this.holdingContractTarget, CHAIN_ID_POLYGON),
         );
 
-        const tx = await program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
-            state: STATE_ADDRESS,
+        const tx = await this.program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
+            state: this.stateAddress,
             bridgeAuthority,
-            tokenAccountAuthority: tokenAuthority,
-            tokenAccount: bridgeInputTokenAccount,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
+            tokenAccount: this.bridgeInputTokenAccount,
         }).remainingAccounts(instruction.keys)
-            .signers([messageKey]) // appears to get erased when calling transaction()  - TODO remove?
+            .signers([messageKey]) // appears to get erased when calling transaction()
             .transaction();
 
         return { tx, messageKey };
@@ -367,9 +370,10 @@ export class SolanaRetirement {
     static async build(
         solWallet: AnchorWallet,
         solConnection: Connection,
+        stateAddress: PublicKey,
         holdingContractTarget: string,
     ): Promise<SolanaRetirement> {
-        const instance = new SolanaRetirement(solWallet, solConnection, holdingContractTarget);
+        const instance = new SolanaRetirement(solWallet, solConnection, stateAddress, holdingContractTarget);
         await instance.init();
         return instance;
     }

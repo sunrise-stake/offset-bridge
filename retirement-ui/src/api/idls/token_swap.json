@@ -1,13 +1,7 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/token_swap.json`.
- */
-export type TokenSwap = {
+{
   "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
   "metadata": {
-    "name": "tokenSwap",
+    "name": "token_swap",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -34,7 +28,7 @@ export type TokenSwap = {
           ]
         },
         {
-          "name": "bridgeAuthority",
+          "name": "bridge_authority",
           "docs": [
             "The wormhole bridge authority. This is the authority that will sign the bridge transaction",
             "and therefore needs to be a delegate on the token account.",
@@ -42,7 +36,7 @@ export type TokenSwap = {
           ]
         },
         {
-          "name": "tokenAccountAuthority",
+          "name": "token_account_authority",
           "pda": {
             "seeds": [
               {
@@ -73,17 +67,17 @@ export type TokenSwap = {
           }
         },
         {
-          "name": "tokenAccount",
+          "name": "token_account",
           "docs": [
             "The account containing tokens that will be transferred through the bridge"
           ]
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "wormholeProgram",
+          "name": "wormhole_program",
           "address": "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
         }
       ],
@@ -93,7 +87,7 @@ export type TokenSwap = {
           "type": "u64"
         },
         {
-          "name": "bridgeData",
+          "name": "bridge_data",
           "type": "bytes"
         }
       ]
@@ -126,16 +120,16 @@ export type TokenSwap = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "stateIn",
+          "name": "state_in",
           "type": {
             "defined": {
-              "name": "genericStateInput"
+              "name": "GenericStateInput"
             }
           }
         }
@@ -158,19 +152,19 @@ export type TokenSwap = {
           "name": "state"
         },
         {
-          "name": "jupiterProgram",
+          "name": "jupiter_program",
           "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
         }
       ],
       "args": [
         {
-          "name": "routeInfo",
+          "name": "route_info",
           "type": "bytes"
         }
       ]
     },
     {
-      "name": "updateState",
+      "name": "update_state",
       "discriminator": [
         135,
         112,
@@ -192,16 +186,16 @@ export type TokenSwap = {
           "writable": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "stateIn",
+          "name": "state_in",
           "type": {
             "defined": {
-              "name": "genericStateInput"
+              "name": "GenericStateInput"
             }
           }
         }
@@ -224,7 +218,7 @@ export type TokenSwap = {
           "name": "state"
         },
         {
-          "name": "tokenAccountAuthority",
+          "name": "token_account_authority",
           "pda": {
             "seeds": [
               {
@@ -255,13 +249,13 @@ export type TokenSwap = {
           }
         },
         {
-          "name": "tokenAccount",
+          "name": "token_account",
           "docs": [
             "The account containing tokens that will be transferred through the bridge"
           ]
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -270,7 +264,7 @@ export type TokenSwap = {
   ],
   "accounts": [
     {
-      "name": "state",
+      "name": "State",
       "discriminator": [
         216,
         146,
@@ -286,63 +280,63 @@ export type TokenSwap = {
   "errors": [
     {
       "code": 6000,
-      "name": "incorrectDestinationAccount",
+      "name": "IncorrectDestinationAccount",
       "msg": "Wormhole target address does not match holding contract specified in state"
     },
     {
       "code": 6001,
-      "name": "unauthorized",
+      "name": "Unauthorized",
       "msg": "Incorrect update authority"
     }
   ],
   "types": [
     {
-      "name": "genericStateInput",
+      "name": "GenericStateInput",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "outputMint",
+            "name": "output_mint",
             "type": "pubkey"
           },
           {
-            "name": "holdingContract",
+            "name": "holding_contract",
             "type": "string"
           },
           {
-            "name": "tokenChainId",
+            "name": "token_chain_id",
             "type": "string"
           },
           {
-            "name": "updateAuthority",
+            "name": "update_authority",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "state",
+      "name": "State",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "outputMint",
+            "name": "output_mint",
             "type": "pubkey"
           },
           {
-            "name": "holdingContract",
+            "name": "holding_contract",
             "type": "string"
           },
           {
-            "name": "tokenChainId",
+            "name": "token_chain_id",
             "type": "string"
           },
           {
-            "name": "updateAuthority",
+            "name": "update_authority",
             "type": "pubkey"
           }
         ]
       }
     }
   ]
-};
+}

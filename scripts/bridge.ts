@@ -20,7 +20,8 @@ import {
 } from "./constants";
 import { bridgeAuthority, bridgeInputTokenAccount, tokenAuthority } from "./util";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { IDL, TokenSwap } from "./types/token_swap";
+import { TokenSwap } from "./types/token_swap";
+import IDL from "./idls/token_swap.json";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import BN from "bn.js";
 import {
@@ -147,7 +148,7 @@ async function bridge() {
 
   const solanaConnection = new Connection(SOLANA_RPC_ENDPOINT, "finalized");
   const solanaProvider = new AnchorProvider(solanaConnection, new NodeWallet(USER_KEYPAIR), {});
-  const solanaProgram = new Program<TokenSwap>(IDL, PROGRAM_ID, solanaProvider);
+  const solanaProgram = new Program<TokenSwap>(IDL as TokenSwap, solanaProvider);
 
   const fromAddress = bridgeInputTokenAccount
 
@@ -173,10 +174,7 @@ async function bridge() {
   const txSig = await solanaProgram.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
     state: STATE_ADDRESS,
     bridgeAuthority,
-    tokenAccountAuthority: tokenAuthority,
     tokenAccount: bridgeInputTokenAccount,
-    tokenProgram: TOKEN_PROGRAM_ID,
-    wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
   }).remainingAccounts(instruction.keys)
     .signers([message])
     .rpc();

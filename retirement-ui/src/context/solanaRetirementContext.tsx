@@ -4,6 +4,7 @@ import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
 import {SolanaRetirement} from "@/api/solanaRetirement";
 import {createContext, FC, PropsWithChildren, useContext, useEffect, useState} from "react";
 import {useAppStore} from "@/app/providers";
+import { PublicKey } from "@solana/web3.js";
 
 interface SolanaRetirementContextProps {
     api: SolanaRetirement | undefined;
@@ -18,14 +19,21 @@ export const SolanaRetirementProvider: FC<PropsWithChildren> = ({children}) => {
     const { connection } = useConnection();
     const [api, setAPI] = useState<SolanaRetirement | undefined>();
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    const solanaStateAddress = useAppStore(state => state.solanaStateAddress);
 
     useEffect(() => {
-        if (wallet && holdingContractTarget) {
+        if (wallet && holdingContractTarget && solanaStateAddress) {
             console.log("creating SolanaRetirement api");
-            console.log("target: ", holdingContractTarget);
-            SolanaRetirement.build(wallet, connection, holdingContractTarget).then(setAPI);
+            console.log("State:", solanaStateAddress)
+            console.log("Target:", holdingContractTarget);
+            SolanaRetirement.build(
+                wallet,
+                connection,
+                new PublicKey(solanaStateAddress),
+                holdingContractTarget
+            ).then(setAPI);
         }
-    }, [wallet?.publicKey?.toBase58(), holdingContractTarget]);
+    }, [wallet?.publicKey?.toBase58(), holdingContractTarget, solanaStateAddress]);
 
     return (
         <SolanaRetirementContext.Provider
