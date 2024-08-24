@@ -10,9 +10,20 @@ const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;
 const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
 const ethSigner = new ethers.Wallet(POLYGON_PRIVATE_KEY, ethProvider);
 
+const holdingContract = process.argv[2];
+const retirementContract = process.argv[3];
+if (!holdingContract || !ethers.utils.isAddress(holdingContract) || !retirementContract || !ethers.utils.isAddress(retirementContract)) {
+    console.error('Usage: bun run scripts/setRetireContract.ts <holdingContract> <retirementContract>');
+    process.exit(1);
+}
+
 async function setRetireContract() {
-    const contract = new ethers.Contract("0xfef853578d8a6aef2599194ac0e2e339fb08c67c", HOLDING_CONTRACT_ABI, ethSigner);
-    const tx = await contract.setRetireContract("0x70acbb1b1D75c6a210F2439901B4A153C49c712f", { gasLimit: 10000000, gasPrice: ethers.utils.parseUnits('200', 'gwei') });
+    const contract = new ethers.Contract(holdingContract, HOLDING_CONTRACT_ABI, ethSigner);
+    const tx = await contract.setRetireContract(retirementContract, {
+        // gasLimit: 500000,
+        maxFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
+        maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
+    });
     const receipt: ContractReceipt = await tx.wait();
     return receipt;
 }

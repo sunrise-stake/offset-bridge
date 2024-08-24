@@ -8,12 +8,13 @@ import {Program, AnchorProvider} from "@coral-xyz/anchor";
 import {TokenSwap} from "./types/token_swap";
 import IDL from './idls/token_swap.json';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import {ethers} from "ethers";
+import {BigNumber, ethers} from "ethers";
 import {HOLDING_CONTRACT_ABI} from "../retirement-ui/src/lib/abi/holdingContract";
 import {ERC20_ABI} from "../retirement-ui/src/lib/abi/erc20";
 
 const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;
 const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
+const NCT_POOL_ADDRESS = "0xD838290e877E0188a4A44700463419ED96c16107";
 
 const isValidPublicKey = (publicKey: string) => {
     try {
@@ -49,14 +50,17 @@ if (!stateAddress || !isValidPublicKey(stateAddress)) {
     console.log("Upgrade Authority", state.updateAuthority.toBase58())
 
     console.log("Fetching holding contract state on Polygon...")
-    const holdingContract = new ethers.Contract(process.argv[2], HOLDING_CONTRACT_ABI, ethProvider);
+    const holdingContract = new ethers.Contract(state.holdingContract, HOLDING_CONTRACT_ABI, ethProvider);
     const retirementContract = await holdingContract.retireContract();
 
     console.log("Retirement TCO2 Contract", retirementContract);
+    const tco2Contract = new ethers.Contract(retirementContract, ERC20_ABI, ethProvider);
+    const result = await tco2Contract.balanceOf(NCT_POOL_ADDRESS);
+    const decimals = await tco2Contract.decimals();
 
-    const tco2Contract = new ethers.Contract(process.argv[2], ERC20_ABI, ethProvider);
-    const result = await tco2Contract.balanceOf("0xD838290e877E0188a4A44700463419ED96c16107");
-    console.log(result.toString());
+    const balance = BigNumber.from(result.toString());
+    const balanceHuman = balance.div(BigNumber.from(10).pow(decimals)).toString();
+    console.log("Available to retire va NCT:", balanceHuman);
 
 
 })().catch((error) => {

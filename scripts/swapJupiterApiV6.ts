@@ -1,6 +1,5 @@
 
 import fetch from 'node-fetch';
-import JSBI from 'jsbi';
 import {
     AddressLookupTableAccount,
     clusterApiUrl,
@@ -14,20 +13,18 @@ import {
     Blockhash,
     AccountInfo
 } from '@solana/web3.js';
-import { PROGRAM_ID, STATE_ADDRESS } from './constants';
+import { STATE_ADDRESS } from './constants';
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     getAssociatedTokenAddress,
-    getOrCreateAssociatedTokenAccount,
   } from "@solana/spl-token";
-import {Program, AnchorProvider, Wallet, Instruction} from "@coral-xyz/anchor";
-// import { Jupiter, RouteInfo, TOKEN_LIST_URL } from '@jup-ag/core';
-import {IDL, TokenSwap} from "./types/token_swap";
-import {ENV, WRAPPED_SOL_TOKEN_MINT, BRIDGE_INPUT_MINT_ADDRESS, SOLANA_RPC_ENDPOINT, JupiterToken, USER_KEYPAIR} from "./constants";
+import {Program, AnchorProvider, Wallet} from "@coral-xyz/anchor";
+import { TokenSwap} from "./types/token_swap";
+import IDL from "./idls/token_swap.json";
+import {WRAPPED_SOL_TOKEN_MINT, BRIDGE_INPUT_MINT_ADDRESS, USER_KEYPAIR} from "./constants";
 
 const API_ENDPOINT = "https://quote-api.jup.ag/v6";
-const JUPITER_PROGRAM_ID = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
 
 const getQuote = async (
     fromMint: PublicKey,
@@ -150,7 +147,7 @@ const getSwapIx = async (
     // const connection = new Connection(SOLANA_RPC_ENDPOINT);
     const connection = new Connection(clusterApiUrl("testnet"));
     const provider = new AnchorProvider(connection, new Wallet(USER_KEYPAIR), {});
-    const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
+    const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
     console.log(WRAPPED_SOL_TOKEN_MINT);
     console.log(BRIDGE_INPUT_MINT_ADDRESS);
 
@@ -202,7 +199,6 @@ const getSwapIx = async (
     // create the swap instruction
     const swapIx = await program.methods.swap(jupiterSwapIx.data).accounts({
         state: STATE_ADDRESS,
-        jupiterProgram: JUPITER_PROGRAM_ID,
     }).remainingAccounts([
         ...accountMetas
     ]).instruction()

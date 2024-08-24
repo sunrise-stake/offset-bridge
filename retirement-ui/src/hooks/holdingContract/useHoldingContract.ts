@@ -46,7 +46,7 @@ export const useHoldingContract = () => {
         enabled: !!holdingContractTarget
     });
     const usdcBalance = useHoldingContractBalance(holdingContractTarget);
-    const offset = useOffset(holdingContractTarget)
+    const offset = useOffset()
     const factory = useHoldingContractFactory();
     const solRecipient = useWalletSafe();
     const { fetchRetirementNFTs } = useToucan();

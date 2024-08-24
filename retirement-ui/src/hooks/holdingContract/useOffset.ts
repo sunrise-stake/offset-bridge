@@ -1,13 +1,14 @@
 import {useContractWrite, usePrepareContractWrite} from "wagmi";
-import {Address} from "abitype/src/abi";
 import {HOLDING_CONTRACT_ABI} from "@/lib/abi/holdingContract";
+import {useAppStore} from "@/app/providers";
 
-export const useOffset = (contractAddress: Address | undefined) => {
+export const useOffset = () => {
+    const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
     const { config, error, isError } = usePrepareContractWrite({
-        address: contractAddress,
+        address: holdingContractTarget,
         abi: HOLDING_CONTRACT_ABI,
         functionName: 'offset',
-        enabled: !!contractAddress,
+        enabled: !!holdingContractTarget,
         args:[ "Sunrise", "Climate-Positive Staking on Solana" ],
     })
     const offset = useContractWrite(config)

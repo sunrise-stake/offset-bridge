@@ -1,7 +1,8 @@
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { TokenSwap, IDL } from "../../scripts/types/token_swap";
+import { TokenSwap } from "../../scripts/types/token_swap";
+import IDL from "../../scripts/idls/token_swap.json";
 import { USER_KEYPAIR, CHAIN_ID_POLYGON, SOL_TOKEN_BRIDGE_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOL_BRIDGE_ADDRESS, USDC_TOKEN_POLYGON } from "../../scripts/constants";
 import { HOLDING_CONTRACT_FACTORY_ADDRESS, holdingContractFactorySalt } from "../../retirement-ui/src/lib/constants";
 import { HOLDING_CONTRACT_FACTORY_ABI  } from "../../retirement-ui/src/lib/abi/holdingContractFactory";
@@ -20,10 +21,8 @@ export const OUTPUT_MINT = new PublicKey("E2VmbootbVCBkMNNxKQgCLMS1X3NoGMaYAsufa
 export const INBETWEEN_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 export const WRAPPED_SOL_TOKEN_MINT = new PublicKey("So11111111111111111111111111111111111111112");
 export const HOLDING_CONTRACT_ADDRESS = "";
-// import { createWormholeWrappedTransfer } from "../../scripts/bridge";
 import { createTransferWrappedInstruction } from "@certusone/wormhole-sdk/lib/cjs/solana/tokenBridge";
 import { BN } from "bn.js";
-// import { TOKEN_PROGRAM_ID } from "spl-token-latest";
 import { createPublicClient, http } from "viem";
 import { polygon } from "viem/chains";
 import { Address } from "viem";
@@ -88,7 +87,7 @@ describe("token-swap", () => {
   const provider = new AnchorProvider(connection, wallet, {});
   console.log("provider set");
 
-  const program = new Program<TokenSwap>(IDL, PROGRAM_ID, provider);
+  const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
   const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("token_authority"), stateAddress.toBuffer()], PROGRAM_ID)[0];
   console.log("program set");
   // const bridgeInputTokenAccount = getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), tokenAuthority, true);
@@ -168,10 +167,7 @@ describe("token-swap", () => {
       const tx = await program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
           state: stateAddress,
           bridgeAuthority,
-          tokenAccountAuthority: tokenAuthority,
           tokenAccount: bridgeInputTokenAccount.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
       }).remainingAccounts(instruction.keys)
         .signers([message])
         .transaction();
@@ -218,10 +214,7 @@ describe("token-swap", () => {
         const tx = await program.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
             state: stateAddress,
             bridgeAuthority,
-            tokenAccountAuthority: tokenAuthority,
             tokenAccount: bridgeInputTokenAccount.address,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            wormholeProgram: SOL_TOKEN_BRIDGE_ADDRESS,
         }).remainingAccounts(instruction.keys)
           .signers([message])
           .transaction();

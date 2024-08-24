@@ -14,7 +14,6 @@ import {
     CHAIN_ID_POLYGON,
     CHAIN_ID_SOLANA,
     JupiterToken,
-    PROGRAM_ID,
     SOL_BRIDGE_ADDRESS,
     SOL_NFT_BRIDGE_ADDRESS,
     SOL_TOKEN_BRIDGE_ADDRESS,
@@ -29,7 +28,6 @@ import {
     createTransferInstruction,
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
-    TOKEN_PROGRAM_ID
 } from "spl-token-latest";
 import {bridgeAuthority, deriveBridgeInputTokenAccount, deriveTokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
@@ -37,8 +35,6 @@ import {nft_bridge, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
 import {createWormholeWrappedTransfer} from "@/lib/bridge";
 import {SolanaStateAccount, VAAResult} from "@/lib/types";
-
-const JUPITER_PROGRAM_ID = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
 
 type UnsubscribeCallback = () => void;
 
