@@ -16,7 +16,7 @@ wallet = "~/.config/solana/id.json"
 
 [test.validator]
 url = "https://api.mainnet-beta.solana.com"
-rpc_port = 8890
+rpc_port = 8899
 faucet_port = 9900
 
 [[test.validator.account]]

@@ -12,7 +12,7 @@ import {
     ledgerWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum, goerli } from 'wagmi/chains';
+import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import {useEffect, useMemo} from "react";
 import {SolflareWalletAdapter, TorusWalletAdapter} from "@solana/wallet-adapter-wallets";
@@ -83,7 +83,7 @@ export type RetirementNFT = {
 
 export interface AppState {
     step: number;
-    solanaStateAddress: string;
+    solanaStateAddress: string | undefined;
     holdingContractTarget?: Address;
     activeUSDCBridgeTransaction?: BridgeTransactionStored;
     activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
@@ -92,7 +92,7 @@ export interface AppState {
 
 export interface Actions {
     setStep: (newStep: number) => void;
-    setSolanaStateAddress: (address: string) => void;
+    setSolanaStateAddress: (address: string | undefined) => void;
     setHoldingContractTarget: (newTarget: Address) => void;
     clearHoldingContractTarget: () => void;
     updateActiveUSDCBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
@@ -116,8 +116,8 @@ export const useAppStore = create<AppState & Actions>()(
                 return ({
                     step: 1,
                     setStep: (newStep: number) => set((state) => ({step: state.step + newStep})),
-                    solanaStateAddress: StateAddress.Default,
-                    setSolanaStateAddress: (newSolanaStateAddress: string) => set(() => ({
+                    solanaStateAddress: undefined,
+                    setSolanaStateAddress: (newSolanaStateAddress: string | undefined) => set(() => ({
                         solanaStateAddress: newSolanaStateAddress
                     })),
 

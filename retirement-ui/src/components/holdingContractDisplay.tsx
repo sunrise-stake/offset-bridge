@@ -8,6 +8,7 @@ import {PooledTCO2Token, useToucan} from "@/hooks/useToucan";
 import {Address} from "abitype/src/abi";
 import {FaWallet} from "react-icons/fa";
 import {usePolygonWriteTransaction} from "@/hooks/usePolygonWriteTransaction";
+import {useSelectedProjectNCTBalance} from "@/hooks/useSelectedProjectNCTBalance";
 
 const addressesEqual = (address1: string, address2: string) => {
     return address1.toLowerCase() === address2.toLowerCase();
@@ -23,6 +24,7 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
     const verraDetails = useVerra(selectedProject);
     const toucan = useToucan();
     const [changeShown, setChangeShown] = useState(false);
+    const availableNCT = useSelectedProjectNCTBalance(selectedProject?.address);
 
     useEffect(() => {
         console.log("factory contract address", factory.contractAddress)
@@ -108,6 +110,7 @@ export const HoldingContractDisplay:FC<{ setReady: (ready: boolean) => void }> =
                     </button>
                 </div>
             )}
+            <div>Available NCT in pool: {availableNCT}</div>
         </div>
     );
 };

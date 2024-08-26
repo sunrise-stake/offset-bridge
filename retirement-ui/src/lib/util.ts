@@ -22,6 +22,11 @@ import * as Wormhole from "@certusone/wormhole-sdk";
 import {nft_bridge} from "@certusone/wormhole-sdk";
 import {RetirementNFT} from "@/app/providers";
 
+// To allow a wallet to have multiple states, add an index to the seed.
+// The default seed index is 0
+const SEED_INDEX = Buffer.from([0]);
+
+export const deriveStateAddress = (owner: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("state_address"), owner.toBuffer(), SEED_INDEX], PROGRAM_ID)[0];
 export const deriveTokenAuthority = (stateAddress: PublicKey) => PublicKey.findProgramAddressSync([Buffer.from("token_authority"), stateAddress.toBuffer()], PROGRAM_ID)[0];
 export const bridgeAuthority = PublicKey.findProgramAddressSync([Buffer.from("authority_signer")], new PublicKey(SOL_TOKEN_BRIDGE_ADDRESS))[0];
 export const deriveBridgeInputTokenAccount = (stateAddress: PublicKey) =>
@@ -58,7 +63,7 @@ export const trimAddress = (address: string): string => address.slice(0, 4) + '.
 
 export const solanaAddressToHex = (address: PublicKey) => `0x${address.toBuffer().toString("hex")}` as const;
 
-export const deriveSolanaAddress = async (tokenId: number, recipient: PublicKey): Promise<string> => {
+export const deriveSolanaNFTTokenAccountAddress = async (tokenId: number, recipient: PublicKey): Promise<string> => {
     const originAsset = Wormhole.tryNativeToUint8Array(RETIREMENT_ERC721, CHAIN_ID_POLYGON);
     const solanaAsset = (await nft_bridge.getForeignAssetSolana(
         SOL_NFT_BRIDGE_ADDRESS,
@@ -77,7 +82,7 @@ export const deriveSolanaAddress = async (tokenId: number, recipient: PublicKey)
 
 export const tokenIDsToRetirementNFTs = (recipient: PublicKey) => (tokenIDs: number[]): Promise<RetirementNFT[]> =>
     Promise.all(tokenIDs.map(async (tokenId) => {
-        const solanaTokenAddress = await deriveSolanaAddress(tokenId, recipient);
+        const solanaTokenAddress = await deriveSolanaNFTTokenAccountAddress(tokenId, recipient);
         return {tokenId, solanaTokenAddress};
     }))
 

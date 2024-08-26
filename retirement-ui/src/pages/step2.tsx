@@ -1,31 +1,27 @@
-import {FC, useCallback, useEffect, useMemo, useState} from "react";
+import {FC, useCallback, useEffect, useState} from "react";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
-import {useSolanaTokenBalance} from "@/hooks/useSolanaTokenBalance";
 import {
     formatDecimal,
     toFixedWithPrecision,
     tokenAmountFromString,
-    deriveTokenAuthority,
     usdcTokenAmountFromCents
 } from "@/lib/util";
-import {toast} from "react-toastify";
-import {SolExplorerLink} from "@/components/solExplorerLink";
 import {NextButton} from "@/components/nextButton";
 import {TokenBalance} from "@/components/tokenBalance";
 import {
     BRIDGE_INPUT_MINT_ADDRESS,
     SolanaToken,
     supportedInputTokens,
-    USDC_TOKEN_DECIMALS,
     USDC_TOKEN_SOLANA,
     WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
-import {carbonToLamports, carbonToUsdcCents, lamportsToCarbon, solToCarbon, usdcToCarbon} from "@/lib/prices";
+import {carbonToLamports, carbonToUsdcCents, lamportsToCarbon, usdcToCarbon} from "@/lib/prices";
 import {SimpleDropdown} from "@/components/simpleDropdown";
 import {useDepositBalances} from "@/hooks/useDepositBalances";
+import {useSolanaTxConfirm} from "@/hooks/useSolanaTxConfirm";
 
 const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 
@@ -43,13 +39,15 @@ const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
 
 export default function Step2() {
     const wallet = useWalletSafe();
-    const { connection } = useConnection();
     const {api} = useSolanaRetirement();
     const [selectedInputToken, setSelectedInputToken] = useState<SolanaToken>(supportedInputTokens[0]);
     const depositBalances = useDepositBalances(wallet.publicKey, selectedInputToken.mint, swapOutputTokenMint);
     const [amountToDeposit, setAmountToDeposit] = useState('');
     const [swapEnabled, setSwapEnabled] = useState(false);
     const [amountInputAsSelectedToken, setAmountInputAsSelectedToken] = useState(true);
+    const handleSwapTransaction = useSolanaTxConfirm(
+        { successMessage: "Swap successful", errorMessage: "Swap failed" }
+    );
 
     const isSolSelected = selectedInputToken.mint === WRAPPED_SOL_TOKEN_MINT;
     const userBalance = isSolSelected ? depositBalances.userSolBalance : depositBalances.userTokenBalance;
@@ -79,32 +77,6 @@ export default function Step2() {
         }
     }, [amountToDeposit, api, depositBalances]);
 
-    const swapConfirmed = async (txSig: string) => {
-        console.log("Transaction signature: {} Waiting for confirmation...", txSig);
-        toast.info(<div>
-            Waiting for confirmation:{' '}<SolExplorerLink address={txSig} type="tx"/>
-        </div>);
-        const blockhash = await connection.getLatestBlockhash();
-        await connection.confirmTransaction({
-            blockhash: blockhash.blockhash,
-            lastValidBlockHeight: blockhash.lastValidBlockHeight,
-            signature: txSig,
-        })
-        return txSig
-    }
-
-    const swapSuccessful = (txSig: string) => {
-        toast.success(<div>
-            Swap successful:{' '}<SolExplorerLink address={txSig} type="tx"/>
-        </div>);
-    }
-
-    const swapFailed = (error: Error) => {
-        toast.error(<div>
-            Swap failed: {error.message}
-        </div>);
-    }
-
     const handleAmountToggleChange = () => {
         setAmountInputAsSelectedToken(!amountInputAsSelectedToken);
     };
@@ -120,9 +92,7 @@ export default function Step2() {
             tx = await api.depositAndSwap(selectedInputToken.mint, amountBigInt);
         }
 
-        return wallet.sendTransaction(tx, connection, {
-        //     // skipPreflight: true
-        }).then(swapConfirmed).then(swapSuccessful).catch(swapFailed);
+        return handleSwapTransaction(tx);
     };
 
     const inputTokens = supportedInputTokens.map((token) => ({

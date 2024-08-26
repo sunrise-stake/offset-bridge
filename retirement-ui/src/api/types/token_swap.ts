@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/token_swap.json`.
  */
 export type TokenSwap = {
-  "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
+  "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
   "metadata": {
     "name": "tokenSwap",
     "version": "0.1.0",
@@ -114,7 +114,36 @@ export type TokenSwap = {
         {
           "name": "state",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  116,
+                  101,
+                  95,
+                  97,
+                  100,
+                  100,
+                  114,
+                  101,
+                  115,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "stateIndex"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
@@ -138,6 +167,10 @@ export type TokenSwap = {
               "name": "genericStateInput"
             }
           }
+        },
+        {
+          "name": "stateIndex",
+          "type": "u8"
         }
       ]
     },

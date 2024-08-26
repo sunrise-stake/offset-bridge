@@ -1,7 +1,6 @@
 import {
     Connection,
     PublicKey,
-    Keypair
 } from '@solana/web3.js';
 import {BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
 import {Program, AnchorProvider } from "@coral-xyz/anchor";
@@ -9,6 +8,7 @@ import {TokenSwap} from "./types/token_swap";
 import IDL from './idls/token_swap.json';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {ethers} from "ethers";
+import {deriveStateAddress} from "./util";
 
 // Read the holding contract address from the command line
 const holdingContract = process.argv[2];
@@ -25,27 +25,34 @@ if (!holdingContract || !ethers.utils.isAddress(holdingContract)) {
     const provider = new AnchorProvider(connection, new NodeWallet(USER_KEYPAIR), {});
     const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
 
-    const stateAddress = Keypair.generate();
     const outputMint = new PublicKey(BRIDGE_INPUT_MINT_ADDRESS);
 
-    console.log("stateAddress", stateAddress.publicKey.toBase58());
+    console.log("stateAddress", deriveStateAddress(USER_KEYPAIR.publicKey).toString());
     console.log("user", USER_KEYPAIR.publicKey.toBase58());
     console.log("outputMint", outputMint.toBase58());
     console.log("holdingContract", holdingContract);
 
-    const txid = await program.methods.initialize({
+    const signature = await program.methods.initialize({
         outputMint,
         holdingContract,
         tokenChainId: "" + CHAIN_ID_POLYGON,
         updateAuthority: USER_KEYPAIR.publicKey,
-        }
+        }, 0 // default seed index. Set a higher value to create subsequent state accounts for the same user
     ).accounts({
-        state: stateAddress.publicKey,
         authority: provider.publicKey,
-    }).signers([stateAddress]).rpc()
+    }).rpc()
 
+    console.log("Transaction sent:")
+    console.log(`https://explorer.solana.com/tx/${signature}`);
+    console.log("Waiting for confirmation...");
 
-    console.log(`https://explorer.solana.com/tx/${txid}`);
+    const latestBlockhash = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({
+        signature,
+        ...latestBlockhash,
+    });
+    console.log("Transaction confirmed");
+
 
 })().catch((error) => {
     console.error(error);

@@ -4,6 +4,9 @@ import {useAppStore} from "@/app/providers";
 
 export const useOffset = () => {
     const holdingContractTarget = useAppStore(state => state.holdingContractTarget);
+    console.log("useOffset", {
+        holdingContractTarget,
+    })
     const { config, error, isError } = usePrepareContractWrite({
         address: holdingContractTarget,
         abi: HOLDING_CONTRACT_ABI,
@@ -12,6 +15,7 @@ export const useOffset = () => {
         args:[ "Sunrise", "Climate-Positive Staking on Solana" ],
     })
     const offset = useContractWrite(config)
+    if (isError) console.log("offset error", error);
 
     if (!offset.writeAsync) return undefined;
 
