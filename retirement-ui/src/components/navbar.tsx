@@ -4,6 +4,7 @@ import {FC} from "react";
 import clsx from "clsx";
 import SwitchTheme from "@/components/switchTheme";
 import {Logo} from "@/components/logo";
+import {SolanaWalletButton} from "@/components/SolanaWalletButton";
 
 export const Navbar: FC = () => (
     <div
@@ -23,8 +24,8 @@ export const Navbar: FC = () => (
         </div>
 
         <div className="flex gap-2">
-            <WalletMultiButton/>
-            <ConnectButton showBalance={false}/>
+            <SolanaWalletButton/>
+            <ConnectButton showBalance={false} label="Select Polygon Wallet"></ConnectButton>
         </div>
     </div>
 )

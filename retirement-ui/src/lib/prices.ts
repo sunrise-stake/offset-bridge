@@ -1,14 +1,14 @@
 import {LAMPORTS_PER_SOL} from '@solana/web3.js'
 import {USDC_TOKEN_DECIMALS} from "@/lib/constants";
 
-const DEFAULT_SOLANA_USD_PRICE = 1500; // SOL price in USD cents
-const DEFAULT_NCT_USD_PRICE = 162; // NCT price in USD cents
+const DEFAULT_SOLANA_USD_PRICE = 15400; // SOL price in USD cents
+const DEFAULT_NCT_USD_PRICE = 68; // NCT price in USD cents
 
 interface Prices {
     solana: number;
     nct: number;
 }
-const PRICES: Prices = {
+export const PRICES: Prices = {
     solana: DEFAULT_SOLANA_USD_PRICE,
     nct: DEFAULT_NCT_USD_PRICE,
 };

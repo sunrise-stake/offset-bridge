@@ -56,7 +56,7 @@ export const tokenAmountFromString = (valueString: string, decimals: number): bi
 }
 
 export const usdcTokenAmountFromCents = (cents: number): bigint => {
-    return BigInt(cents) * BigInt(10 ** 4);
+    return BigInt(Math.round(cents)) * BigInt(10 ** 4);
 }
 
 export const trimAddress = (address: string): string => address.slice(0, 4) + '...' + address.slice(-4);

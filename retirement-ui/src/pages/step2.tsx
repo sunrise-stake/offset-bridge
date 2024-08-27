@@ -1,4 +1,4 @@
-import {FC, useCallback, useEffect, useState} from "react";
+import {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {useConnection} from "@solana/wallet-adapter-react";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
@@ -22,8 +22,11 @@ import {carbonToLamports, carbonToUsdcCents, lamportsToCarbon, usdcToCarbon} fro
 import {SimpleDropdown} from "@/components/simpleDropdown";
 import {useDepositBalances} from "@/hooks/useDepositBalances";
 import {useSolanaTxConfirm} from "@/hooks/useSolanaTxConfirm";
+import {SlippageWarning} from "@/components/slippageWarning";
+import {useUSDValue} from "@/hooks/useUSDValue";
 
 const swapOutputTokenMint = BRIDGE_INPUT_MINT_ADDRESS;
+const slippageWarningAt = 1_000 // USD
 
 /**
  * The following accounts are of interest during this step:
@@ -45,14 +48,11 @@ export default function Step2() {
     const [amountToDeposit, setAmountToDeposit] = useState('');
     const [swapEnabled, setSwapEnabled] = useState(false);
     const [amountInputAsSelectedToken, setAmountInputAsSelectedToken] = useState(true);
-    const handleSwapTransaction = useSolanaTxConfirm(
-        { successMessage: "Swap successful", errorMessage: "Swap failed" }
-    );
-
+    const handleSwapTransaction = useSolanaTxConfirm( { successMessage: "Swap successful", errorMessage: "Swap failed" });
     const isSolSelected = selectedInputToken.mint === WRAPPED_SOL_TOKEN_MINT;
     const userBalance = isSolSelected ? depositBalances.userSolBalance : depositBalances.userTokenBalance;
 
-    const getInputAmountAsSelectedToken = useCallback((): bigint => {
+    const inputAmountBigInt = useMemo((): bigint => {
         if (amountInputAsSelectedToken && !!amountToDeposit) return tokenAmountFromString(amountToDeposit, selectedInputToken.decimals);
 
         if (selectedInputToken.mint === USDC_TOKEN_SOLANA) {
@@ -65,10 +65,10 @@ export default function Step2() {
 
         throw new Error('Unable to convert for token ' + selectedInputToken.symbol);
     }, [amountToDeposit, amountInputAsSelectedToken, selectedInputToken]);
+    const inputAmountUSDValue = useUSDValue(Number(amountToDeposit), selectedInputToken.mint);
 
     useEffect(() => {
         try {
-            const inputAmountBigInt = getInputAmountAsSelectedToken();
             const unwrappedSolDeposited = isSolSelected && depositBalances.tokenAuthorityUnwrappedSolBalance && depositBalances.tokenAuthorityUnwrappedSolBalance > 0;
             const inputAmountValid = inputAmountBigInt > 0 && userBalance !== undefined && inputAmountBigInt <= userBalance;
             setSwapEnabled(api !== undefined && (unwrappedSolDeposited || inputAmountValid));
@@ -83,13 +83,11 @@ export default function Step2() {
 
     const handleSwap = async () => {
         if (!api || !swapEnabled) return;
-        const amountBigInt = getInputAmountAsSelectedToken();
-
         let tx;
         if (isSolSelected) {
-            tx = await api.wrapAndSwap(amountBigInt, depositBalances.tokenAuthorityUnwrappedSolBalance);
+            tx = await api.wrapAndSwap(inputAmountBigInt, depositBalances.tokenAuthorityUnwrappedSolBalance);
         } else {
-            tx = await api.depositAndSwap(selectedInputToken.mint, amountBigInt);
+            tx = await api.depositAndSwap(selectedInputToken.mint, inputAmountBigInt);
         }
 
         return handleSwapTransaction(tx);
@@ -110,12 +108,13 @@ export default function Step2() {
             {formatDecimal(tokenAmount, selectedInputToken.decimals)} {selectedInputToken.symbol} ( {toFixedWithPrecision(carbonAmount, 2)} tCO₂E )
         </span>;
     }
+    const placeholder = amountInputAsSelectedToken ? (isSolSelected ? "SOL" : selectedInputToken.symbol) : "tCO₂E";
 
     return (<div>
         <h1 className="text-2xl mb-4">Step 2 - Deposit</h1>
         <div className="mb-2 inline-flex items-center space-x-2 gap-2">Input token: <SimpleDropdown options={inputTokens} initial={inputTokens[0]} select={setSelectedInputToken} /></div>
         <div className="mb-2">My Balance: <TokenBalance balance={userBalance} decimals={selectedInputToken.decimals}/> {selectedInputToken.symbol}</div>
-        <div className="mb-2">To deposit:  <CarbonAmount tokenAmount={getInputAmountAsSelectedToken()}/></div>
+        <div className="mb-2">To deposit:  <CarbonAmount tokenAmount={inputAmountBigInt}/></div>
         {isSolSelected && <div className="mb-2">Unwrapped:  <TokenBalance balance={depositBalances.tokenAuthorityUnwrappedSolBalance} decimals={selectedInputToken.decimals} requiredDecimals={5}/>  {selectedInputToken.symbol}</div>}
         <div className="mb-2">Deposited:  <TokenBalance balance={depositBalances.tokenAuthorityTokenBalance} decimals={selectedInputToken.decimals} requiredDecimals={5}/>  {selectedInputToken.symbol}</div>
         <div className="mb-2">Swapped:  <USDCarbonAmount usdAmount={depositBalances.tokenAuthoritySwappedBalance}/></div>
@@ -125,7 +124,7 @@ export default function Step2() {
                 className="input input-bordered w-32"
                 value={amountToDeposit}
                 onChange={(e) => setAmountToDeposit(e.target.value)}
-                placeholder={ amountInputAsSelectedToken ? "$" : "tCO₂E"}
+                placeholder={placeholder}
             />
             <button
                 className="btn btn-primary w-32"
@@ -147,6 +146,7 @@ export default function Step2() {
                 <span className="text-gray-600">Carbon</span>
             </div>
         </div>
+        { (inputAmountUSDValue > slippageWarningAt) && <SlippageWarning currentVal={inputAmountUSDValue} units={"USD"} recommendedMax={slippageWarningAt}/>}
         <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ depositBalances.tokenAuthoritySwappedBalance === undefined || Number(depositBalances.tokenAuthoritySwappedBalance) === 0 }/>
         </div>

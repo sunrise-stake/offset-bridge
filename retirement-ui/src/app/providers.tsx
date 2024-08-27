@@ -12,7 +12,7 @@ import {
     ledgerWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
+import { polygon } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import {useEffect, useMemo} from "react";
 import {SolflareWalletAdapter, TorusWalletAdapter} from "@solana/wallet-adapter-wallets";
@@ -26,7 +26,6 @@ import {useRouter} from "next/navigation";
 import {SolanaRetirementProvider} from "@/context/solanaRetirementContext";
 import {VAAResult} from "@/lib/types";
 import {Address} from "abitype/src/abi";
-import {StateAddress} from "@/lib/constants";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
@@ -88,6 +87,7 @@ export interface AppState {
     activeUSDCBridgeTransaction?: BridgeTransactionStored;
     activeRetirementCertificateBridgeTransaction?: BridgeTransactionStored;
     retirementNFTs: RetirementNFT[];
+    adminMode: boolean; // Used by sunrise administrators to retire yield earned by the sunrise platform
 }
 
 export interface Actions {
@@ -100,6 +100,7 @@ export interface Actions {
     updateActiveRetirementCertificateBridgeTransaction: (newTx: Partial<BridgeTransaction>) => void;
     clearActiveRetirementCertificateBridgeTransaction: () => void;
     setRetirementNFTs: (newNFTs: RetirementNFT[]) => void;
+    setAdminMode: (newAdminMode: boolean) => void;
 }
 
 const convertBridgeTransaction = (newTx: Partial<BridgeTransaction>): Partial<BridgeTransactionStored> => {
@@ -142,6 +143,9 @@ export const useAppStore = create<AppState & Actions>()(
 
                     retirementNFTs: [],
                     setRetirementNFTs: (newNFTs: RetirementNFT[]) => set(() => ({retirementNFTs: newNFTs})),
+
+                    adminMode: false,
+                    setAdminMode: (newAdminMode: boolean) => set(() => ({adminMode: newAdminMode})),
                 });
             },
             {

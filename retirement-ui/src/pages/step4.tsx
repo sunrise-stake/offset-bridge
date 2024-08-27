@@ -2,7 +2,6 @@ import {FC, useEffect, useState} from "react";
 import {toast} from "react-toastify";
 import {NextButton} from "@/components/nextButton";
 import {PolyExplorerLink} from "@/components/polyExplorerLink";
-import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {useAppStore} from "@/app/providers";
 import {USDCarbonAmount} from "@/components/USDCarbonAmount";
 import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";

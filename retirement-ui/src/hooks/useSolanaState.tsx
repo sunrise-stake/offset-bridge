@@ -1,11 +1,13 @@
 import {SolanaStateAccount} from "@/lib/types";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
 import {useEffect, useState} from "react";
-import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
+import {useAnchorWallet, useConnection, useWallet} from "@solana/wallet-adapter-react";
 import {useWalletSafe} from "@/hooks/useWalletSafe";
 import {toast} from "react-toastify";
 import {SolExplorerLink} from "@/components/solExplorerLink";
 import {useSolanaTxConfirm} from "@/hooks/useSolanaTxConfirm";
+import {useAppStore} from "@/app/providers";
+import {deriveStateAddress} from "@/lib/util";
 
 // return the current solana state if one is selected, and a function to create a new one
 export const useSolanaState = ():{
@@ -24,7 +26,9 @@ export const useSolanaState = ():{
 
             const tx = await api.createState(holdingContract)
 
-            return handleTransaction(tx)
+            await handleTransaction(tx)
+
+            await api.updateState();
         }
     };
 }

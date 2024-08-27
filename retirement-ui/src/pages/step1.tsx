@@ -1,29 +1,26 @@
 import {NextButton} from "@/components/nextButton";
 import {HoldingContractDisplay} from "@/components/holdingContractDisplay";
-import {useEffect, useState} from "react";
-import { SolanaStateSelector } from "@/components/solanaStateSelector";
+import {useEffect, useMemo, useState} from "react";
 import {SolanaStateManager} from "@/components/solanaStateManager";
 import {useSolanaRetirement} from "@/context/solanaRetirementContext";
+import {useHoldingContract} from "@/hooks/holdingContract/useHoldingContract";
 
 export default function Step1() {
-    const [ready, setReady] = useState(false);
     const { api } = useSolanaRetirement();
+    const holdingContract = useHoldingContract();
+    const [holdingContractUpdateReady, setHoldingContractUpdateReady] = useState(false);
 
-    useEffect(() => {
-        // step 1 is ready as soon as there is a populated solana state
-        // To get to that state, we need:
-        // 1. the user to have selected either their own or existing solana state (admin mode)
-        // 2. the user to have selected a holding contract for their state
-        // 3. the state and holding contract combination to have been registered on solana if not already
-        setReady(!!api?.ready);
-    }, [api?.ready]);
+    const ready = useMemo(() => {
+        console.log("Step1: ready", api?.ready, holdingContract?.tco2, holdingContractUpdateReady);
+        const solanaState = api?.state;
+        const holdingContractDeployed = !!holdingContract?.tco2;
+        return api?.ready && solanaState && holdingContractDeployed && holdingContractUpdateReady;
+    }, [api?.state, holdingContract?.tco2, holdingContractUpdateReady])
 
     return (<div>
-        <h1 className="text-2xl mb-4">Step 1 - Select Account</h1>
+        <h1 className="text-2xl mb-4">Step 1 - Select Retirement Project</h1>
+        <HoldingContractDisplay setReady={setHoldingContractUpdateReady}/>
         <SolanaStateManager/>
-        <HoldingContractDisplay setReady={() => {
-            // TODO remove once no longer needed
-        }}/>
         <div className="flex items-center space-x-2 mt-2">
             <NextButton disabled={ !ready }/>
         </div>
