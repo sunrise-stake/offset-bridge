@@ -93,10 +93,6 @@ export class SolanaRetirement {
         this.state = await this.getState();
     }
 
-    async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
-        await this.solConnection.simulateTransaction(tx, config).then(console.log).catch(console.error);
-    }
-
     listenToTokenBalance(mint: PublicKey, owner: PublicKey, callback: (amount: bigint) => void): UnsubscribeCallback {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
@@ -104,7 +100,12 @@ export class SolanaRetirement {
             console.log("Getting balance for token account", tokenAccount.toBase58(), ", mint ", mint.toBase58(), " and owner ", owner.toBase58());
             this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
-            }).catch(console.error);
+            }).catch((error) => {
+                console.error(error);
+                if (error.message.endsWith("Invalid param: could not find account")) {
+                    callback(0n);
+                }
+            });
         }
 
         notify();
