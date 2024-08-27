@@ -1,0 +1,139 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  common:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Cache solana
+        uses: ./.github/actions/cache-solana
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: |
+            yarn.lock
+            ui/yarn.lock
+
+      - name: Install dependencies
+        run: |
+          yarn --frozen-lockfile --network-concurrency 2
+          (cd ui && yarn --frozen-lockfile --network-concurrency 2)
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: install essentials
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev
+
+  evm:
+    runs-on: ubuntu-latest
+    needs: common
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+
+      - name: Run Forge tests
+        run: forge test -vvv
+
+  solana:
+    needs: common
+    runs-on: ubuntu-latest
+    outputs:
+      target_deploy_artifact: ${{ steps.build-artifact-upload-step.outputs.artifact-id }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run fmt
+        working-directory: solana-contract
+        run: cargo fmt -- --check
+
+      - name: Run clippy
+        working-directory: solana-contract
+        run: cargo clippy -- --deny=warnings
+
+      - name: Cache build artifact
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            solana-contract/target
+          key: cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+      - name: Build
+        working-directory: solana-contract
+        run: cargo build-sbf
+
+      - name: Upload build artifacts
+        id: build-artifact-upload-step
+        uses: actions/upload-artifact@v4
+        with:
+          name: target_deploy
+          path: solana-contract/target/deploy
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Run tests
+        working-directory: solana-contract
+        run: cargo test-sbf
+
+  ui:
+    needs: common
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: |
+            yarn.lock
+            ui/yarn.lock
+
+      - name: Run build
+        run: yarn build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dists
+          path: packages/sdks/*/dist
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Run lint
+        run: yarn lint

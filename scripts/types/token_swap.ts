@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/token_swap.json`.
  */
 export type TokenSwap = {
-  "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
+  "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
   "metadata": {
     "name": "tokenSwap",
     "version": "0.1.0",

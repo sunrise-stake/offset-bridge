@@ -217,13 +217,10 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,node
 
-/lib/
-cache/ 
-out/
+evm-contract/cache/
+evm-contract/out/
 broadcast/
-node_modules/
 target/
-token-swap/suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T.json
-
-.anchor
-test-ledger
+solana-contract/suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T.json
+solana-contract/.anchor
+solana-contract/test-ledger
