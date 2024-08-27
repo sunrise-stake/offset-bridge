@@ -46,7 +46,6 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
 
     useEffect(() => {
             const holdingContractAddress = read.data ? read.data : undefined;
-            console.log('holdingContractAddress', holdingContractAddress)
             if (!holdingContractAddress) return;
             publicClient.getBytecode({address: holdingContractAddress}).then((bytecode) => {
                 if (!bytecode || bytecode === '0x') {
@@ -56,7 +55,7 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
                 }
             });
         }
-        // retrigger whenver the data is refetched from the chain
+        // retrigger whenever the data is refetched from the chain
         , [read.data, deploy.data, read.isRefetching]);
 
     const create = async () => {

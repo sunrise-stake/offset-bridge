@@ -44,7 +44,7 @@ export default function Step3() {
     const { connection } = useConnection();
     const { address } = useAccount();
     const stateAddress = useAppStore(state => state.solanaStateAddress)
-    const tokenAuthority = deriveTokenAuthority(new PublicKey(stateAddress));
+    const tokenAuthority = stateAddress ? deriveTokenAuthority(new PublicKey(stateAddress)) : undefined;
     const bridgeInputBalance = useSolanaTokenBalance(bridgeInputTokenMint, tokenAuthority);
     const {api : solanaAPI} = useSolanaRetirement();
     const activeBridgeTransaction = useAppStore(state => state.activeUSDCBridgeTransaction)

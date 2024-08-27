@@ -27,11 +27,9 @@ type DepositBalances = {
  * If 4 is non-zero, a wrap instruction should be executed to convert the SOL to wrapped SOL before the swap takes place.
  */
 export const useDepositBalances = (owner: PublicKey, inputTokenMint: PublicKey, outputTokenMint: PublicKey): DepositBalances => {
-    const stateAddress = useAppStore(state => state.solanaStateAddress)
-    const tokenAuthority = deriveTokenAuthority(new PublicKey(stateAddress));
-    const tokenAuthorityWrappedSolATA = getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true);
-
-    console.log("tokenAuthorityWrappedSolATA", tokenAuthorityWrappedSolATA.toBase58());
+    const stateAddress = useAppStore(state => state.solanaStateAddress);
+    const tokenAuthority = stateAddress ? deriveTokenAuthority(new PublicKey(stateAddress)) : undefined;
+    const tokenAuthorityWrappedSolATA = tokenAuthority ? getAssociatedTokenAddressSync(new PublicKey(WRAPPED_SOL_TOKEN_MINT), tokenAuthority, true) : undefined;
 
     // 1. The user's SPL balance (if depositing SPL)
     const userTokenBalance = useSolanaTokenBalance(inputTokenMint, owner);

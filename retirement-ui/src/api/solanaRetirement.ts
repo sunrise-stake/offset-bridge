@@ -29,7 +29,7 @@ import {
     getAssociatedTokenAddress,
     getAssociatedTokenAddressSync,
 } from "spl-token-latest";
-import {bridgeAuthority, deriveBridgeInputTokenAccount, deriveTokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx} from "@/lib/util";
+import {bridgeAuthority, deriveBridgeInputTokenAccount, deriveTokenAuthority, getQuote, getSwapIx, getJupiterSwapIx, swapToBridgeInputTx, deriveStateAddress} from "@/lib/util";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import {nft_bridge, postVaaSolanaWithRetry} from "@certusone/wormhole-sdk";
 import BN from "bn.js";
@@ -42,6 +42,7 @@ export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
     program: Program<TokenSwap>;
+    state: SolanaStateAccount | null = null;
 
     constructor(
         readonly solWallet: AnchorWallet,
@@ -61,10 +62,35 @@ export class SolanaRetirement {
         return deriveBridgeInputTokenAccount(this.stateAddress)
     }
 
-    async getState(): Promise<SolanaStateAccount> {
-        const state = await this.program.account.state.fetch(new PublicKey(this.stateAddress));
+    get hasState(): boolean {
+        return this.state !== null;
+    }
+
+    async createState(holdingContract: string): Promise<Transaction> {
+        if (!this.ready) throw new Error("API not initialized");
+        if (this.hasState) throw new Error("State already created");
+
+        const outputMint = new PublicKey(BRIDGE_INPUT_MINT_ADDRESS);
+
+        return this.program.methods.initialize({
+                outputMint,
+                holdingContract,
+                tokenChainId: "" + CHAIN_ID_POLYGON,
+                updateAuthority: this.solWallet.publicKey,
+            }, 0 // default seed index. Set a higher value to create subsequent state accounts for the same user
+        ).accounts({
+            authority: this.solWallet.publicKey,
+        }).transaction()
+    }
+
+    async getState(): Promise<SolanaStateAccount | null> {
+        const state = await this.program.account.state.fetchNullable(new PublicKey(this.stateAddress));
         console.log("State:", state);
         return state;
+    }
+
+    async updateState(): Promise<void> {
+        this.state = await this.getState();
     }
 
     async simulate(tx: VersionedTransaction, config?: SimulateTransactionConfig): Promise<void> {
@@ -102,8 +128,7 @@ export class SolanaRetirement {
     }
 
     async init(): Promise<void> {
-        // this.tokens = await (await fetch(TOKEN_LIST_URL[ENV])).json() as JupiterToken[];
-
+        await this.updateState();
         this.ready = true;
     }
 

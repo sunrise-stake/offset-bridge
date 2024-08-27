@@ -22,10 +22,11 @@ export const SolanaRetirementProvider: FC<PropsWithChildren> = ({children}) => {
     const solanaStateAddress = useAppStore(state => state.solanaStateAddress);
 
     useEffect(() => {
+        console.log("SolanaRetirementProvider useEffect");
         if (wallet && holdingContractTarget && solanaStateAddress) {
-            console.log("creating SolanaRetirement api");
-            console.log("State:", solanaStateAddress)
-            console.log("Target:", holdingContractTarget);
+            console.log("SolanaRetirementProvider useEffect: creating SolanaRetirement api");
+            console.log("SolanaRetirementProvider useEffect: State Address:", solanaStateAddress)
+            console.log("SolanaRetirementProvider useEffect: Target:", holdingContractTarget);
             SolanaRetirement.build(
                 wallet,
                 connection,

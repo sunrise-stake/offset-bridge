@@ -18,7 +18,7 @@ pub mod token_swap {
     use crate::util::errors::ErrorCode;
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, state_in: GenericStateInput) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, state_in: GenericStateInput, _state_index: u8) -> Result<()> {
         ctx.accounts.state.output_mint = state_in.output_mint;
         ctx.accounts.state.holding_contract = state_in.holding_contract;
         ctx.accounts.state.token_chain_id = state_in.token_chain_id;
@@ -38,10 +38,9 @@ pub mod token_swap {
         Ok(())
     }
 
-
     pub fn wrap(ctx: Context<Wrap>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
+        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
         wrap_sol(
             &ctx.accounts.token_account.to_account_info(),
             &ctx.accounts.token_program,
@@ -50,7 +49,6 @@ pub mod token_swap {
     }
 
     pub fn swap(ctx: Context<Swap>, route_info: Vec<u8>) -> Result<()> {
-
         let mut router_accounts = vec![];
         let state_address = ctx.accounts.state.key();
         let (token_authority, token_authority_bump) = State::get_token_authority(&state_address);
@@ -69,7 +67,7 @@ pub mod token_swap {
             data: route_info.clone(),
         };
 
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[token_authority_bump]];
+        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[token_authority_bump]];
 
         program::invoke_signed(
             &swap_ix,
@@ -90,7 +88,7 @@ pub mod token_swap {
             return Err(ErrorCode::IncorrectDestinationAccount.into()); 
         }
         
-        let authority_seeds= [State::SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
+        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
 
         approve_delegate(
             amount,
@@ -114,11 +112,13 @@ pub mod token_swap {
 }
 
 #[derive(Accounts)]
-#[instruction(state_in: GenericStateInput)]
+#[instruction(state_in: GenericStateInput, state_index: u8)]
 pub struct Initialize<'info> {
     #[account(
         init,
         payer = authority,
+        seeds = [State::STATE_SEED, authority.key().as_ref(), &state_index.to_le_bytes()],
+        bump,
         space = State::space(state_in.holding_contract, state_in.token_chain_id),
     )]
     pub state: Account<'info, State>,
@@ -138,7 +138,7 @@ pub struct Swap<'info> {
 pub struct Wrap<'info> {
     pub state: Account<'info, State>,
     #[account(
-    seeds = [State::SEED, state.key().as_ref()],
+    seeds = [State::TOKEN_AUTHORITY_SEED, state.key().as_ref()],
     bump
     )]
     /// CHECK: Derived from the state account
@@ -160,7 +160,7 @@ pub struct Bridge<'info> {
     /// CHECK: this must be the wormhole token bridge authority signer, or the transaction will fail overall
     pub bridge_authority: UncheckedAccount<'info>,
     #[account(
-    seeds = [State::SEED, state.key().as_ref()],
+    seeds = [State::TOKEN_AUTHORITY_SEED, state.key().as_ref()],
     bump
     )]
     /// CHECK: Derived from the state account
@@ -191,9 +191,8 @@ pub struct State {
 
 impl State {
     pub const SIZE: usize = 8 + 24 + 24 + 32 + 32; // include 8 bytes for the anchor discriminator
-
-    pub const SEED: &'static [u8] = b"token_authority";
-    pub const WORMHOLE_SEED: &'static [u8] = b"wrapped";
+    pub const STATE_SEED: &'static [u8] = b"state_address";
+    pub const TOKEN_AUTHORITY_SEED: &'static [u8] = b"token_authority";
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {
         // find space needed for state account for current config
@@ -209,7 +208,7 @@ impl State {
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
-            &[Self::SEED, state_address.as_ref()],
+            &[Self::TOKEN_AUTHORITY_SEED, state_address.as_ref()],
             &id(),
         )
     }
