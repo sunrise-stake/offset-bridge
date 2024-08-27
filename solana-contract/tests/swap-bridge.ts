@@ -1,11 +1,11 @@
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { TokenSwap } from "../../scripts/types/token_swap";
-import IDL from "../../scripts/idls/token_swap.json";
+import { SwapBridge } from "../../scripts/types/swap_bridge";
+import IDL from "../../scripts/idls/swap_bridge.json";
 import { USER_KEYPAIR, CHAIN_ID_POLYGON, SOL_TOKEN_BRIDGE_ADDRESS, BRIDGE_INPUT_MINT_ADDRESS, SOL_BRIDGE_ADDRESS, USDC_TOKEN_POLYGON } from "../../scripts/constants";
-import { HOLDING_CONTRACT_FACTORY_ADDRESS, holdingContractFactorySalt } from "../../retirement-ui/src/lib/constants";
-import { HOLDING_CONTRACT_FACTORY_ABI  } from "../../retirement-ui/src/lib/abi/holdingContractFactory";
+import { HOLDING_CONTRACT_FACTORY_ADDRESS, holdingContractFactorySalt } from "../../ui/src/lib/constants";
+import { HOLDING_CONTRACT_FACTORY_ABI  } from "../../ui/src/lib/abi/holdingContractFactory";
 // import { bridgeAuthority, bridgeInputTokenAccount } from "../../scripts/util";
 import { Account, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -76,7 +76,7 @@ export const createWormholeWrappedTransfer = async (
   return { instruction: tokenBridgeTransferIx, message }
 }
 
-describe("token-swap", () => {
+describe("swap-bridge", () => {
   // Configure the client to use the local cluster.
   console.log("test start");
   // const userKeypair = Keypair.generate();
@@ -87,7 +87,7 @@ describe("token-swap", () => {
   const provider = new AnchorProvider(connection, wallet, {});
   console.log("provider set");
 
-  const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+  const program = new Program<SwapBridge>(IDL as SwapBridge, provider);
   const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("token_authority"), stateAddress.toBuffer()], PROGRAM_ID)[0];
   console.log("program set");
   // const bridgeInputTokenAccount = getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), tokenAuthority, true);
@@ -138,7 +138,7 @@ describe("token-swap", () => {
           holdingContract: holdingContractAddress.toString(),
           tokenChainId: CHAIN_ID_POLYGON.toString(),
           updateAuthority: USER_KEYPAIR.publicKey
-      }).accounts({ state: stateAddress, authority: USER_KEYPAIR.publicKey })
+      }, 0).accounts({ authority: USER_KEYPAIR.publicKey })
       .signers([stateKeypair ])
       .rpc()
       .catch((e) => {

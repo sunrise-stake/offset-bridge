@@ -5,12 +5,12 @@ import {
 } from '@solana/web3.js';
 import {SOLANA_RPC_ENDPOINT} from "./constants";
 import {Program, AnchorProvider} from "@coral-xyz/anchor";
-import {TokenSwap} from "./types/token_swap";
-import IDL from './idls/token_swap.json';
+import {SwapBridge} from "./types/swap_bridge";
+import IDL from './idls/swap_bridge.json';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {BigNumber, ethers} from "ethers";
-import {HOLDING_CONTRACT_ABI} from "../retirement-ui/src/lib/abi/holdingContract";
-import {ERC20_ABI} from "../retirement-ui/src/lib/abi/erc20";
+import {HOLDING_CONTRACT_ABI} from "../ui/src/lib/abi/holdingContract";
+import {ERC20_ABI} from "../ui/src/lib/abi/erc20";
 
 const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;
 const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
@@ -38,7 +38,7 @@ if (!stateAddress || !isValidPublicKey(stateAddress)) {
     const connection = new Connection(SOLANA_RPC_ENDPOINT);
 
     const provider = new AnchorProvider(connection, new NodeWallet(Keypair.generate()), {});
-    const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+    const program = new Program<SwapBridge>(IDL as SwapBridge, provider);
 
     console.log("Fetching state on Solana...")
 

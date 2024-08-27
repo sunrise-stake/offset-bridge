@@ -2,7 +2,6 @@
 import { PublicKey, Connection, Keypair, TransactionInstruction } from "@solana/web3.js";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import { parseUnits } from "@ethersproject/units";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { ethers } from "ethers";
 import {
   CHAIN_ID_POLYGON,
@@ -20,8 +19,8 @@ import {
 } from "./constants";
 import { bridgeAuthority, bridgeInputTokenAccount, tokenAuthority } from "./util";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { TokenSwap } from "./types/token_swap";
-import IDL from "./idls/token_swap.json";
+import { SwapBridge } from "./types/swap_bridge";
+import IDL from "./idls/swap_bridge.json";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import BN from "bn.js";
 import {
@@ -148,7 +147,7 @@ async function bridge() {
 
   const solanaConnection = new Connection(SOLANA_RPC_ENDPOINT, "finalized");
   const solanaProvider = new AnchorProvider(solanaConnection, new NodeWallet(USER_KEYPAIR), {});
-  const solanaProgram = new Program<TokenSwap>(IDL as TokenSwap, solanaProvider);
+  const solanaProgram = new Program<SwapBridge>(IDL as SwapBridge, solanaProvider);
 
   const fromAddress = bridgeInputTokenAccount
 

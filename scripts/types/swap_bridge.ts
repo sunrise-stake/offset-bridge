@@ -2,12 +2,12 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/token_swap.json`.
+ * IDL can be found at `target/idl/swap_bridge.json`.
  */
-export type TokenSwap = {
-  "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+export type SwapBridge = {
+  "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
   "metadata": {
-    "name": "tokenSwap",
+    "name": "swapBridge",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"

@@ -20,8 +20,8 @@ import {
     getAssociatedTokenAddress,
   } from "@solana/spl-token";
 import {Program, AnchorProvider, Wallet} from "@coral-xyz/anchor";
-import { TokenSwap} from "./types/token_swap";
-import IDL from "./idls/token_swap.json";
+import { SwapBridge} from "./types/swap_bridge";
+import IDL from "./idls/swap_bridge.json";
 import {WRAPPED_SOL_TOKEN_MINT, BRIDGE_INPUT_MINT_ADDRESS, USER_KEYPAIR} from "./constants";
 
 const API_ENDPOINT = "https://quote-api.jup.ag/v6";
@@ -147,7 +147,7 @@ const getSwapIx = async (
     // const connection = new Connection(SOLANA_RPC_ENDPOINT);
     const connection = new Connection(clusterApiUrl("testnet"));
     const provider = new AnchorProvider(connection, new Wallet(USER_KEYPAIR), {});
-    const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+    const program = new Program<SwapBridge>(IDL as SwapBridge, provider);
     console.log(WRAPPED_SOL_TOKEN_MINT);
     console.log(BRIDGE_INPUT_MINT_ADDRESS);
 

@@ -1,7 +1,6 @@
 import {ethers} from "ethers";
 
-import {HOLDING_CONTRACT_ABI} from "../retirement-ui/src/lib/abi/holdingContract";
-
+import {HOLDING_CONTRACT_ABI} from "../ui/src/lib/abi/holdingContract";
 
 require("dotenv").config(({ path: ".env" }));
 const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;

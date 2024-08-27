@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-import {ERC20_ABI} from "../retirement-ui/src/lib/abi/erc20";
+import {ERC20_ABI} from "../ui/src/lib/abi/erc20";
 
 
 require("dotenv").config(({ path: ".env" }));

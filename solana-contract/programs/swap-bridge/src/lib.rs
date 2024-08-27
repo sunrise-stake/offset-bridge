@@ -10,7 +10,7 @@ use crate::util::token::wrapped_sol::ID as WRAPPED_SOL;
 declare_id!("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 
 #[program]
-pub mod token_swap {
+pub mod swap_bridge {
     use anchor_lang::solana_program::instruction::Instruction;
     use anchor_lang::solana_program::program;
     use crate::util::bridge::call_bridge;

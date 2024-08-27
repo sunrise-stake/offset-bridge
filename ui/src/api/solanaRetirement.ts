@@ -4,7 +4,7 @@ import {
     AccountMeta,
     Connection,
     Keypair,
-    PublicKey, SimulateTransactionConfig, SystemProgram,
+    PublicKey, SystemProgram,
     Transaction,
     TransactionInstruction,
     VersionedTransaction
@@ -20,8 +20,8 @@ import {
     WORMHOLE_RPC_HOSTS_MAINNET,
     WRAPPED_SOL_TOKEN_MINT,
 } from "@/lib/constants";
-import {TokenSwap} from "./types/token_swap";
-import IDL from "./idls/token_swap.json";
+import {SwapBridge} from "./types/swap_bridge";
+import IDL from "./idls/swap_bridge.json";
 import {AnchorProvider, Program} from "@coral-xyz/anchor";
 import {
     createAssociatedTokenAccountInstruction, createSyncNativeInstruction,
@@ -41,7 +41,7 @@ type UnsubscribeCallback = () => void;
 export class SolanaRetirement {
     ready: boolean = false;
     tokens: JupiterToken[] = [];
-    program: Program<TokenSwap>;
+    program: Program<SwapBridge>;
     state: SolanaStateAccount | null = null;
 
     constructor(
@@ -51,7 +51,7 @@ export class SolanaRetirement {
         public holdingContractTarget: string,
     ) {
         const provider = new AnchorProvider(this.solConnection, this.solWallet, {});
-        this.program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+        this.program = new Program<SwapBridge>(IDL as SwapBridge, provider);
     }
 
     get tokenAuthority(): PublicKey {

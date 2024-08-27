@@ -1,7 +1,7 @@
 {
   "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
   "metadata": {
-    "name": "token_swap",
+    "name": "swap_bridge",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
