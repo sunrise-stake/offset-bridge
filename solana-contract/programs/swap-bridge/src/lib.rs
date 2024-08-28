@@ -1,24 +1,28 @@
 mod util;
 
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
-use crate::util::errors::ErrorCode;
 use crate::util::bridge::Wormhole;
+use crate::util::errors::ErrorCode;
 use crate::util::swap::Jupiter;
 use crate::util::token::wrapped_sol::ID as WRAPPED_SOL;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 declare_id!("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 
 #[program]
 pub mod swap_bridge {
+    use super::*;
+    use crate::util::bridge::call_bridge;
+    use crate::util::errors::ErrorCode;
+    use crate::util::token::{approve_delegate, wrap_sol};
     use anchor_lang::solana_program::instruction::Instruction;
     use anchor_lang::solana_program::program;
-    use crate::util::bridge::call_bridge;
-    use crate::util::token::{approve_delegate, wrap_sol};
-    use crate::util::errors::ErrorCode;
-    use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, state_in: GenericStateInput, _state_index: u8) -> Result<()> {
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        state_in: GenericStateInput,
+        _state_index: u8,
+    ) -> Result<()> {
         ctx.accounts.state.output_mint = state_in.output_mint;
         ctx.accounts.state.holding_contract = state_in.holding_contract;
         ctx.accounts.state.token_chain_id = state_in.token_chain_id;
@@ -40,7 +44,11 @@ pub mod swap_bridge {
 
     pub fn wrap(ctx: Context<Wrap>) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
+        let authority_seeds = [
+            State::TOKEN_AUTHORITY_SEED,
+            state_address.as_ref(),
+            &[ctx.bumps.token_account_authority],
+        ];
         wrap_sol(
             &ctx.accounts.token_account.to_account_info(),
             &ctx.accounts.token_program,
@@ -67,7 +75,11 @@ pub mod swap_bridge {
             data: route_info.clone(),
         };
 
-        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[token_authority_bump]];
+        let authority_seeds = [
+            State::TOKEN_AUTHORITY_SEED,
+            state_address.as_ref(),
+            &[token_authority_bump],
+        ];
 
         program::invoke_signed(
             &swap_ix,
@@ -78,17 +90,34 @@ pub mod swap_bridge {
         Ok(())
     }
 
-    pub fn bridge<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>, amount: u64, bridge_data: Vec<u8>) -> Result<()> {
+    pub fn bridge<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>,
+        amount: u64,
+        bridge_data: Vec<u8>,
+    ) -> Result<()> {
         let state_address = ctx.accounts.state.key();
-        let deserialised_bridge_data = TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
-        msg!("Holding contract address specified in state: {:?}", &ctx.accounts.state.holding_contract[2..]);
-        msg!("Holding contract address specified in input bridge data: {:?}", &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase());
+        let deserialised_bridge_data =
+            TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
+        msg!(
+            "Holding contract address specified in state: {:?}",
+            &ctx.accounts.state.holding_contract[2..]
+        );
+        msg!(
+            "Holding contract address specified in input bridge data: {:?}",
+            &hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()
+        );
 
-       if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase() != ctx.accounts.state.holding_contract.to_uppercase()[2..] {
-            return Err(ErrorCode::IncorrectDestinationAccount.into()); 
+        if hex::encode(deserialised_bridge_data.recipient_address).to_uppercase()
+            != ctx.accounts.state.holding_contract.to_uppercase()[2..]
+        {
+            return Err(ErrorCode::IncorrectDestinationAccount.into());
         }
-        
-        let authority_seeds= [State::TOKEN_AUTHORITY_SEED, state_address.as_ref(), &[ctx.bumps.token_account_authority]];
+
+        let authority_seeds = [
+            State::TOKEN_AUTHORITY_SEED,
+            state_address.as_ref(),
+            &[ctx.bumps.token_account_authority],
+        ];
 
         approve_delegate(
             amount,
@@ -96,7 +125,7 @@ pub mod swap_bridge {
             &ctx.accounts.token_account_authority.to_account_info(),
             &ctx.accounts.bridge_authority.to_account_info(),
             &ctx.accounts.token_program,
-            &authority_seeds
+            &authority_seeds,
         )?;
 
         call_bridge(
@@ -104,7 +133,7 @@ pub mod swap_bridge {
             &ctx.remaining_accounts,
             &ctx.accounts.token_account_authority.to_account_info(),
             &ctx.accounts.wormhole_program,
-            &authority_seeds
+            &authority_seeds,
         )?;
 
         Ok(())
@@ -172,7 +201,6 @@ pub struct Bridge<'info> {
     pub wormhole_program: Program<'info, Wormhole>,
 }
 
-
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct GenericStateInput {
     pub output_mint: Pubkey,
@@ -183,7 +211,7 @@ pub struct GenericStateInput {
 
 #[account]
 pub struct State {
-    output_mint: Pubkey,     // The target token mint
+    output_mint: Pubkey, // The target token mint
     holding_contract: String,
     token_chain_id: String,
     update_authority: Pubkey,
@@ -196,8 +224,7 @@ impl State {
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {
         // find space needed for state account for current config
-            4
-            + (holding_contract.len() as usize)
+        4 + (holding_contract.len() as usize)
             + 4
             + (token_chain_id.len() as usize)
             + 4
@@ -207,10 +234,7 @@ impl State {
     }
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[Self::TOKEN_AUTHORITY_SEED, state_address.as_ref()],
-            &id(),
-        )
+        Pubkey::find_program_address(&[Self::TOKEN_AUTHORITY_SEED, state_address.as_ref()], &id())
     }
 }
 

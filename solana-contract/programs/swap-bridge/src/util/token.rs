@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token;
-use anchor_spl::token::{Token, Approve, SyncNative, sync_native};
+use anchor_spl::token::{sync_native, Approve, SyncNative, Token};
 
 pub fn approve_delegate<'a>(
     amount: u64,
@@ -18,11 +18,7 @@ pub fn approve_delegate<'a>(
         authority: token_account_owner.clone(),
     };
     let cpi_program = token_program.to_account_info().clone();
-    let cpi_ctx = CpiContext::new_with_signer(
-        cpi_program,
-        cpi_accounts,
-        &seeds
-    );
+    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, &seeds);
     token::approve(cpi_ctx, amount)?;
 
     Ok(())

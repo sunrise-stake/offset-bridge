@@ -56,11 +56,13 @@ jobs:
           version: nightly
 
       - name: Run Forge build
+        working-directory: evm-contract
         run: |
           forge --version
           forge build --sizes
 
       - name: Run Forge tests
+        working-directory: evm-contract
         run: forge test -vvv
 
   solana:
@@ -123,17 +125,16 @@ jobs:
           cache-dependency-path: |
             yarn.lock
             ui/yarn.lock
+            
+      - name: Check that all deps are restored
+        run: |
+          ls -l
+          ls -l ui
 
       - name: Run build
+        working-directory: ui
         run: yarn build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dists
-          path: packages/sdks/*/dist
-          if-no-files-found: error
-          retention-days: 1
-
       - name: Run lint
+        working-directory: ui
         run: yarn lint

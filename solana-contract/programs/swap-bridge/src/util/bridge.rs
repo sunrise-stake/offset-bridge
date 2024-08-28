@@ -4,16 +4,16 @@ use anchor_lang::solana_program::program;
 
 // wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb
 pub const WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
-    14,  10,  88, 158, 100, 136,  20, 122,
-    148, 220, 250,  89,  43, 144, 253, 212,
-    17,  82, 187,  44, 167, 123, 246,   1,
-    103,  88, 166, 244, 223, 157,  33, 180
+    14, 10, 88, 158, 100, 136, 20, 122, 148, 220, 250, 89, 43, 144, 253, 212, 17, 82, 187, 44, 167,
+    123, 246, 1, 103, 88, 166, 244, 223, 157, 33, 180,
 ]);
 
 pub struct Wormhole;
 
 impl Id for Wormhole {
-    fn id() -> Pubkey { WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID }
+    fn id() -> Pubkey {
+        WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID
+    }
 }
 
 pub fn call_bridge<'a, 'b>(
@@ -35,10 +35,7 @@ pub fn call_bridge<'a, 'b>(
             AccountMeta::new_readonly(*account.key, is_signer)
         });
     }
-    router_accounts.push(AccountMeta::new_readonly(
-        *wormhole_program.key,
-        false,
-    ));
+    router_accounts.push(AccountMeta::new_readonly(*wormhole_program.key, false));
     let bridge_ix = Instruction {
         program_id: WORMHOLE_TOKEN_BRIDGE_PROGRAM_ID,
         accounts: router_accounts,
@@ -49,19 +46,15 @@ pub fn call_bridge<'a, 'b>(
 
     msg!("Invoking bridge with {} accounts", accounts.len());
 
-    program::invoke_signed(
-        &bridge_ix,
-        &accounts[..],
-        &[&signer_seeds[..]],
-    )?;
+    program::invoke_signed(&bridge_ix, &accounts[..], &[&signer_seeds[..]])?;
 
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn test_wormhole_token_bridge_program_id() {
