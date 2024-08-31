@@ -1,0 +1,31 @@
+name: cache-solana
+inputs:
+  solana_version:
+    description: 'Solana version to install'
+    required: false
+    default: v1.18.17
+description: install and Cache Solana binaries
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      id: cache-solana
+      with:
+        path: |
+          ~/.cache/solana/
+          ~/.local/share/solana/
+        key: solana-${{ runner.os }}-v0000-${{ inputs.solana_version }}
+    - name: Set Solana path
+      shell: bash
+      run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+    - name: install solana
+      if: steps.cache-solana.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sh -c "$(curl -sSfL https://release.solana.com/${{ inputs.solana_version }}/install)"
+        solana --version
+    - name: setup solana
+      shell: bash
+      run: |
+        solana --version
+        solana-keygen new --silent --no-bip39-passphrase

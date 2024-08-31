@@ -1,12 +1,12 @@
 import { ContractReceipt, ethers } from "ethers";
 
-import {HOLDING_CONTRACT_ABI} from "../retirement-ui/src/lib/abi/holdingContract";
+import {HOLDING_CONTRACT_ABI} from "../ui/src/lib/abi/holdingContract";
 import {
     HOLDING_CONTRACT_FACTORY_ADDRESS,
     holdingContractFactorySalt,
     RETIREMENT_CONTRACT
-} from "../retirement-ui/src/lib/constants";
-import {HOLDING_CONTRACT_FACTORY_ABI} from "../retirement-ui/src/lib/abi/holdingContractFactory";
+} from "../ui/src/lib/constants";
+import {HOLDING_CONTRACT_FACTORY_ABI} from "../ui/src/lib/abi/holdingContractFactory";
 import {PublicKey} from "@solana/web3.js";
 import {solanaAddressToHex} from "./util";
 

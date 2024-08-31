@@ -4,8 +4,8 @@ import {
 } from '@solana/web3.js';
 import {BRIDGE_INPUT_MINT_ADDRESS, CHAIN_ID_POLYGON, SOLANA_RPC_ENDPOINT, USER_KEYPAIR} from "./constants";
 import {Program, AnchorProvider } from "@coral-xyz/anchor";
-import {TokenSwap} from "./types/token_swap";
-import IDL from './idls/token_swap.json';
+import {SwapBridge} from "./types/swap_bridge";
+import IDL from './idls/swap_bridge.json';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {ethers} from "ethers";
 import {deriveStateAddress} from "./util";
@@ -23,7 +23,7 @@ if (!holdingContract || !ethers.utils.isAddress(holdingContract)) {
     const connection = new Connection(SOLANA_RPC_ENDPOINT);
 
     const provider = new AnchorProvider(connection, new NodeWallet(USER_KEYPAIR), {});
-    const program = new Program<TokenSwap>(IDL as TokenSwap, provider);
+    const program = new Program<SwapBridge>(IDL as SwapBridge, provider);
 
     const outputMint = new PublicKey(BRIDGE_INPUT_MINT_ADDRESS);
 

@@ -1,4 +1,4 @@
-import {NCT_TOKEN_ADDRESS} from "../retirement-ui/src/lib/constants";
+import {NCT_TOKEN_ADDRESS} from "../ui/src/lib/constants";
 import ToucanClient from "toucan-sdk";
 import {gql} from "@urql/core";
 
