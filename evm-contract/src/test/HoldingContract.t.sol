@@ -20,7 +20,11 @@ contract HoldingContractTest is Test {
     IERC20 public constant usdc = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
 
     address user = address(1234);
-    address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
+
+    // TCO2 contract address for carbon credit project
+    // https://registry.verra.org/app/projectDetail/VCS/875
+    // 208k supply remaining at polygon block # 61373304
+    address tco2 = 0x0BCCAB36F518f55E00f3efe2e828aE63cd2ac1B9;
     string beneficiaryName = "0x0";
     bytes32 SolanaAccountAddress = "";
 
@@ -55,7 +59,6 @@ contract HoldingContractTest is Test {
     }
 
     function setUp() public {
-        console.log("In Setup");
         // deploy an implementation contract
         holdingImplementation = new HoldingContract();
         // deploy factory contract pointing to implementation contract
@@ -63,20 +66,6 @@ contract HoldingContractTest is Test {
         carbonOffsetSettler = new CarbonOffsetSettler();
         // address(holdingImplementation)
         // holdingImplementation.setFactoryContract(address(factory));
-
-        // deploy USDC contract
-//        console.log("Deploying USDC contract");
-//        console.log("Master minter is", usdc.masterMinter());
-//        // spoof .configureMinter() call with the master minter account
-//        vm.prank(usdc.masterMinter());
-//        console.log("Configuring minter");
-//        // allow this test contract to mint USDC
-//        usdc.configureMinter(address(this), type(uint256).max);
-//        console.log("Minting");
-//
-//        // mint $1000 USDC to the test contract
-//        usdc.mint(address(this), 1000e6);
-//        console.log("USDC contract deployed");
 
         //deploy proxy contract
         vm.prank(user);
@@ -87,7 +76,6 @@ contract HoldingContractTest is Test {
             SolanaAccountAddress,
             address(carbonOffsetSettler)
         );
-        console.log("Proxy address: %s", proxy);
     }
 
     function test_proxy_setup() public {
@@ -165,14 +153,9 @@ contract HoldingContractTest is Test {
     }
 
     function test_Offset() public {
-        // check holding contract USDC balance
-        uint b = usdc.balanceOf(address(proxy));
-        console.log("USDC balance: %s", b);
         // fund holding contract with USDC
         uint amount = 100 * 1e6;
-        console.log("Dealing %s USDC to proxy with address %s", amount, proxy);
         deal(address(usdc), proxy, amount);
-        console.log("Dealt USDC");
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -182,14 +165,9 @@ contract HoldingContractTest is Test {
         //     )
         // );
         // check balances
-        console.log("deal complete");
         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
-        uint certBalance = cert.balanceOf(proxy);
-        console.log("cert balance: %s", certBalance);
         assertEq(cert.balanceOf(proxy), 0);
-        console.log("cert balance checked");
         assertEq(IERC20(usdc).balanceOf(proxy), 100 * 1e6);
-        console.log("balances checked");
         // Call offset and emit event
 
         vm.expectEmit(true, true, true, true);
@@ -266,10 +244,25 @@ contract HoldingContractTest is Test {
         uint amount = 100 * 1e6;
         deal(address(usdc), proxy, amount);
         vm.startPrank(user);
-        HoldingContract(proxy).offset("entity", "msg");
-        HoldingContract(proxy).bridgeToAddress(4054, SolanaAccountAddress);
-        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
 
+        vm.recordLogs();
+        HoldingContract(proxy).offset("entity", "msg");
+
+        bytes32 topic = keccak256("Transfer(address,address,uint256)");
+        uint256 tokenId;
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        for (uint i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == topic && logs[i].topics.length > 3) {
+                // from address (0) is topic 1
+                // to address (holding contract) is topic 2
+                // tokenId is topic 3
+                tokenId = uint256(logs[i].topics[3]);
+            }
+        }
+
+        HoldingContract(proxy).bridgeToAddress(tokenId, SolanaAccountAddress);
+
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
         assertEq(cert.balanceOf(proxy), 0);
     }
 }
