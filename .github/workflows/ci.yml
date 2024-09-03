@@ -86,14 +86,6 @@ jobs:
         working-directory: solana-contract
         run: cargo clippy -- --deny=warnings
 
-      - name: Cache build artifact
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            solana-contract/target
-          key: cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
       - name: Build
         working-directory: solana-contract
         run: cargo build-sbf
