@@ -80,7 +80,7 @@ export const useHoldingContract = () => {
         return writeContract(config.request)
     }, [holdingContractTarget]);
 
-    console.log("data", reads.data);
+    console.log("Holding Contract:", reads.data);
 
     return {
         reads,

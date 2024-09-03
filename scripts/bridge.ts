@@ -101,35 +101,6 @@ export const createWormholeWrappedTransfer = async (
   return { instruction: tokenBridgeTransferIx, message }
 }
 
-// export const createTransferInstruction = async (
-//     connection,
-//     SOL_BRIDGE_ADDRESS,
-//     SOL_TOKEN_BRIDGE_ADDRESS,
-//     payerAddress,
-//     fromAddress,
-//     mintAddress,
-//     amount,
-//     targetAddress,
-//     CHAIN_ID_ETH,
-//     originAddress,
-//     originChain
-// ) => {
-//   const tx = await transferFromSolana(
-//       connection,
-//       SOL_BRIDGE_ADDRESS,
-//       SOL_TOKEN_BRIDGE_ADDRESS,
-//       payerAddress,
-//       fromAddress,
-//       mintAddress,
-//       amount,
-//       targetAddress,
-//       CHAIN_ID_ETH,
-//       originAddress,
-//       originChain
-//   );
-//   return tx.instructions[1];
-// }
-
 /* 
 0. get test token 
     - i actually found USDC faucet here: https://usdcfaucet.com/, however not available on testnet 
@@ -163,12 +134,6 @@ async function bridge() {
     amount,
     Wormhole.tryNativeToUint8Array(HOLDING_CONTRACT_ADDRESS, CHAIN_ID_POLYGON),
   );
-
-  instruction.keys.forEach((key) => {
-    console.log(key.pubkey.toString(), key.isSigner, key.isWritable);
-  });
-  console.log(instruction.keys.length);
-  console.log(instruction.data.toString("hex"));
 
   const txSig = await solanaProgram.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
     state: STATE_ADDRESS,

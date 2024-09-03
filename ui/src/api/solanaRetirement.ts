@@ -85,7 +85,6 @@ export class SolanaRetirement {
 
     async getState(): Promise<SolanaStateAccount | null> {
         const state = await this.program.account.state.fetchNullable(new PublicKey(this.stateAddress));
-        console.log("State:", state);
         return state;
     }
 
@@ -97,7 +96,6 @@ export class SolanaRetirement {
         const tokenAccount = getAssociatedTokenAddressSync(mint, owner, true);
 
         const notify = () => {
-            console.log("Getting balance for token account", tokenAccount.toBase58(), ", mint ", mint.toBase58(), " and owner ", owner.toBase58());
             this.solConnection.getTokenAccountBalance(tokenAccount).then((balance) => {
                 callback(BigInt(balance.value.amount));
             }).catch((error) => {
@@ -195,8 +193,6 @@ export class SolanaRetirement {
 
         const quote = await getQuote(inputMint, BRIDGE_INPUT_MINT_ADDRESS, Number(amount), 20);
 
-        console.log("Routes: " + JSON.stringify(quote.route));
-
         const jupiterIx = await getSwapIx(this.tokenAuthority,  quote);
         const {
             computeBudgetInstructions, // The necessary instructions to setup the compute budget.
@@ -207,8 +203,6 @@ export class SolanaRetirement {
 
         // create the swap instruction proxying the jupiter instruction
         const accountMetas = jupiterSwapIx.keys;
-
-        console.log({ accountMetas });
 
         // mark the token authority as a non-signer, because it is a PDA owned by the Offset Bridge program
         accountMetas.filter((meta) => meta.pubkey.equals(this.tokenAuthority)).forEach(
@@ -238,8 +232,6 @@ export class SolanaRetirement {
             this.tokenAuthority,
             true
         );
-        console.log(`ata: ${ata.toBase58()}`);
-
         const ataAccountInfo = await this.solConnection.getAccountInfo(ata)
         let preIxs: TransactionInstruction[] = [];
         preIxs.push(...preInstructions ?? []);
@@ -285,13 +277,11 @@ export class SolanaRetirement {
     }
 
     async depositAndSwap(inputMint: PublicKey, amount: bigint) : Promise<VersionedTransaction> {
-        console.log("Swapping: ", amount, "of", inputMint.toBase58());
         return this.swap(inputMint, amount, [this.makeDepositIx(inputMint, amount)]);
     }
 
     async wrapAndSwap(amountToDeposit: bigint, amountToWrap: bigint = 0n) : Promise<VersionedTransaction> {
         const preInstructions = amountToDeposit > 0n ? await this.makeDepositAndWrapSolIxes(amountToDeposit) : await this.makeWrapSolIx();
-        console.log("Swapping: ", amountToDeposit + amountToWrap, " lamports");
         return this.swap(WRAPPED_SOL_TOKEN_MINT, amountToDeposit + amountToWrap, preInstructions);
     }
 
@@ -385,10 +375,6 @@ export class SolanaRetirement {
         // the mint account is the one with index #1 in that instruction
         const mintToIx = response.transaction.message.instructions[response.transaction.message.instructions.length - 1];
         const mintAccountIndex = mintToIx.accounts[1];
-
-        console.log("Mint account index:", mintAccountIndex);
-        console.log("Total accounts for ix:", mintToIx.accounts.length);
-        console.log("Ix program ID:", response.transaction.message.accountKeys[mintToIx.programIdIndex].toBase58());
 
         return response.transaction.message.accountKeys[mintAccountIndex];
     }

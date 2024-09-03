@@ -59,7 +59,6 @@ export const useHoldingContractFactory = (retirementProject = DEFAULT_RETIREMENT
         , [read.data, deploy.data, read.isRefetching]);
 
     const create = async () => {
-        console.log('create', {deploy, read, config});
         if (!deploy.writeAsync) return;
         return deploy.writeAsync();
     }

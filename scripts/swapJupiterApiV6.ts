@@ -160,13 +160,10 @@ const getSwapIx = async (
         console.log({r});
     })
 
-    
-
     const programATA = await getAssociatedTokenAddress(
       new PublicKey(BRIDGE_INPUT_MINT_ADDRESS),
       USER_KEYPAIR.publicKey
     )
-    console.log(programATA);
     const programATA2 = PublicKey.findProgramAddressSync(
       [
         USER_KEYPAIR.publicKey.toBuffer(),
@@ -175,8 +172,6 @@ const getSwapIx = async (
       ],
       ASSOCIATED_TOKEN_PROGRAM_ID
     )[0];
-    console.log(programATA2);
-    console.log(USER_KEYPAIR.publicKey);
 
     const jupiterIx = await getSwapIx(USER_KEYPAIR.publicKey,  quote); // programATA,
 

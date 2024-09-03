@@ -98,11 +98,9 @@ export default function Step2() {
         name: token.symbol
     }));
     const CarbonAmount:FC<{ tokenAmount: bigint | undefined }> = ({ tokenAmount }) => {
-        console.log('tokenAmount', tokenAmount)
         if (tokenAmount === undefined) return <span className="loading loading-spinner text-primary"/>;
 
         const carbonAmount = isSolSelected ? lamportsToCarbon(Number(tokenAmount)) : usdcToCarbon(tokenAmount);
-        console.log('carbonAmount', carbonAmount)
 
         return <span>
             {formatDecimal(tokenAmount, selectedInputToken.decimals)} {selectedInputToken.symbol} ( {toFixedWithPrecision(carbonAmount, 2)} tCO₂E )

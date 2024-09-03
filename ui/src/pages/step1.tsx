@@ -11,7 +11,6 @@ export default function Step1() {
     const [holdingContractUpdateReady, setHoldingContractUpdateReady] = useState(false);
 
     const ready = useMemo(() => {
-        console.log("Step1: ready", api?.ready, holdingContract?.tco2, holdingContractUpdateReady);
         const solanaState = api?.state;
         const holdingContractDeployed = !!holdingContract?.tco2;
         return api?.ready && solanaState && holdingContractDeployed && holdingContractUpdateReady;

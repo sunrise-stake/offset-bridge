@@ -96,7 +96,6 @@ export default function Step5() {
     }
 
     const getVAAFailed = (error: Error) => {
-        console.log(error);
         toast.error(<div>
             Failed to retrieve information from bridge: {error.message}
         </div>);

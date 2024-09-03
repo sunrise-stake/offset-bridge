@@ -41,7 +41,6 @@ async function createHoldingContract() {
         maxFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
         maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
     });
-    console.log(tx);
     const receipt: ContractReceipt = await tx.wait();
     return receipt;
 }

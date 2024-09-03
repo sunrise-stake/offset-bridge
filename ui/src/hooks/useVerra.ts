@@ -15,7 +15,6 @@ export const useVerra = (project: PooledTCO2Token | undefined): VerraResource | 
     const [link, setLink] = useState<string>()
 
     useEffect(() => {
-        console.log("project", project)
         if (!project) return;
         const resourceId = projectToResourceId(project);
         setLink(VERRA_URL + resourceId);

@@ -43,11 +43,7 @@ export const useToucan = () => {
                 }
             `;
 
-            console.log("Querying for all NCT tokens")
-
             const result = await toucan.fetchCustomQuery<PooledTokenLookup>(query, { poolAddress: NCT_TOKEN_ADDRESS });
-
-            console.log({result})
 
             if (!result) return [];
 
@@ -82,8 +78,6 @@ export const useToucan = () => {
                 args: [tokenId]
             }))
         });
-
-        console.log({tokenIds, data})
 
         if (!data) return [];
 

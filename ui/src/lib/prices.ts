@@ -16,7 +16,6 @@ export const PRICES: Prices = {
 fetch("https://api.sunrisestake.com/prices")
     .then(async (res) => res.json())
     .then(({ solana, "toucan-protocol-nature-carbon-tonne": nct }) => {
-        console.log("Prices", { solana, nct });
         PRICES.solana = Number(solana.usd) * 100;
         PRICES.nct = Number(nct.usd) * 100;
     })

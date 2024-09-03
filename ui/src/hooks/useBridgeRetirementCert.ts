@@ -24,7 +24,5 @@ export const useBridgeRetirementCert = () => {
         args: [BigInt(nftToRetire.tokenId), solanaAddressToHex(new PublicKey(nftToRetire.solanaTokenAddress))]
     })
 
-    if (bridgePrepare.isError) console.log(bridgePrepare.error)
-
     return useContractWrite(bridgePrepare.config)
 }

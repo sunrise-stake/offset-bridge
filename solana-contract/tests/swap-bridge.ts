@@ -69,27 +69,20 @@ export const createWormholeWrappedTransfer = async (
   // so we don't want an explicit signer here
   tokenBridgeTransferIx.keys.find((key) => key.pubkey.equals(tokenAuthority))!.isSigner = false;
 
-  console.log("payer: ", payerAddress.toBase58())
-  console.log("tokenAuthority: ", tokenAuthority.toBase58())
-  console.log("message: ", message.publicKey.toBase58())
-
   return { instruction: tokenBridgeTransferIx, message }
 }
 
 describe("swap-bridge", () => {
   // Configure the client to use the local cluster.
-  console.log("test start");
   // const userKeypair = Keypair.generate();
   const stateKeypair = Keypair.generate();
   const stateAddress = stateKeypair.publicKey;
   const wallet = new Wallet(USER_KEYPAIR);
   const connection = new Connection("http://localhost:8890");
   const provider = new AnchorProvider(connection, wallet, {});
-  console.log("provider set");
 
   const program = new Program<SwapBridge>(IDL as SwapBridge, provider);
   const tokenAuthority = PublicKey.findProgramAddressSync([Buffer.from("token_authority"), stateAddress.toBuffer()], PROGRAM_ID)[0];
-  console.log("program set");
   // const bridgeInputTokenAccount = getAssociatedTokenAddressSync(new PublicKey(BRIDGE_INPUT_MINT_ADDRESS), tokenAuthority, true);
   const bridgeAuthority = PublicKey.findProgramAddressSync([Buffer.from("authority_signer")], new PublicKey(SOL_TOKEN_BRIDGE_ADDRESS))[0];
 
@@ -129,8 +122,6 @@ describe("swap-bridge", () => {
       );
       const blockhash2 = await connection.getLatestBlockhash();
       await connection.confirmTransaction({ signature: tx2, ...blockhash2 });
-      console.log("airdrop done")
-      console.log(holdingContractAddress);
       if (!holdingContractAddress) return;
 
       const tx = await program.methods.initialize({
