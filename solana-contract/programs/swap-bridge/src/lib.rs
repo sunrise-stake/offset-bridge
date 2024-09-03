@@ -81,11 +81,7 @@ pub mod swap_bridge {
             &[token_authority_bump],
         ];
 
-        program::invoke_signed(
-            &swap_ix,
-            ctx.remaining_accounts,
-            &[&authority_seeds[..]],
-        )?;
+        program::invoke_signed(&swap_ix, ctx.remaining_accounts, &[&authority_seeds[..]])?;
 
         Ok(())
     }
@@ -224,13 +220,7 @@ impl State {
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {
         // find space needed for state account for current config
-        4 + holding_contract.len()
-            + 4
-            + token_chain_id.len()
-            + 4
-            + 32
-            + 32
-            + 8 /* Discriminator */
+        4 + holding_contract.len() + 4 + token_chain_id.len() + 4 + 32 + 32 + 8 /* Discriminator */
     }
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
