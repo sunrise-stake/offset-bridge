@@ -21,7 +21,7 @@
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.32",
-    "@solana/web3.js": "^1.91.7",
+    "@solana/web3.js": "^1.95.3",
     "@types/bs58": "^4.0.1",
     "@types/node": "20.2.5",
     "@types/react": "18.2.8",
