@@ -1,0 +1,19 @@
+name: cache-node
+description: install and Cache Node Modules
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+        cache-dependency-path: |
+          yarn.lock
+          ui/yarn.lock
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        yarn --frozen-lockfile --network-concurrency 2
+        (cd ui && yarn --frozen-lockfile --network-concurrency 2)
