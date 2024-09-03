@@ -60,7 +60,7 @@ pub mod swap_bridge {
         let mut router_accounts = vec![];
         let state_address = ctx.accounts.state.key();
         let (token_authority, token_authority_bump) = State::get_token_authority(&state_address);
-        for account in &ctx.remaining_accounts[..] {
+        for account in ctx.remaining_accounts {
             let is_signer = account.key == &token_authority;
             router_accounts.push(if account.is_writable {
                 AccountMeta::new(*account.key, is_signer)
@@ -83,15 +83,15 @@ pub mod swap_bridge {
 
         program::invoke_signed(
             &swap_ix,
-            &ctx.remaining_accounts[..],
+            ctx.remaining_accounts,
             &[&authority_seeds[..]],
         )?;
 
         Ok(())
     }
 
-    pub fn bridge<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, Bridge<'info>>,
+    pub fn bridge<'info>(
+        ctx: Context<'_, '_, '_, 'info, Bridge<'info>>,
         amount: u64,
         bridge_data: Vec<u8>,
     ) -> Result<()> {
@@ -130,7 +130,7 @@ pub mod swap_bridge {
 
         call_bridge(
             bridge_data,
-            &ctx.remaining_accounts,
+            ctx.remaining_accounts,
             &ctx.accounts.token_account_authority.to_account_info(),
             &ctx.accounts.wormhole_program,
             &authority_seeds,
@@ -224,9 +224,9 @@ impl State {
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {
         // find space needed for state account for current config
-        4 + (holding_contract.len() as usize)
+        4 + holding_contract.len()
             + 4
-            + (token_chain_id.len() as usize)
+            + token_chain_id.len()
             + 4
             + 32
             + 32
