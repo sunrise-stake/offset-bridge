@@ -1,9 +1,6 @@
 [submodule "evm-contract/lib/forge-std"]
 	path = evm-contract/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "evm-contract/lib/contracts"]
-	path = evm-contract/lib/ToucanProtocol/contracts
-	url = https://github.com/ToucanProtocol/contracts
 [submodule "evm-contract/lib/OffsetHelper"]
 	path = evm-contract/lib/OffsetHelper
 	url = https://github.com/ToucanProtocol/OffsetHelper
