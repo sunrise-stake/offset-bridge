@@ -1,0 +1,45 @@
+name: cache-node
+description: install and Cache Node Modules
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+        cache-dependency-path: |
+          yarn.lock
+          ui/yarn.lock
+
+    - name: Cache top-level node modules
+      id: top-node-modules
+      uses: actions/cache@v4
+      with:
+        key: node_modules-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+        path: node_modules
+
+    - name: Cache ui node modules
+      id: ui-node-modules
+      uses: actions/cache@v4
+      with:
+        key: node_modules-${{ runner.os }}-${{ hashFiles('ui/yarn.lock') }}
+        path: ui/node_modules
+
+    - name: Cache nextjs build cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/ui/.next/cache
+        # Generate a new cache whenever packages or source files change.
+        key: nextjs-${{ runner.os }}-${{ hashFiles('ui/src/yarn.lock') }}-${{ hashFiles('ui/src/**/*.ts', 'ui/src/**/*.tsx') }}
+        # If source files changed but packages didn't, rebuild from a prior cache.
+        restore-keys: |
+          nextjs-${{ runner.os }}-${{ hashFiles('ui/src/yarn.lock') }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        echo "Before installing dependencies" $(date "+%F %T.%3N")
+        yarn --frozen-lockfile --network-concurrency 2
+        (cd ui && yarn --frozen-lockfile --network-concurrency 2)
+        echo "After installing dependencies" $(date "+%F %T.%3N")

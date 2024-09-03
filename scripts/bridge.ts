@@ -1,5 +1,5 @@
 // Transfer from Solana to Polygon using Wormhole SDK
-import { PublicKey, Connection, Keypair, TransactionInstruction } from "@solana/web3.js";
+import {PublicKey, Connection, Keypair, TransactionInstruction, GetVersionedTransactionConfig} from "@solana/web3.js";
 import * as Wormhole from "@certusone/wormhole-sdk";
 import { parseUnits } from "@ethersproject/units";
 import { ethers } from "ethers";
@@ -149,7 +149,9 @@ async function bridge() {
   console.log("Transaction confirmed:", txSig);
 
   // Get the sequence number and emitter address required to fetch the signedVAA of our message
-  const info = await solanaConnection.getTransaction(txSig);
+  const info = await solanaConnection.getTransaction(txSig, {
+    maxSupportedTransactionVersion: 0
+  });
   if (!info) {
     throw new Error(
       "An error occurred while fetching the transaction info"

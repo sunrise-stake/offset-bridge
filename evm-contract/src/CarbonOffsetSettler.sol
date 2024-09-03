@@ -9,8 +9,6 @@ import "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeab
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
 import "forge-std/console.sol";
-import "toucan/RetirementCertificates.sol";
-import "forge-std/console.sol";
 
 contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
     address public constant NCT = 0xD838290e877E0188a4A44700463419ED96c16107;

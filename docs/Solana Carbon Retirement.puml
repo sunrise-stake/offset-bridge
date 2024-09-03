@@ -47,17 +47,10 @@ TX 3 - Redeem bridged tokens
 end note
 
 User->Wormhole_P: Poll for VAA
-note left
-TODO is this correct?
-end note
 Wormhole_P-->User: <<VAA available>>
 User->HoldingContract_P: Redeem from Bridge
 HoldingContract_P->Wormhole_P:Redeem VAA
 Wormhole_P-->HoldingContract_P: <<USDC>>
-note left
-TODO can we store the originator
-of the bridge here, ie the solana address?
-end note
 HoldingContract_P-->User: <<OK>>
 
 note left of User
@@ -78,11 +71,6 @@ CarbonOffsetSettler_P->TCO2Contract_P:retireAndMintCertificate
 TCO2Contract_P-->CarbonOffsetSettler_P:<<retirement certificate>>
 CarbonOffsetSettler_P-->HoldingContract_P: <<OK>>
 HoldingContract_P-->User: <<OK>>
-
-note left
-TODO any work required here to convert it to an ERC721?
-end note
-
 note left of User
 TX 5 - Bridge Retirement Certificate
 end note
@@ -97,9 +85,6 @@ TX 6 - Redeem Retirement Certificate
 end note
 
 User->Wormhole_S: Poll for VAA
-note left
-TODO is this correct?
-end note
 Wormhole_S-->User: <<VAA available>>
 User->RetirementProgram_S: Redeem ticket (pass VAA)
 RetirementProgram_S->Wormhole_S: Redeem VAA

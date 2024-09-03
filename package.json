@@ -7,7 +7,7 @@
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@jup-ag/api": "^6.0.10",
     "@solana/spl-token": "0.4.6",
-    "@solana/web3.js": "^1.76.0",
+    "@solana/web3.js": "^1.95.3",
     "bs58": "^5.0.0",
     "ethers": "^5.7.2",
     "jsbi": "^4.3.0",
@@ -34,15 +34,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "initialize": "ts-node scripts/initialize.ts",
-    "wrap-sol": "ts-node scripts/wrapSOL.ts",
-    "deposit-usdc": "ts-node scripts/depositUSDC.ts",
-    "swap": "ts-node scripts/swap.ts",
-    "bridge": "ts-node scripts/bridge.ts",
-    "redeem": "ts-node scripts/redeemPolygonVAA.ts",
-    "retire": "ts-node scripts/retireFunds.ts",
-    "bridge-nft": "ts-node scripts/bridgeNFT.ts"
+    "install:all": "yarn install && (cd ui && yarn install)",
+    "build:ui": "cd ui && yarn build",
+    "start:ui": "cd ui && yarn dev",
+    "build:evm": "cd evm-contract && forge build",
+    "build:solana": "cd solana-contract && anchor build"
   },
   "repository": {
     "type": "git",

@@ -7,17 +7,24 @@ import "src/CarbonOffsetSettler.sol";
 import "src/HoldingContractFactory.sol";
 import "forge-std/console.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 contract HoldingContractTest is Test {
     HoldingContract holdingImplementation;
     CarbonOffsetSettler carbonOffsetSettler;
     HoldingContractFactory factory;
     address proxy;
-    address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+//    address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
 
+    IERC20 public constant usdc = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
+
     address user = address(1234);
-    address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
+
+    // TCO2 contract address for carbon credit project
+    // https://registry.verra.org/app/projectDetail/VCS/875
+    // 208k supply remaining at polygon block # 61373304
+    address tco2 = 0x0BCCAB36F518f55E00f3efe2e828aE63cd2ac1B9;
     string beneficiaryName = "0x0";
     bytes32 SolanaAccountAddress = "";
 
@@ -110,12 +117,12 @@ contract HoldingContractTest is Test {
         assertEq(HoldingContract(proxy).beneficiary(), address(146));
         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
 
-        deal(usdc, proxy, 100 * 1e6);
+        deal(address(usdc), proxy, 100 * 1e6);
 
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
         assertEq(cert.balanceOf(proxy), 1);
-        // deal(usdc, proxy, 100 * 1e6);
+        // deal(address(usdc), proxy, 100 * 1e6);
         // HoldingContract(proxy).offset("2nd entity", "msg");
         // assertEq(cert.balanceOf(proxy), 2);
 
@@ -132,7 +139,7 @@ contract HoldingContractTest is Test {
         );
         HoldingContract(proxy).setBeneficiary(address(6143), "Solana");
         assertEq(HoldingContract(proxy).beneficiary(), address(6143));
-        deal(usdc, proxy, 100 * 1e6);
+        deal(address(usdc), proxy, 100 * 1e6);
 
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
@@ -148,7 +155,7 @@ contract HoldingContractTest is Test {
     function test_Offset() public {
         // fund holding contract with USDC
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        deal(address(usdc), proxy, amount);
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -161,7 +168,6 @@ contract HoldingContractTest is Test {
         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
         assertEq(cert.balanceOf(proxy), 0);
         assertEq(IERC20(usdc).balanceOf(proxy), 100 * 1e6);
-
         // Call offset and emit event
 
         vm.expectEmit(true, true, true, true);
@@ -201,7 +207,7 @@ contract HoldingContractTest is Test {
 
         // Fund holding contract with USDC
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        deal(address(usdc), proxy, amount);
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -236,12 +242,27 @@ contract HoldingContractTest is Test {
 
     function test_bridge() public {
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        deal(address(usdc), proxy, amount);
         vm.startPrank(user);
-        HoldingContract(proxy).offset("entity", "msg");
-        HoldingContract(proxy).bridgeToAddress(4054, SolanaAccountAddress);
-        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
 
+        vm.recordLogs();
+        HoldingContract(proxy).offset("entity", "msg");
+
+        bytes32 topic = keccak256("Transfer(address,address,uint256)");
+        uint256 tokenId;
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        for (uint i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == topic && logs[i].topics.length > 3) {
+                // from address (0) is topic 1
+                // to address (holding contract) is topic 2
+                // tokenId is topic 3
+                tokenId = uint256(logs[i].topics[3]);
+            }
+        }
+
+        HoldingContract(proxy).bridgeToAddress(tokenId, SolanaAccountAddress);
+
+        IERC721Upgradeable cert = IERC721Upgradeable(CERT);
         assertEq(cert.balanceOf(proxy), 0);
     }
 }

@@ -11,7 +11,7 @@ pub fn approve_delegate<'a>(
     signer_seeds: &[&[u8]],
 ) -> Result<()> {
     msg!("Approving delegate for {}", amount);
-    let seeds = [&signer_seeds[..]];
+    let seeds = [signer_seeds];
     let cpi_accounts = Approve {
         to: token_account.clone(),
         delegate: delegate.clone(),
@@ -33,7 +33,7 @@ pub fn wrap_sol<'a>(
     let cpi_accounts = SyncNative {
         account: token_account.to_account_info(),
     };
-    let seeds = [&signer_seeds[..]];
+    let seeds = [signer_seeds];
     let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, &seeds);
     sync_native(cpi_ctx)
 }
