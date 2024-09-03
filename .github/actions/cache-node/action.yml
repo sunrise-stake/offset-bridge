@@ -26,6 +26,16 @@ runs:
         key: node_modules-${{ runner.os }}-${{ hashFiles('ui/yarn.lock') }}
         path: ui/node_modules
 
+    - name: Cache nextjs build cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/ui/.next/cache
+        # Generate a new cache whenever packages or source files change.
+        key: nextjs-${{ runner.os }}-${{ hashFiles('ui/src/yarn.lock') }}-${{ hashFiles('ui/src/**/*.ts', 'ui/src/**/*.tsx') }}
+        # If source files changed but packages didn't, rebuild from a prior cache.
+        restore-keys: |
+          nextjs-${{ runner.os }}-${{ hashFiles('ui/src/yarn.lock') }}-
+
     - name: Install dependencies
       shell: bash
       run: |
