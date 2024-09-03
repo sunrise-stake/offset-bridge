@@ -7,14 +7,17 @@ import "src/CarbonOffsetSettler.sol";
 import "src/HoldingContractFactory.sol";
 import "forge-std/console.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 contract HoldingContractTest is Test {
     HoldingContract holdingImplementation;
     CarbonOffsetSettler carbonOffsetSettler;
     HoldingContractFactory factory;
     address proxy;
-    address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+//    address usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
+
+    IERC20 public constant usdc = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
 
     address user = address(1234);
     address tco2 = 0x463de2a5c6E8Bb0c87F4Aa80a02689e6680F72C7;
@@ -52,6 +55,7 @@ contract HoldingContractTest is Test {
     }
 
     function setUp() public {
+        console.log("In Setup");
         // deploy an implementation contract
         holdingImplementation = new HoldingContract();
         // deploy factory contract pointing to implementation contract
@@ -59,6 +63,20 @@ contract HoldingContractTest is Test {
         carbonOffsetSettler = new CarbonOffsetSettler();
         // address(holdingImplementation)
         // holdingImplementation.setFactoryContract(address(factory));
+
+        // deploy USDC contract
+//        console.log("Deploying USDC contract");
+//        console.log("Master minter is", usdc.masterMinter());
+//        // spoof .configureMinter() call with the master minter account
+//        vm.prank(usdc.masterMinter());
+//        console.log("Configuring minter");
+//        // allow this test contract to mint USDC
+//        usdc.configureMinter(address(this), type(uint256).max);
+//        console.log("Minting");
+//
+//        // mint $1000 USDC to the test contract
+//        usdc.mint(address(this), 1000e6);
+//        console.log("USDC contract deployed");
 
         //deploy proxy contract
         vm.prank(user);
@@ -69,6 +87,7 @@ contract HoldingContractTest is Test {
             SolanaAccountAddress,
             address(carbonOffsetSettler)
         );
+        console.log("Proxy address: %s", proxy);
     }
 
     function test_proxy_setup() public {
@@ -110,12 +129,12 @@ contract HoldingContractTest is Test {
         assertEq(HoldingContract(proxy).beneficiary(), address(146));
         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
 
-        deal(usdc, proxy, 100 * 1e6);
+        deal(address(usdc), proxy, 100 * 1e6);
 
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
         assertEq(cert.balanceOf(proxy), 1);
-        // deal(usdc, proxy, 100 * 1e6);
+        // deal(address(usdc), proxy, 100 * 1e6);
         // HoldingContract(proxy).offset("2nd entity", "msg");
         // assertEq(cert.balanceOf(proxy), 2);
 
@@ -132,7 +151,7 @@ contract HoldingContractTest is Test {
         );
         HoldingContract(proxy).setBeneficiary(address(6143), "Solana");
         assertEq(HoldingContract(proxy).beneficiary(), address(6143));
-        deal(usdc, proxy, 100 * 1e6);
+        deal(address(usdc), proxy, 100 * 1e6);
 
         HoldingContract(proxy).offset("entity", "msg");
         assertEq(IERC20(usdc).balanceOf(proxy), 0);
@@ -146,9 +165,14 @@ contract HoldingContractTest is Test {
     }
 
     function test_Offset() public {
+        // check holding contract USDC balance
+        uint b = usdc.balanceOf(address(proxy));
+        console.log("USDC balance: %s", b);
         // fund holding contract with USDC
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        console.log("Dealing %s USDC to proxy with address %s", amount, proxy);
+        deal(address(usdc), proxy, amount);
+        console.log("Dealt USDC");
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -158,10 +182,14 @@ contract HoldingContractTest is Test {
         //     )
         // );
         // check balances
+        console.log("deal complete");
         IERC721Upgradeable cert = IERC721Upgradeable(CERT);
+        uint certBalance = cert.balanceOf(proxy);
+        console.log("cert balance: %s", certBalance);
         assertEq(cert.balanceOf(proxy), 0);
+        console.log("cert balance checked");
         assertEq(IERC20(usdc).balanceOf(proxy), 100 * 1e6);
-
+        console.log("balances checked");
         // Call offset and emit event
 
         vm.expectEmit(true, true, true, true);
@@ -201,7 +229,7 @@ contract HoldingContractTest is Test {
 
         // Fund holding contract with USDC
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        deal(address(usdc), proxy, amount);
         // vm.prank(0x19aB546E77d0cD3245B2AAD46bd80dc4707d6307);
         // usdc.call(
         //     abi.encodeWithSignature(
@@ -236,7 +264,7 @@ contract HoldingContractTest is Test {
 
     function test_bridge() public {
         uint amount = 100 * 1e6;
-        deal(usdc, proxy, amount);
+        deal(address(usdc), proxy, amount);
         vm.startPrank(user);
         HoldingContract(proxy).offset("entity", "msg");
         HoldingContract(proxy).bridgeToAddress(4054, SolanaAccountAddress);

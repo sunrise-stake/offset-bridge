@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 env:
   FOUNDRY_PROFILE: ci
+  FOUNDRY_FORK_BLOCK_NUMBER: 61373304
 
 jobs:
   common:
@@ -53,8 +54,10 @@ jobs:
           forge build --sizes
 
       - name: Run Forge tests
+        env:
+          RPC: ${{ secrets.POLYGON_RPC }}
         working-directory: evm-contract
-        run: forge test -vvv
+        run: forge test -vvv --fork-url $RPC --fork-block-number $FOUNDRY_FORK_BLOCK_NUMBER
 
   solana:
     needs: common
