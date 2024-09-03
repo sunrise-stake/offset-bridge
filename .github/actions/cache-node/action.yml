@@ -15,5 +15,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
+        echo "Before installing dependencies" $(date "+%F %T.%3N")
         yarn --frozen-lockfile --network-concurrency 2
         (cd ui && yarn --frozen-lockfile --network-concurrency 2)
+        echo "After installing dependencies" $(date "+%F %T.%3N")
