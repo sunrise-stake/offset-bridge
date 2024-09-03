@@ -74,6 +74,9 @@ jobs:
         with:
           workspaces: solana-contract
 
+      - name: Install and cache solana
+        uses: ./.github/actions/cache-solana
+
       - name: Run fmt
         working-directory: solana-contract
         run: cargo fmt -- --check
