@@ -12,3 +12,6 @@
 	path = evm-contract/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
 	branch = release-v4.9
+[submodule "evm-contract/lib/ToucanProtocol"]
+	path = evm-contract/lib/ToucanProtocol
+	url = https://github.com/ToucanProtocol/contracts
