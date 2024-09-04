@@ -12,6 +12,10 @@ import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upg
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 
+/**
+ * A holding contract that holds the bridged funds from a Solana account, use it to buy and retire TCO2,
+ * and send the retirement certificate back to the Solana address
+ */
 contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     // Logic contract address
     // address public logicContract;
@@ -37,7 +41,13 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     // USDC token contract
     address public constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
 
-    // Event emitted when funds are used to offset emissions
+    /**
+     * Event emitted when funds are used to offset emissions
+     * @param tco2 Address of the project for which TCO2 will be retired
+     * @param beneficiary Address of beneficiary, to whom the retirement will be accredited
+     * @param beneficiaryName Name of beneficiary
+     * @param amount Amount of TCO2 offset
+     */
     event Offset(
         address indexed tco2,
         address indexed beneficiary,
@@ -49,8 +59,15 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     error InsufficientFunds();
     error InvalidRetireContract();
 
-    /*
+    /**
+     * To initialize a holding contract with a new set of parameters
      * @notice Initialize the proxy contract
+     * @param newTco2 Address of the project for which TCO2 will be retired
+     * @param newBeneficiary Address of beneficiary, to whom the retirement will be accredited
+     * @param newBeneficiaryName Name of beneficiary
+     * @param newSolanaAccountAddress Address of wallet in Solana to which the retirement certificate will be sent to
+     * @param newRetireContract Address of the deployed contract of CarbonOffsetSettler to be used to retire TCO2
+     * @param owner Address of owner of the holding contract
      */
     function initialize(
         address newTco2,
@@ -70,22 +87,18 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         transferOwnership(owner);
     }
 
-    /*
+    /**
      * @notice Set the address of the CarbonOffsetSettler contract
-     * @param newRetireContract address of the CarbonOffsetSettler contract
+     * @param newRetireContract Address of the CarbonOffsetSettler contract
      */
     function setRetireContract(address newRetireContract) external onlyOwner {
         if (newRetireContract == address(0)) revert InvalidRetireContract();
         retireContract = newRetireContract;
     }
 
-    // function setFactoryContract(address newFactoryContract) external onlyOwner {
-    //     factoryContract = newFactoryContract;
-    // }
-
     // ------------------ Setting retirement details (admin-only, ensure valid values) ------------------ //
 
-    /*
+    /**
      * @notice Set the details for the beneficiary of the carbon offset
      * @param newBeneficiary address of the beneficiary (in case you're retiring for someone else)
      * @param newBeneficiaryName name of the beneficiary
@@ -98,7 +111,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         beneficiaryName = newBeneficiaryName;
     }
 
-    /*
+    /**
      * @notice Set the address of the TCO2 token contract
      * @param newTco2 address of the TCO2 token contract
      */
@@ -118,7 +131,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
     }
 
     // --------------------------------- Permissionless retiring --------------------------------------- //
-    /*
+    /**
      * @notice Offset carbon emissions by sending USDC to the CarbonOffsetSettler contract and using the funds to retire carbon tokens.
      * @param entity name of the entity that does the retirement (Sunrise Stake)
      * @param message retirement message
@@ -158,7 +171,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         _bridgeNFT(tokenId);
     }
 
-    /*
+    /**
      * @dev Necessary to receive ERC721 transfers
      */
     function onERC721Received(
@@ -170,7 +183,7 @@ contract HoldingContract is OwnableUpgradeable, IERC721Receiver {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    /*
+    /**
      * @notice Set the Solana Account that receives the retirement certificate
      * @dev This is read out to calculate the associated token account for the Wormhole message
      * @param newSolanaAccountAddress address of the Solana Account
