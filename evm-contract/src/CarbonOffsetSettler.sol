@@ -10,6 +10,9 @@ import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/IERC721Upgradeable.sol";
 import "forge-std/console.sol";
 
+/**
+ * @notice This contract is to be used to purchase and offset carbon credits
+ */
 contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
     address public constant NCT = 0xD838290e877E0188a4A44700463419ED96c16107;
     address public constant CERT = 0x5e377f16E4ec6001652befD737341a28889Af002;
@@ -19,18 +22,15 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
 
     uint public tokenId;
 
-    // function initialize(
-    //     address newholdingContract,
-    //     address sunriseAdmin
-    // ) external {
-    //     transferOwnership(sunriseAdmin);
-    //     holdingContract = newholdingContract;
-    // }
-
-    // function setHoldingContract(address newHoldingContract) external onlyOwner {
-    //     holdingContract = newHoldingContract;
-    // }
-
+    /**
+     * Retire carbon credits from specified project for a specified amount of USDC
+     * @param _tco2 Address of the project for which TCO2 will be retired
+     * @param _amountUSDC Amount of USDC to be used to buy carbon credits
+     * @param _entity Name of the entity who is performing the retirement
+     * @param _beneficiary Address of beneficiary, to whom the retirement will be accredited
+     * @param _beneficiaryName Name of beneficiary
+     * @param _msg Any message to be attached to the retirement certificate
+     */
     function retire(
         address _tco2,
         uint256 _amountUSDC,
@@ -72,7 +72,7 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
         );
     }
 
-    /*
+    /**
      * @notice Called when new Toucan retirement certificate NFTs are minted.
      */
     function onERC721Received(
@@ -85,9 +85,10 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    /*
-     * Given a specific TCO2 and amount, return the amount of xUSDC we would
-     * need to burn after fees.
+    /**
+     * Given a specific TCO2 and amount, return the amount of xUSDC we would need to burn after fees.
+     * @param _tco2 Address of the project for which TCO2 will be retired
+     * @param _amountToOffset Amount of TCO2 to offset
      */
     function getUSDCNeeded(
         address _tco2,
@@ -111,9 +112,10 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
         return expectedAmountsIn[0];
     }
 
-    /*
-     * Given a specific TCO2 and amount, return the amount of xUSDC we would
-     * need to burn after fees.
+    /**
+     * Given a specific TCO2 and amount, return the amount of NCT we would need to burn after fees.
+     * @param _tco2 Address of the project for which TCO2 will be retired
+     * @param _amountToOffset Amount of TCO2 to offset
      */
     function getExpectedNCT(
         address _tco2,
@@ -135,8 +137,10 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
         return expectedAmountsIn[0];
     }
 
-    /*
-     * Only support USDC <-> NCT routes
+    /**
+     * Find path for swapping; only support USDC <-> NCT routes
+     * @param _from Address of token to be swapped from
+     * @param _to Address of token to be swapped to
      */
     function generatePath(
         address _from,
@@ -150,6 +154,7 @@ contract CarbonOffsetSettler is OwnableUpgradeable, IERC721Receiver {
 
     /**
      * Swap USDC on contract into NCT.
+     * @param _amountUSDC Amount of USDC to swap for NCT tokans
      */
     function swap(uint256 _amountUSDC) public returns (uint256) {
         IUniswapV2Router02 routerSushi = IUniswapV2Router02(SUSHI_ROUTER);

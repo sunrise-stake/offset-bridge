@@ -23,6 +23,16 @@ pub fn call_bridge<'a>(
     wormhole_program: &Program<'a, Wormhole>,
     signer_seeds: &[&[u8]],
 ) -> Result<()> {
+    /* To call and bridge funds to target chain
+
+    Parameters
+    ----------
+    bridge_data: data for bridging instructions from Wormhole
+    accounts: accounts involved in the bridging instructions
+    token_account_authority: the token authority (also the input account PDA)
+    wormhole_program: the Wormhole program to carry out the bridging action
+    signer_seeds: seeds of signers (i.e. the token authority)
+    */
     let mut router_accounts = vec![];
     for account in accounts {
         // transaction signers are:

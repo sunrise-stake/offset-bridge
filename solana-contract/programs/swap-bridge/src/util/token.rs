@@ -10,6 +10,17 @@ pub fn approve_delegate<'a>(
     token_program: &Program<'a, Token>,
     signer_seeds: &[&[u8]],
 ) -> Result<()> {
+    /* To approve the bridge (Wormhole) as a delagate of an amount of funds in the token_account
+
+    Parameters
+    ----------
+    amount: amount of funds to delegate to Wormhole
+    token_account: address of the account which contains the funds to delegate
+    token_account_owner: owner of the token_account (i.e. the token authority)
+    delegate: account to which the funds woule be delegated (Wormholde bridge authority)
+    token_program: Token Program for carrying out CPI transfer
+    signer_seeds: seeds of signers (i.e. the token authority)
+    */
     msg!("Approving delegate for {}", amount);
     let seeds = [signer_seeds];
     let cpi_accounts = Approve {
