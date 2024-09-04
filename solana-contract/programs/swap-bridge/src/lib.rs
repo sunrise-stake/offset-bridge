@@ -11,6 +11,8 @@ declare_id!("suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T");
 
 #[program]
 pub mod swap_bridge {
+    /// Program to swap SOL or USDC to a wrapped USDC token (e.g. USDCpo)
+    /// and bridge it over to the chain where carbon tokens are to be bought and retired (e.g. Polygon) using Wormhole
     use super::*;
     use crate::util::bridge::call_bridge;
     use crate::util::errors::ErrorCode;
@@ -23,6 +25,17 @@ pub mod swap_bridge {
         state_in: GenericStateInput,
         _state_index: u8,
     ) -> Result<()> {
+        /* Initialise the state account with specific parameters
+
+        Parameters
+        ----------
+        state_in: GenericStateInput specifying the content of the state account, including:
+            state_in.output_mint: the output mint of the target token (e.g. USDCpo)
+            state_in.holding_contract: the holding contract address on target chain
+            state_in.token_chain_id: the Wormhole ID of the target chain
+            state_in.update_authority: an account with the authority to update these parameters of the state account
+        _state_index: index to differentiate different # of state accounts belonging to the same wallet
+        */
         ctx.accounts.state.output_mint = state_in.output_mint;
         ctx.accounts.state.holding_contract = state_in.holding_contract;
         ctx.accounts.state.token_chain_id = state_in.token_chain_id;
@@ -32,7 +45,17 @@ pub mod swap_bridge {
     }
 
     pub fn update_state(ctx: Context<UpdateState>, state_in: GenericStateInput) -> Result<()> {
-        // update state account parameters
+        /* Update state account parameters
+
+        Parameters
+        ----------
+        state_in: GenericStateInput specifying the content of the state account, including:
+            state_in.output_mint: the output mint of the target token (e.g. USDCpo)
+            state_in.holding_contract: the holding contract address on target chain
+            state_in.token_chain_id: the Wormhole ID of the target chain
+            state_in.update_authority: an account with the authority to update these parameters of the state account
+        _state_index: index to differentiate different # of state accounts belonging to the same wallet
+        */
         let state = &mut ctx.accounts.state;
         state.update_authority = state_in.update_authority;
         state.output_mint = state_in.output_mint;
@@ -57,9 +80,16 @@ pub mod swap_bridge {
     }
 
     pub fn swap(ctx: Context<Swap>, route_info: Vec<u8>) -> Result<()> {
+        /* Swap SOL for wrapped USDC for the target chain using Jupiter
+
+        Parameters
+        ----------
+        route_info: data for instructions from Jupiter specifying the route for swapping
+        */
         let mut router_accounts = vec![];
         let state_address = ctx.accounts.state.key();
         let (token_authority, token_authority_bump) = State::get_token_authority(&state_address);
+        // Set token_authority to be a signer
         for account in ctx.remaining_accounts {
             let is_signer = account.key == &token_authority;
             router_accounts.push(if account.is_writable {
@@ -91,7 +121,16 @@ pub mod swap_bridge {
         amount: u64,
         bridge_data: Vec<u8>,
     ) -> Result<()> {
+        /* Brige a specified amount of wrapped USDC to target chain via Wormwhole
+
+        Parameters
+        ----------
+        amount: amount to bridge over
+        bridge_data: data for bridging instructions from Wormhole
+        */
         let state_address = ctx.accounts.state.key();
+        // Deserialise bridge_data to check if the recipient address on the target chain
+        // is the same as the holding contract address specified in the state
         let deserialised_bridge_data =
             TransferWrapped::deserialize(&mut bridge_data.as_ref()).unwrap();
         msg!(
@@ -139,6 +178,7 @@ pub mod swap_bridge {
 #[derive(Accounts)]
 #[instruction(state_in: GenericStateInput, state_index: u8)]
 pub struct Initialize<'info> {
+    /// Initialize the state account
     #[account(
         init,
         payer = authority,
@@ -176,8 +216,8 @@ pub struct Wrap<'info> {
 
 #[derive(Accounts)]
 pub struct Bridge<'info> {
-    /// The state account that identifies the mint of the token being transferred through the bridge
-    /// and is also the token account authority
+    /// State account specifying the mint of the token being transferred through the bridge
+    /// and the recipient address on the target chain
     pub state: Account<'info, State>,
     /// The wormhole bridge authority. This is the authority that will sign the bridge transaction
     /// and therefore needs to be a delegate on the token account.
@@ -199,31 +239,39 @@ pub struct Bridge<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct GenericStateInput {
+    /// Mint of the wrapped USDC token to be bridged over to the target chain
     pub output_mint: Pubkey,
+    /// Holding contract on the target chain to receive the bridged tokens
     pub holding_contract: String,
+    /// Wormhole ID specifying the target chain
     pub token_chain_id: String,
+    /// Authority who can update the data in the state account
     pub update_authority: Pubkey,
 }
 
 #[account]
 pub struct State {
-    output_mint: Pubkey, // The target token mint
+    /// Mint of the wrapped USDC token to be bridged over to the target chain
+    output_mint: Pubkey,
+    /// Holding contract on the target chain to receive the bridged tokens
     holding_contract: String,
+    /// Wormhole ID specifying the target chain
     token_chain_id: String,
+    /// Authority who can update the data in the state account
     update_authority: Pubkey,
 }
 
 impl State {
-    pub const SIZE: usize = 8 + 24 + 24 + 32 + 32; // include 8 bytes for the anchor discriminator
     pub const STATE_SEED: &'static [u8] = b"state_address";
     pub const TOKEN_AUTHORITY_SEED: &'static [u8] = b"token_authority";
 
     pub fn space(holding_contract: String, token_chain_id: String) -> usize {
-        // find space needed for state account for current config
+        // Find space needed for state account for current config
         4 + holding_contract.len() + 4 + token_chain_id.len() + 4 + 32 + 32 + 8 /* Discriminator */
     }
 
     pub fn get_token_authority(state_address: &Pubkey) -> (Pubkey, u8) {
+        // Derive token_authority address from the state account address
         Pubkey::find_program_address(&[Self::TOKEN_AUTHORITY_SEED, state_address.as_ref()], &id())
     }
 }
@@ -231,7 +279,7 @@ impl State {
 #[derive(Accounts)]
 #[instruction(state_in: GenericStateInput)]
 pub struct UpdateState<'info> {
-    // to be used for updating parameters of state account
+    // To be used for updating parameters of state account
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
@@ -243,12 +291,16 @@ pub struct UpdateState<'info> {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
-/// Token Bridge instructions.
+/// Schema for deserialising the bridge data from Wormhole
 pub struct TransferWrapped {
     batch_id: u32,
+    /// Amount to bridge
     amount: u64,
     fee: u64,
+    /// Wormhole adds zeros in front of the recipient address to accommodate for different address lengths
     zeros_padding: [u8; 13],
+    /// Recipient address on target chain
     recipient_address: [u8; 20],
+    /// Wormhole ID for target chain
     recipient_chain: u16,
 }
