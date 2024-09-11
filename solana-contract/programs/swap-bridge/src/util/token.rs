@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token;
-use anchor_spl::token::{sync_native, Approve, SyncNative, Token};
+use anchor_spl::token::{Approve, Token};
 
 pub fn approve_delegate<'a>(
     amount: u64,
@@ -33,23 +33,4 @@ pub fn approve_delegate<'a>(
     token::approve(cpi_ctx, amount)?;
 
     Ok(())
-}
-
-pub fn wrap_sol<'a>(
-    token_account: &AccountInfo<'a>,
-    token_program: &Program<'a, Token>,
-    signer_seeds: &[&[u8]],
-) -> Result<()> {
-    let cpi_program = token_program.to_account_info();
-    let cpi_accounts = SyncNative {
-        account: token_account.to_account_info(),
-    };
-    let seeds = [signer_seeds];
-    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, &seeds);
-    sync_native(cpi_ctx)
-}
-
-pub(crate) mod wrapped_sol {
-    use super::*;
-    declare_id!("So11111111111111111111111111111111111111112");
 }

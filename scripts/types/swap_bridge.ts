@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/swap_bridge.json`.
  */
 export type SwapBridge = {
-  "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
+  "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
   "metadata": {
     "name": "swapBridge",
     "version": "0.1.0",
@@ -29,8 +29,8 @@ export type SwapBridge = {
         {
           "name": "state",
           "docs": [
-            "The state account that identifies the mint of the token being transferred through the bridge",
-            "and is also the token account authority"
+            "State account specifying the mint of the token being transferred through the bridge",
+            "and the recipient address on the target chain"
           ]
         },
         {
@@ -113,6 +113,9 @@ export type SwapBridge = {
       "accounts": [
         {
           "name": "state",
+          "docs": [
+            "Initialize the state account"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -239,66 +242,6 @@ export type SwapBridge = {
           }
         }
       ]
-    },
-    {
-      "name": "wrap",
-      "discriminator": [
-        178,
-        40,
-        10,
-        189,
-        228,
-        129,
-        186,
-        140
-      ],
-      "accounts": [
-        {
-          "name": "state"
-        },
-        {
-          "name": "tokenAccountAuthority",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "state"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenAccount",
-          "docs": [
-            "The account containing tokens that will be transferred through the bridge"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -336,18 +279,30 @@ export type SwapBridge = {
         "fields": [
           {
             "name": "outputMint",
+            "docs": [
+              "Mint of the wrapped USDC token to be bridged over to the target chain"
+            ],
             "type": "pubkey"
           },
           {
             "name": "holdingContract",
+            "docs": [
+              "Holding contract on the target chain to receive the bridged tokens"
+            ],
             "type": "string"
           },
           {
             "name": "tokenChainId",
+            "docs": [
+              "Wormhole ID specifying the target chain"
+            ],
             "type": "string"
           },
           {
             "name": "updateAuthority",
+            "docs": [
+              "Authority who can update the data in the state account"
+            ],
             "type": "pubkey"
           }
         ]
@@ -360,18 +315,30 @@ export type SwapBridge = {
         "fields": [
           {
             "name": "outputMint",
+            "docs": [
+              "Mint of the wrapped USDC token to be bridged over to the target chain"
+            ],
             "type": "pubkey"
           },
           {
             "name": "holdingContract",
+            "docs": [
+              "Holding contract on the target chain to receive the bridged tokens"
+            ],
             "type": "string"
           },
           {
             "name": "tokenChainId",
+            "docs": [
+              "Wormhole ID specifying the target chain"
+            ],
             "type": "string"
           },
           {
             "name": "updateAuthority",
+            "docs": [
+              "Authority who can update the data in the state account"
+            ],
             "type": "pubkey"
           }
         ]

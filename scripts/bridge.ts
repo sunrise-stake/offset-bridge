@@ -138,7 +138,7 @@ async function bridge() {
   const txSig = await solanaProgram.methods.bridge(new BN(amount.toString()), instruction.data).accounts({
     state: STATE_ADDRESS,
     bridgeAuthority,
-    tokenAccount: bridgeInputTokenAccount,
+    tokenAccount: bridgeInputTokenAccount(STATE_ADDRESS),
   }).remainingAccounts(instruction.keys)
     .signers([message])
     .rpc();

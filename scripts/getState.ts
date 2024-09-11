@@ -11,6 +11,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {BigNumber, ethers} from "ethers";
 import {HOLDING_CONTRACT_ABI} from "../ui/src/lib/abi/holdingContract";
 import {ERC20_ABI} from "../ui/src/lib/abi/erc20";
+import {tokenAuthority} from "./util";
 
 const POLYGON_NODE_URL = process.env.POLYGON_NODE_URL;
 const ethProvider = new ethers.providers.JsonRpcProvider(POLYGON_NODE_URL);
@@ -26,7 +27,7 @@ const isValidPublicKey = (publicKey: string) => {
 }
 
 // read the state address from the command line
-const stateAddress = process.argv[2];
+const stateAddress = process.argv[2] ?? "4U6vxUjMGhiaM8GzmH8KKvs8q7L3zxjDV5eRJnyfAtgF";
 // ensure the state address is provided and is a valid PublicKey
 if (!stateAddress || !isValidPublicKey(stateAddress)) {
     console.error('Usage: bun run scripts/getState.ts <stateAddress>');
@@ -44,18 +45,24 @@ if (!stateAddress || !isValidPublicKey(stateAddress)) {
 
     const state = await program.account.state.fetch(new PublicKey(stateAddress));
 
-    console.log("Output Mint Address: ", state.outputMint.toBase58());
-    console.log("Chain ID: ", state.tokenChainId);
-    console.log("Holding Contract", state.holdingContract);
-    console.log("Upgrade Authority", state.updateAuthority.toBase58())
+    console.log("State Address:", stateAddress);
+    console.log("Output Mint Address:", state.outputMint.toBase58());
+    console.log("Chain ID:", state.tokenChainId);
+    console.log("Holding Contract:", state.holdingContract);
+    console.log("Upgrade Authority:", state.updateAuthority.toBase58())
+
+    console.log("Token Authority", tokenAuthority(new PublicKey(stateAddress)).toBase58())
 
     console.log("Fetching holding contract state on Polygon...")
     const holdingContract = new ethers.Contract(state.holdingContract, HOLDING_CONTRACT_ABI, ethProvider);
+    const owner = await holdingContract.owner();
+    console.log("Owner:", owner);
+
     const retirementContract = await holdingContract.retireContract();
-    console.log("Retirement Contract", retirementContract);
+    console.log("Retirement Contract:", retirementContract);
 
     const tco2ContractAddress = await holdingContract.tco2();
-    console.log("TCO2 Contract Address", tco2ContractAddress);
+    console.log("TCO2 Contract Address:", tco2ContractAddress);
     const tco2Contract = new ethers.Contract(tco2ContractAddress, ERC20_ABI, ethProvider);
     const result = await tco2Contract.balanceOf(NCT_POOL_ADDRESS);
     const decimals = await tco2Contract.decimals();
