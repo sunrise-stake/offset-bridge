@@ -1,0 +1,375 @@
+{
+  "address": "suobUdMc9nSaQ1TjRkQA4K6CR9CmDiU9QViN7kVw74T",
+  "metadata": {
+    "name": "swap_bridge",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "bridge",
+      "discriminator": [
+        174,
+        41,
+        120,
+        146,
+        98,
+        218,
+        169,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "docs": [
+            "The state account that identifies the mint of the token being transferred through the bridge",
+            "and is also the token account authority"
+          ]
+        },
+        {
+          "name": "bridge_authority",
+          "docs": [
+            "The wormhole bridge authority. This is the authority that will sign the bridge transaction",
+            "and therefore needs to be a delegate on the token account.",
+            "It will also be listed in the remainingAccounts list that are populated directly from the generated wormhole transaction on the client"
+          ]
+        },
+        {
+          "name": "token_account_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The account containing tokens that will be transferred through the bridge"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "wormhole_program",
+          "address": "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "bridge_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  116,
+                  101,
+                  95,
+                  97,
+                  100,
+                  100,
+                  114,
+                  101,
+                  115,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "state_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "state_in",
+          "type": {
+            "defined": {
+              "name": "GenericStateInput"
+            }
+          }
+        },
+        {
+          "name": "_state_index",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "swap",
+      "discriminator": [
+        248,
+        198,
+        158,
+        145,
+        225,
+        117,
+        135,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "state"
+        },
+        {
+          "name": "jupiter_program",
+          "address": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+        }
+      ],
+      "args": [
+        {
+          "name": "route_info",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "update_state",
+      "discriminator": [
+        135,
+        112,
+        215,
+        75,
+        247,
+        185,
+        53,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "state",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "state_in",
+          "type": {
+            "defined": {
+              "name": "GenericStateInput"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrap",
+      "discriminator": [
+        178,
+        40,
+        10,
+        189,
+        228,
+        129,
+        186,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "state"
+        },
+        {
+          "name": "token_account_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The account containing tokens that will be transferred through the bridge"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "State",
+      "discriminator": [
+        216,
+        146,
+        107,
+        94,
+        104,
+        75,
+        182,
+        177
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "IncorrectDestinationAccount",
+      "msg": "Wormhole target address does not match holding contract specified in state"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Incorrect update authority"
+    }
+  ],
+  "types": [
+    {
+      "name": "GenericStateInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "output_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "holding_contract",
+            "type": "string"
+          },
+          {
+            "name": "token_chain_id",
+            "type": "string"
+          },
+          {
+            "name": "update_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "State",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "output_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "holding_contract",
+            "type": "string"
+          },
+          {
+            "name": "token_chain_id",
+            "type": "string"
+          },
+          {
+            "name": "update_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}
